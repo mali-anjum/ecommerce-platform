@@ -16,10 +16,7 @@ export const registerSchema = z.object({
   password: z
     .string()
     .min(1, "Password is required")
-    .min(8, "Password must be at least 8 characters")
-    .regex(/[A-Z]/, "Must contain at least one uppercase letter")
-    .regex(/[0-9]/, "Must contain at least one number")
-    .regex(/[^A-Za-z0-9]/, "Must contain at least one special character"),
+    .min(6, "Password must be at least 6 characters"),
   
   confirmPassword: z.string().min(1, "Please confirm your password")
 }).refine((data) => data.password === data.confirmPassword, {
