@@ -30,6 +30,7 @@ export const LoginForm = () => {
   });
 
   const { setFocus } = methods;
+  const { register, formState: { errors } } = methods;
 
   useEffect(() => {
     setFocus("email");
@@ -66,23 +67,25 @@ export const LoginForm = () => {
           
           <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6">
             <InputField
-              name="email"
               label="Email Address"
               type="email"
               icon={Mail}
               placeholder="Enter your email"
               autoComplete="email"
               disabled={isSubmitDisabled}
+              {...register("email")}
+              error={errors.email}
             />
             
             <InputField
-              name="password"
               label="Password"
               type="password"
               icon={Lock}
               placeholder="Enter your password"
               autoComplete="current-password"
               disabled={isSubmitDisabled}
+              {...register("password")}
+              error={errors.password}
             />
             
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm">
