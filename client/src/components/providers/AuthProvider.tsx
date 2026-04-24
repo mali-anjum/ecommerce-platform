@@ -18,9 +18,15 @@ export default function AuthProvider({
   const isPublicAuthRoute =
     pathname === "/auth/login" || pathname === "/auth/register";
 
-  useSilentAuth();
+  useSilentAuth(!isPublicAuthRoute);
 
   useEffect(() => {
+    if (isPublicAuthRoute) {
+      setIsInitialized(true);
+      setInitError(null);
+      return;
+    }
+
     let mounted = true;
     let initTimeout: NodeJS.Timeout;
 
@@ -53,7 +59,7 @@ export default function AuthProvider({
       mounted = false;
       clearTimeout(initTimeout);
     };
-  }, [initialize]);
+  }, [initialize, isPublicAuthRoute]);
 
   if (!isInitialized && !isPublicAuthRoute) {
     return (

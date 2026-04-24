@@ -198,6 +198,10 @@ interface CartStore {
   clearCart: () => Promise<void>;
 }
 
+const CART_FETCH_COOLDOWN_MS = 1500;
+let cartFetchInFlight: Promise<void> | null = null;
+let lastCartFetchAt = 0;
+
 export const useCartStore = create<CartStore>((set, get) => {
   const debounceUpdateCartItemQuantity = debounce(
     async (id: string, quantity: number) => {
@@ -225,8 +229,17 @@ export const useCartStore = create<CartStore>((set, get) => {
     error: null,
 
     fetchCart: async () => {
+      const now = Date.now();
+      if (now - lastCartFetchAt < CART_FETCH_COOLDOWN_MS) {
+        return;
+      }
+      if (cartFetchInFlight) {
+        return cartFetchInFlight;
+      }
+
       set({ isLoading: true, error: null });
-      try {
+      cartFetchInFlight = (async () => {
+        try {
         console.log("🛒 Fetching cart...");
 
         const response = await axios.get("/api/cart/fetch-cart", {
@@ -242,16 +255,22 @@ export const useCartStore = create<CartStore>((set, get) => {
           isLoading: false,
         });
 
-        console.log("✅ Cart fetched successfully");
-      } catch (error: any) {
-        console.error("❌ Cart fetch failed:", error);
+          console.log("✅ Cart fetched successfully");
+          lastCartFetchAt = Date.now();
+        } catch (error: any) {
+          console.error("❌ Cart fetch failed:", error);
 
-        set({
-          error: error.response?.data?.error || "Failed to fetch cart",
-          isLoading: false,
-          items: [],
-        });
-      }
+          set({
+            error: error.response?.data?.error || "Failed to fetch cart",
+            isLoading: false,
+            items: [],
+          });
+        } finally {
+          cartFetchInFlight = null;
+        }
+      })();
+
+      return cartFetchInFlight;
     },
 
     addToCart: async (item) => {

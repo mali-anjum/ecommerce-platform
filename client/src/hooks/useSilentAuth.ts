@@ -5,7 +5,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { authLogger } from "@/utils/Logger";
 import { getSafeISOString } from "@/utils/getSafeISOString";
 
-export default function useSilentAuth() {
+export default function useSilentAuth(enabled = true) {
   const { refreshAccessToken, checkSession, getTokenExpiryInfo } =
     useAuthStore();
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -227,6 +227,10 @@ export default function useSilentAuth() {
   ]);
 
   useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+
     authLogger.info("useSilentAuth hook initialized");
 
     initialCheckTimeoutRef.current = setTimeout(() => {
@@ -287,7 +291,7 @@ export default function useSilentAuth() {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("storage", handleStorageChange);
     };
-  }, [checkAndRefreshIfNeeded]);
+  }, [checkAndRefreshIfNeeded, enabled]);
 
   return null;
 }

@@ -49,6 +49,11 @@ const axiosInstance = axios.create({
   timeout: 15000,
 });
 
+const SESSION_CHECK_COOLDOWN_MS = 2500;
+let checkSessionInFlight: Promise<Session> | null = null;
+let lastSessionCheckAt = 0;
+let lastSessionCheckResult: Session | null = null;
+
 export const useAuthStore = create<AuthStore>()(
   persist(
     (set, get) => ({
@@ -387,6 +392,18 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       checkSession: async (): Promise<Session> => {
+        const now = Date.now();
+        if (
+          lastSessionCheckResult &&
+          now - lastSessionCheckAt < SESSION_CHECK_COOLDOWN_MS
+        ) {
+          return lastSessionCheckResult;
+        }
+        if (checkSessionInFlight) {
+          return checkSessionInFlight;
+        }
+
+        checkSessionInFlight = (async () => {
         try {
           const res = await axiosInstance.get("/check-session");
 
@@ -394,23 +411,34 @@ export const useAuthStore = create<AuthStore>()(
             console.log("🔍 AuthStore: Session check result:", res.data);
           }
 
-          return {
+          const normalizedSession: Session = {
             success: res.data.success ?? true,
             hasRefreshToken: res.data.hasRefreshToken ?? false,
             hasAccessToken: res.data.hasAccessToken ?? false,
             cookiesPresent: res.data.cookiesPresent ?? [],
             ...res.data,
           };
+          lastSessionCheckAt = Date.now();
+          lastSessionCheckResult = normalizedSession;
+          return normalizedSession;
         } catch (error) {
           console.error("AuthStore: Session check failed:", error);
-          return {
+          const failedSession: Session = {
             success: false,
             hasRefreshToken: false,
             hasAccessToken: false,
             cookiesPresent: [],
             error: "Session check failed",
           };
+          lastSessionCheckAt = Date.now();
+          lastSessionCheckResult = failedSession;
+          return failedSession;
+        } finally {
+          checkSessionInFlight = null;
         }
+        })();
+
+        return checkSessionInFlight;
       },
 
       fetchMe: async () => {

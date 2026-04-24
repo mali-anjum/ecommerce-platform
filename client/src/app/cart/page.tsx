@@ -56,8 +56,10 @@ function UserCartPage() {
 
   useEffect(() => {
     setIsMounted(true);
-    fetchCart();
-  }, [fetchCart]);
+    if (items.length === 0) {
+      fetchCart();
+    }
+  }, [fetchCart, items.length]);
 
   useEffect(() => {
     if (isMounted && !user && !isLoading) {

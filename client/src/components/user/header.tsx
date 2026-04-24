@@ -117,8 +117,10 @@ function Header() {
   const { fetchCart, items } = useCartStore();
 
   useEffect(() => {
+    if (!user) return;
+    if (items.length > 0) return;
     fetchCart();
-  }, [fetchCart]);
+  }, [fetchCart, user, items.length]);
 
   async function handleLogout() {
     await logout();
