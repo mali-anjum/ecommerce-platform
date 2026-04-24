@@ -55,6 +55,21 @@ async function setTokens(
 const register = async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, email, password } = req.body;
+    if (!name || !email || !password) {
+      res.status(400).json({
+        success: false,
+        error: "Name, email, and password are required",
+      });
+      return;
+    }
+    if (String(password).length < 6) {
+      res.status(400).json({
+        success: false,
+        error: "Password must be at least 6 characters",
+      });
+      return;
+    }
+
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
       res.status(400).json({
@@ -91,6 +106,10 @@ const login = async (req: Request, res: Response): Promise<void> => {
 
   try {
     const { email, password } = req.body;
+    console.log("[TRACE][BACKEND_LOGIN] /api/auth/login hit", {
+      hasEmail: Boolean(email),
+      passwordLength: password ? String(password).length : 0,
+    });
 
     // Input validation
     if (!email || !password) {
@@ -98,6 +117,13 @@ const login = async (req: Request, res: Response): Promise<void> => {
       res.status(400).json({
         success: false,
         error: "Email and password are required",
+      });
+      return;
+    }
+    if (String(password).length < 6) {
+      res.status(400).json({
+        success: false,
+        error: "Password must be at least 6 characters",
       });
       return;
     }
