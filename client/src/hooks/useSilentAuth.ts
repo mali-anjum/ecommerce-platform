@@ -10,6 +10,7 @@ export default function useSilentAuth() {
     useAuthStore();
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const initialCheckTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isRefreshingRef = useRef<boolean>(false);
   const retryCountRef = useRef<number>(0);
 
@@ -58,55 +59,7 @@ export default function useSilentAuth() {
     }
   }, [checkSession, getTokenExpiryInfo]);
 
-  const scheduleTokenRefresh = useCallback(async () => {
-    if (isRefreshingRef.current) {
-      authLogger.debug("Refresh already in progress, skipping");
-      return;
-    }
-
-    try {
-      const refreshTime = await calculateRefreshTime();
-
-      if (refreshTime === null) {
-        authLogger.info("No session detected, skipping refresh schedule");
-        return;
-      }
-
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-        authLogger.debug("Cleared existing refresh timeout");
-      }
-
-      if (refreshTime <= 0) {
-        authLogger.info("Immediate token refresh required");
-        await performTokenRefresh();
-        return;
-      }
-
-           // ✅ FIXED: Use getSafeISOString here
-      authLogger.info(`Scheduled next token refresh`, {
-        refreshInMinutes: Math.round(refreshTime / 60000),
-        refreshInSeconds: Math.round(refreshTime / 1000),
-        scheduledTime: getSafeISOString(Date.now() + refreshTime) || 'Invalid date',
-      });
-
-      authLogger.info(`Scheduled next token refresh`, {
-        refreshInMinutes: Math.round(refreshTime / 60000),
-        refreshInSeconds: Math.round(refreshTime / 1000),
-        scheduledTime: new Date(Date.now() + refreshTime).toISOString(),
-      });
-
-      timeoutRef.current = setTimeout(async () => {
-        authLogger.debug("Executing scheduled token refresh");
-        await performTokenRefresh();
-      }, refreshTime);
-    } catch (error) {
-      authLogger.error("Token refresh scheduling failed", error);
-    }
-  }, [calculateRefreshTime]);
-
-  const performTokenRefresh = async () => {
+  const performTokenRefresh = useCallback(async () => {
     if (isRefreshingRef.current) {
       authLogger.debug("Refresh already in progress, skipping duplicate");
       return;
@@ -127,13 +80,9 @@ export default function useSilentAuth() {
           retryCount: retryCountRef.current,
         });
 
-        retryCountRef.current = 0; // Reset retry counter on success
-
-        // Reschedule next refresh
+        retryCountRef.current = 0;
         setTimeout(() => {
-          authLogger.debug(
-            "Rescheduling next refresh after successful refresh",
-          );
+          authLogger.debug("Rescheduling next refresh after successful refresh");
           scheduleTokenRefresh();
         }, 1000);
       } else {
@@ -142,12 +91,11 @@ export default function useSilentAuth() {
           retryCount: retryCountRef.current + 1,
         });
 
-        // Exponential backoff for failed refreshes
         retryCountRef.current++;
         const backoffTime = Math.min(
           1000 * Math.pow(2, retryCountRef.current),
           30000,
-        ); // max 30s
+        );
 
         authLogger.info(`Scheduling retry with exponential backoff`, {
           backoffSeconds: Math.round(backoffTime / 1000),
@@ -176,7 +124,49 @@ export default function useSilentAuth() {
     } finally {
       isRefreshingRef.current = false;
     }
-  };
+  }, [refreshAccessToken]);
+
+  const scheduleTokenRefresh = useCallback(async () => {
+    if (isRefreshingRef.current) {
+      authLogger.debug("Refresh already in progress, skipping");
+      return;
+    }
+
+    try {
+      const refreshTime = await calculateRefreshTime();
+
+      if (refreshTime === null) {
+        authLogger.info("No session detected, skipping refresh schedule");
+        return;
+      }
+
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+        authLogger.debug("Cleared existing refresh timeout");
+      }
+
+      if (refreshTime <= 0) {
+        authLogger.info("Immediate token refresh required");
+        await performTokenRefresh();
+        return;
+      }
+
+      // ✅ FIXED: Use getSafeISOString here
+      authLogger.info(`Scheduled next token refresh`, {
+        refreshInMinutes: Math.round(refreshTime / 60000),
+        refreshInSeconds: Math.round(refreshTime / 1000),
+        scheduledTime: getSafeISOString(Date.now() + refreshTime) || 'Invalid date',
+      });
+
+      timeoutRef.current = setTimeout(async () => {
+        authLogger.debug("Executing scheduled token refresh");
+        await performTokenRefresh();
+      }, refreshTime);
+    } catch (error) {
+      authLogger.error("Token refresh scheduling failed", error);
+    }
+  }, [calculateRefreshTime, performTokenRefresh]);
 
   const checkAndRefreshIfNeeded = useCallback(async () => {
     try {
@@ -239,7 +229,7 @@ export default function useSilentAuth() {
   useEffect(() => {
     authLogger.info("useSilentAuth hook initialized");
 
-    setTimeout(() => {
+    initialCheckTimeoutRef.current = setTimeout(() => {
       checkAndRefreshIfNeeded();
     }, 2000);
 
@@ -281,6 +271,11 @@ export default function useSilentAuth() {
         clearTimeout(timeoutRef.current);
         timeoutRef.current = null;
         authLogger.debug("Cleared refresh timeout");
+      }
+      if (initialCheckTimeoutRef.current) {
+        clearTimeout(initialCheckTimeoutRef.current);
+        initialCheckTimeoutRef.current = null;
+        authLogger.debug("Cleared initial auth check timeout");
       }
 
       if (intervalRef.current) {

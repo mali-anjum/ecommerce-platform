@@ -4,16 +4,20 @@
 import React, { useEffect, useState } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import useSilentAuth from "@/hooks/useSilentAuth";
+import { usePathname } from "next/navigation";
 
 export default function AuthProvider({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
   const [isInitialized, setIsInitialized] = useState(false);
   const [initError, setInitError] = useState<string | null>(null);
-  const { initialize } = useAuthStore(); 
-  
+  const { initialize } = useAuthStore();
+  const isPublicAuthRoute =
+    pathname === "/auth/login" || pathname === "/auth/register";
+
   useSilentAuth();
 
   useEffect(() => {
@@ -51,7 +55,7 @@ export default function AuthProvider({
     };
   }, [initialize]);
 
-  if (!isInitialized) {
+  if (!isInitialized && !isPublicAuthRoute) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
