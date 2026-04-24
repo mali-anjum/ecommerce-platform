@@ -13,6 +13,8 @@ const ERROR_MESSAGES = {
 const TIMEOUT_MS = 20000; // 10 seconds
 
 export async function POST(req: NextRequest) {
+  console.log("[TRACE][CLIENT_LOGIN_PROXY] /api/auth/login hit");
+
  const BACKEND_URL =
     process.env.NODE_ENV === "production"
       ? process.env.BACKEND_URL
@@ -62,10 +64,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    console.log("[TRACE][CLIENT_LOGIN_PROXY] Parsed request body", {
+      hasEmail: Boolean(parsedBody?.email),
+      passwordLength: parsedBody?.password ? String(parsedBody.password).length : 0,
+    });
+
     // Add timeout protection
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
-    console.log(`BACKEND_URL: ${BACKEND_URL}/api/auth/login}`);
+    console.log("[TRACE][CLIENT_LOGIN_PROXY] Forwarding to backend", {
+      url: `${BACKEND_URL}/api/auth/login`,
+    });
     const backendRes = await fetch(`${BACKEND_URL}/api/auth/login`, {
       method: "POST",
       body: JSON.stringify(parsedBody), // Use parsed and re-stringified body
@@ -106,6 +115,10 @@ export async function POST(req: NextRequest) {
     }
 
     const responseData = await backendRes.json();
+    console.log("[TRACE][CLIENT_LOGIN_PROXY] Backend login success", {
+      status: backendRes.status,
+      hasUser: Boolean(responseData?.user),
+    });
     const response = NextResponse.json(responseData, {
       status: backendRes.status,
     });
