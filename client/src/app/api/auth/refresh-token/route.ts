@@ -140,38 +140,22 @@ export async function POST(req: NextRequest) {
       hasTokenInfo: !!responseData.tokenInfo,
     });
 
-    const enhancedData = {
-      ...responseData,
-      tokenInfo: {
-        accessTokenExpiresIn:
-          responseData.tokenInfo?.accessTokenExpiresIn ?? 15 * 60 * 1000,
-        refreshTokenExpiresIn:
-          responseData.tokenInfo?.refreshTokenExpiresIn ??
-          7 * 24 * 60 * 60 * 1000,
-        refreshedAt:
-          responseData.tokenInfo?.refreshedAt ?? new Date().toISOString(),
-        suggestedRefreshTime:
-          responseData.tokenInfo?.suggestedRefreshTime ?? 12 * 60 * 1000,
-        proxied: true,
-        proxyTimestamp: new Date().toISOString(),
-      },
-    };
-
-    const response = NextResponse.json(enhancedData, {
+    const response = NextResponse.json(responseData, {
       status: backendRes.status,
     });
 
-    // Forward Set-Cookie headers from backend
-    const setCookieHeaders = backendRes.headers.get("set-cookie");
-    if (setCookieHeaders) {
-      // Handle multiple Set-Cookie headers
-      const cookiesArray = Array.isArray(setCookieHeaders)
-        ? setCookieHeaders
-        : [setCookieHeaders];
+    const setCookieHeaders =
+      typeof backendRes.headers.getSetCookie === "function"
+        ? backendRes.headers.getSetCookie()
+        : [];
 
-      proxyLogger.log(`🍪 Backend Set-Cookie headers count:`, cookiesArray.length);
+    if (setCookieHeaders.length > 0) {
+      proxyLogger.log(
+        `🍪 Backend Set-Cookie headers count:`,
+        setCookieHeaders.length
+      );
 
-      for (const cookie of cookiesArray) {
+      for (const cookie of setCookieHeaders) {
         response.headers.append("Set-Cookie", cookie);
         proxyLogger.log(
           "   Set-Cookie:",
