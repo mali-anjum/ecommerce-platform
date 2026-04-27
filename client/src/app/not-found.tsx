@@ -157,7 +157,7 @@ function SearchRecovery() {
 
   const popularPages = [
     { name: "Home", path: "/", icon: Home },
-    { name: "Shop", path: "/listing", icon: Zap },
+    { name: "Shop", path: "/products", icon: Zap },
     { name: "New Arrivals", path: "/new-arrivals", icon: Sparkles },
     { name: "Account", path: "/account", icon: Globe },
   ];
@@ -165,7 +165,7 @@ function SearchRecovery() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
+      router.push(`/products?search=${encodeURIComponent(searchQuery)}`);
     }
   };
 

@@ -1,11 +1,12 @@
 // auth.controller.ts (suggested)
 import { prisma } from "../lib/prisma";
 import { Request, Response } from "express";
+import { AuthenticatedRequest } from "../types/express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 import crypto from "crypto";
-import { decode } from "punycode";
+import { buildTokenInfo } from "../utils/auth/tokenInfo";
 
 function signAccessToken(userId: string, email: string, role: string) {
   return jwt.sign({ userId, email, role }, process.env.JWT_SECRET!, {
@@ -180,7 +181,7 @@ const login = async (req: Request, res: Response): Promise<void> => {
     const endTime = Date.now();
     console.log(`✅ Login successful for ${email} in ${endTime - startTime}ms`);
 
-    // Response without sensitive data
+    // Same tokenInfo shape as refresh so the client can schedule rotation without an extra round trip
     res.status(200).json({
       success: true,
       message: "Login successful",
@@ -190,6 +191,7 @@ const login = async (req: Request, res: Response): Promise<void> => {
         email: user.email,
         role: user.role,
       },
+      tokenInfo: buildTokenInfo(),
     });
   } catch (error) {
     const endTime = Date.now();
@@ -254,30 +256,35 @@ const refreshAccessToken = async (
     const hashedToken = hashToken(refreshToken);
     const user = await prisma.user.findFirst({
       where: { refreshToken: hashedToken },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+      },
     });
 
     if (!user) {
-      res.clearCookie("accessToken");
-      res.clearCookie("refreshToken");
+      res.clearCookie("accessToken", { ...cookieOptions });
+      res.clearCookie("refreshToken", { ...cookieOptions });
       res.status(401).json({ success: false, error: "Invalid refresh token" });
       return;
     }
 
-    // Issue new access token
+    // Rotate refresh token on every refresh for replay resistance.
     const newAccessToken = signAccessToken(user.id, user.email, user.role);
-    const ACCESS_TOKEN_MAX_AGE = 15 * 60 * 1000; // 15 minutes in milliseconds
+    const newRefreshToken = uuidv4();
+    const newHashedRefreshToken = hashToken(newRefreshToken);
 
-    res.cookie("accessToken", newAccessToken, {
-      ...cookieOptions,
-      maxAge: ACCESS_TOKEN_MAX_AGE,
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { refreshToken: newHashedRefreshToken, lastLogin: new Date() },
     });
 
-
-
+    await setTokens(res, newAccessToken, newRefreshToken);
 
     const now = Date.now();
 
-    // ✅ CRITICAL: Return ALL values in milliseconds
     res.json({
       success: true,
       message: "Token refreshed",
@@ -287,14 +294,7 @@ const refreshAccessToken = async (
         email: user.email,
         role: user.role,
       },
-      tokenInfo: {
-        accessTokenExpiresIn: 15 * 60 * 1000, // 15 minutes in milliseconds
-        refreshTokenExpiresIn: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
-        refreshedAt: now, // milliseconds timestamp (NOT ISO string)
-        suggestedRefreshTime: 12 * 60 * 1000, // 12 minutes in milliseconds (80% of 15)
-        // Alternative: Return absolute timestamp instead
-        // suggestedRefreshTime: now + (12 * 60 * 1000), // Absolute time
-      },
+      tokenInfo: buildTokenInfo(now),
     });
   } catch (error) {
     console.error("Token refresh error:", error);
@@ -302,18 +302,43 @@ const refreshAccessToken = async (
   }
 };
 
-const logout = async (req: Request, res: Response): Promise<void> => {
-  const isProd = process.env.NODE_ENV === "production";
-  const domain = isProd ? process.env.COOKIE_DOMAIN : undefined;
 
-  res.clearCookie("accessToken", {
-    path: "/",
-    domain: domain,
-  });
-  res.clearCookie("refreshToken", {
-    path: "/",
-    domain: domain,
-  });
+const heartbeat = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user?.userId) {
+      res.status(401).json({ success: false, error: "Authentication required" });
+      return;
+    }
+
+    await prisma.user.update({
+      where: { id: req.user.userId },
+      data: { lastLogin: new Date() },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Session heartbeat recorded",
+      tokenInfo: buildTokenInfo(),
+    });
+  } catch (error) {
+    console.error("Heartbeat error:", error);
+    res.status(500).json({ success: false, error: "Heartbeat failed" });
+  }
+};
+
+const logout = async (req: Request, res: Response): Promise<void> => {
+  const refreshToken = req.cookies?.refreshToken;
+
+  if (refreshToken) {
+    const hashed = hashToken(refreshToken);
+    await prisma.user.updateMany({
+      where: { refreshToken: hashed },
+      data: { refreshToken: null },
+    });
+  }
+
+  res.clearCookie("accessToken", { ...cookieOptions });
+  res.clearCookie("refreshToken", { ...cookieOptions });
 
   res.status(200).json({
     success: true,
@@ -321,4 +346,4 @@ const logout = async (req: Request, res: Response): Promise<void> => {
   });
 };
 
-export { register, login, getCurrentUser, refreshAccessToken, logout };
+export { register, login, getCurrentUser, refreshAccessToken, heartbeat, logout };

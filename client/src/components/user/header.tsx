@@ -20,7 +20,7 @@ import {
   TrendingUp
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,11 +37,12 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "../ui/sheet";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useCartStore } from "@/store/useCartStore";
 // import ThemeToggle from "../layout/Themetoggle";
 import ThemeToggle from "../common/ThemeToggler";
 import { Input } from "../ui/input";
+import { useCategoryStore } from "@/store/useCategoryStore";
 
 const mainNavItems = [
   {
@@ -74,25 +75,6 @@ const mainNavItems = [
   },
 ];
 
-const categoryItems = [
-  {
-    title: "Electronics",
-    subcategories: ["Smartphones", "Laptops", "Wearables", "Audio"],
-  },
-  {
-    title: "Fashion",
-    subcategories: ["Men", "Women", "Kids", "Accessories"],
-  },
-  {
-    title: "Home & Living",
-    subcategories: ["Furniture", "Decor", "Kitchen", "Lighting"],
-  },
-  {
-    title: "Beauty",
-    subcategories: ["Skincare", "Makeup", "Fragrance", "Haircare"],
-  },
-];
-
 const accountItems = [
   { title: "My Account", to: "/account" },
   { title: "Orders", to: "/orders" },
@@ -111,16 +93,39 @@ const infoItems = [
 function Header() {
   const { logout, user } = useAuthStore();
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [mobileView, setMobileView] = useState<"menu" | "account" | "categories">("menu");
   const [showSheetDialog, setShowSheetDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedDepartment, setSelectedDepartment] = useState("all");
   const { fetchCart, items } = useCartStore();
+  const { categories, fetchCategories } = useCategoryStore();
+
+  const categoryItems = useMemo(() => categories, [categories]);
 
   useEffect(() => {
     if (!user) return;
     if (items.length > 0) return;
     fetchCart();
   }, [fetchCart, user, items.length]);
+
+  useEffect(() => {
+    void fetchCategories();
+  }, [fetchCategories]);
+
+  useEffect(() => {
+    if (pathname !== "/products") return;
+    const main = searchParams.get("mainCategory")?.trim() ?? "";
+    const sub = searchParams.get("subcategory")?.trim() ?? "";
+    if (!main) {
+      setSelectedDepartment("all");
+    } else {
+      setSelectedDepartment(sub ? `${main}::${sub}` : main);
+    }
+    const q = searchParams.get("search") ?? "";
+    setSearchQuery(q);
+  }, [pathname, searchParams]);
 
   async function handleLogout() {
     await logout();
@@ -129,10 +134,18 @@ function Header() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
-      setSearchQuery("");
+
+    const params = new URLSearchParams();
+    if (searchQuery.trim()) params.set("search", searchQuery.trim());
+
+    if (selectedDepartment !== "all") {
+      const [mainCategory, subcategory] = selectedDepartment.split("::");
+      if (mainCategory) params.set("mainCategory", mainCategory);
+      if (subcategory) params.set("subcategory", subcategory);
     }
+
+    const query = params.toString();
+    router.push(query ? `/products?${query}` : "/products");
   };
 
   const renderMobileMenuItems = () => {
@@ -241,7 +254,7 @@ function Header() {
                     className="w-full justify-between"
                     onClick={() => {
                       setShowSheetDialog(false);
-                      router.push(`/category/${category.title.toLowerCase()}`);
+                      router.push(`/products?mainCategory=${encodeURIComponent(category.title)}`);
                     }}
                   >
                     <span className="font-medium">{category.title}</span>
@@ -250,15 +263,15 @@ function Header() {
                   <div className="pl-4 space-y-1">
                     {category.subcategories.map((sub) => (
                       <Button
-                        key={sub}
+                        key={sub.title}
                         variant="ghost"
                         className="w-full justify-start text-sm"
                         onClick={() => {
                           setShowSheetDialog(false);
-                          router.push(`/category/${category.title.toLowerCase()}/${sub.toLowerCase()}`);
+                          router.push(`/products?mainCategory=${encodeURIComponent(category.title)}&subcategory=${encodeURIComponent(sub.title)}`);
                         }}
                       >
-                        {sub}
+                        {sub.title}
                       </Button>
                     ))}
                   </div>
@@ -444,14 +457,32 @@ function Header() {
           </Link>
 
           {/* Desktop Search */}
-          <div className="hidden lg:flex flex-1 max-w-xl mx-8">
-            <form onSubmit={handleSearch} className="relative w-full">
+          <div className="hidden lg:flex flex-1 max-w-3xl mx-8">
+            <form onSubmit={handleSearch} className="relative w-full flex items-center">
+              <select
+                value={selectedDepartment}
+                onChange={(e) => setSelectedDepartment(e.target.value)}
+                className="h-10 rounded-l-full border border-border/50 border-r-0 bg-card px-3 text-sm text-muted-foreground focus:outline-none"
+              >
+                <option value="all">All Departments</option>
+                {categoryItems.map((category) => (
+                  <optgroup key={category.slug} label={category.title}>
+                    <option value={`${category.title}`}>{category.title}</option>
+                    {category.subcategories.map((sub) => (
+                      <option key={`${category.slug}-${sub.slug}`} value={`${category.title}::${sub.title}`}>
+                        {sub.title}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+
               <Input
                 type="search"
                 placeholder="Search futuristic products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pr-12 bg-card border-border/50 focus:border-primary/50 rounded-full"
+                className="pr-12 bg-card border-border/50 focus:border-primary/50 rounded-none rounded-r-full"
               />
               <Button
                 type="submit"
@@ -644,12 +675,12 @@ function Header() {
                           </h4>
                           <ul className="space-y-1">
                             {category.subcategories.map((sub) => (
-                              <li key={sub}>
+                              <li key={sub.title}>
                                 <Link
-                                  href={`/category/${category.title.toLowerCase()}/${sub.toLowerCase()}`}
+                                  href={`/products?mainCategory=${encodeURIComponent(category.title)}&subcategory=${encodeURIComponent(sub.title)}`}
                                   className="text-sm text-muted-foreground hover:text-primary"
                                 >
-                                  {sub}
+                                  {sub.title}
                                 </Link>
                               </li>
                             ))}

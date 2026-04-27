@@ -29,7 +29,7 @@ export function SearchBar({ variant = "desktop", onSearch }: SearchBarProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) {
-      router.push(`/search?q=${encodeURIComponent(query)}`);
+      router.push(`/products?search=${encodeURIComponent(query)}`);
       setQuery("");
       setShowSuggestions(false);
       onSearch?.(query);
@@ -141,14 +141,14 @@ export function SearchBar({ variant = "desktop", onSearch }: SearchBarProps) {
                 <Button
                   variant="ghost"
                   className="w-full justify-start text-sm"
-                  onClick={() => router.push(`/category/electronics?q=${query}`)}
+                  onClick={() => router.push(`/products?mainCategory=Electronics&search=${encodeURIComponent(query)}`)}
                 >
                   Electronics › {query}
                 </Button>
                 <Button
                   variant="ghost"
                   className="w-full justify-start text-sm"
-                  onClick={() => router.push(`/category/fashion?q=${query}`)}
+                  onClick={() => router.push(`/products?mainCategory=Fashion&search=${encodeURIComponent(query)}`)}
                 >
                   Fashion › {query}
                 </Button>

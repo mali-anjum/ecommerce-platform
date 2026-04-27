@@ -15,6 +15,11 @@ import { parseMaybeArray } from "../utils/parsedArray";
 import { ApiResponse } from "../utils/ApiResponse";
 import { createLogger } from "../utils/logger";
 import { PRODUCT_CATEGORY_CATALOG } from "../constants/productCategories";
+import {
+  buildCatalogWhereFragment,
+  buildCatalogWhereFragmentFromTitles,
+  getCatalogTreeWithCounts,
+} from "../services/catalogService";
 
 // TODO: Consider cleaning up uploaded Cloudinary images if DB insert failed (use public_id to delete).
 // Use Promise.allSettled and handle partial failures gracefully.
@@ -111,12 +116,43 @@ const createProduct = asyncHandler(
         throw new ValidationError("price and stock must be numeric");
       }
 
+      let resolvedCategory = category as string;
+      let subcategoryId: string | null = null;
+
+      const bodySubId =
+        typeof req.body.subcategoryId === "string"
+          ? req.body.subcategoryId.trim()
+          : "";
+      if (bodySubId) {
+        const sub = await prisma.subcategory.findUnique({
+          where: { id: bodySubId },
+        });
+        if (!sub) {
+          throw new ValidationError(`Invalid subcategoryId: ${bodySubId}`);
+        }
+        subcategoryId = sub.id;
+        resolvedCategory = sub.title;
+      } else if (req.body.departmentSlug && req.body.subcategorySlug) {
+        const ds = String(req.body.departmentSlug).trim().toLowerCase();
+        const ss = String(req.body.subcategorySlug).trim().toLowerCase();
+        const sub = await prisma.subcategory.findFirst({
+          where: {
+            slug: ss,
+            department: { slug: ds },
+          },
+        });
+        if (sub) {
+          subcategoryId = sub.id;
+          resolvedCategory = sub.title;
+        }
+      }
+
       const newlyCreatedProduct = await prisma.product.create({
         data: {
           name,
           brand,
           description,
-          category,
+          category: resolvedCategory,
           gender,
           sizes: processedSizes,
           colors: processedColors,
@@ -125,6 +161,7 @@ const createProduct = asyncHandler(
           images: imageUrls,
           soldCount: 0,
           rating: 0,
+          subcategoryId,
         },
       });
 
@@ -274,13 +311,44 @@ const updateProduct = asyncHandler(
       rating,
     } = req.body;
 
+    let resolvedCategory = category as string | undefined;
+    let subcategoryIdUpdate: string | null | undefined = undefined;
+
+    if (typeof req.body.subcategoryId === "string") {
+      const sid = req.body.subcategoryId.trim();
+      if (sid === "") {
+        subcategoryIdUpdate = null;
+      } else {
+        const sub = await prisma.subcategory.findUnique({ where: { id: sid } });
+        if (!sub) throw new ValidationError(`Invalid subcategoryId: ${sid}`);
+        subcategoryIdUpdate = sub.id;
+        resolvedCategory = sub.title;
+      }
+    } else if (
+      typeof req.body.departmentSlug === "string" &&
+      typeof req.body.subcategorySlug === "string"
+    ) {
+      const ds = String(req.body.departmentSlug).trim().toLowerCase();
+      const ss = String(req.body.subcategorySlug).trim().toLowerCase();
+      const sub = await prisma.subcategory.findFirst({
+        where: { slug: ss, department: { slug: ds } },
+      });
+      if (sub) {
+        subcategoryIdUpdate = sub.id;
+        resolvedCategory = sub.title;
+      }
+    }
+
     const product = await prisma.product.update({
       where: { id },
       data: {
         name,
         brand,
         description,
-        category,
+        category: resolvedCategory ?? category,
+        ...(subcategoryIdUpdate !== undefined
+          ? { subcategoryId: subcategoryIdUpdate }
+          : {}),
         gender,
         sizes: sizes.split(","),
         colors: colors.split(","), // ✅ FIXED: colors.split instead of sizes.split
@@ -327,6 +395,9 @@ const getProductsForClient = asyncHandler(
     const search = ((req.query.search as string) || "").trim();
     const mainCategory = ((req.query.mainCategory as string) || "").trim();
     const subcategory = ((req.query.subcategory as string) || "").trim();
+    const departmentSlug = ((req.query.departmentSlug as string) || "").trim();
+    const subcategorySlug = ((req.query.subcategorySlug as string) || "").trim();
+    const subcategoryIdParam = ((req.query.subcategoryId as string) || "").trim();
     const collection = ((req.query.collection as string) || "all").toLowerCase();
 
     const minPrice = parseFloat(req.query.minPrice as string) || 0;
@@ -335,17 +406,46 @@ const getProductsForClient = asyncHandler(
 
     let sortBy = (req.query.sortBy as string) || "createdAt";
     let sortOrder =
-      ((req.query.sortOrder as string) ||
-        (req.query.sortOrderas as string) ||
-        "desc") as "asc" | "desc";
+      ((req.query.sortOrder as string) || "desc") as "asc" | "desc";
 
     const skip = (page - 1) * limit;
 
-    const selectedMainCategory = PRODUCT_CATEGORY_CATALOG.find(
-      (category) => category.title.toLowerCase() === mainCategory.toLowerCase()
-    );
+    const useCatalogSlugs =
+      departmentSlug.length > 0 ||
+      subcategorySlug.length > 0 ||
+      subcategoryIdParam.length > 0;
+
+    const slugCatalogWhere = useCatalogSlugs
+      ? await buildCatalogWhereFragment({
+          departmentSlug: departmentSlug || undefined,
+          subcategorySlug: subcategorySlug || undefined,
+          subcategoryId: subcategoryIdParam || undefined,
+        })
+      : null;
+
+    const catalogFilter: Prisma.ProductWhereInput | null = useCatalogSlugs
+      ? slugCatalogWhere ?? { id: { in: [] } }
+      : null;
+
+    const titleCatalogWhere =
+      !useCatalogSlugs && (mainCategory.length > 0 || subcategory.length > 0)
+        ? await buildCatalogWhereFragmentFromTitles({
+            mainCategory: mainCategory || undefined,
+            subcategory: subcategory || undefined,
+          })
+        : null;
+
+    const selectedMainCategory = useCatalogSlugs
+      ? undefined
+      : PRODUCT_CATEGORY_CATALOG.find(
+          (category) =>
+            category.title.toLowerCase() === mainCategory.toLowerCase()
+        );
     const selectedMainCategoryTokens = selectedMainCategory
-      ? [selectedMainCategory.title, ...selectedMainCategory.subcategories.map((item) => item.title)]
+      ? [
+          selectedMainCategory.title,
+          ...selectedMainCategory.subcategories.map((item) => item.title),
+        ]
       : [];
 
     const searchFilter: Prisma.ProductWhereInput =
@@ -385,21 +485,28 @@ const getProductsForClient = asyncHandler(
       AND: [
         collectionWhere,
         searchFilter,
-        selectedMainCategoryTokens.length > 0
-          ? {
-              category: {
-                in: selectedMainCategoryTokens,
-              },
-            }
-          : {},
-        subcategory
-          ? {
-              category: {
-                equals: subcategory,
-                mode: "insensitive",
-              },
-            }
-          : {},
+        catalogFilter !== null
+          ? catalogFilter
+          : titleCatalogWhere !== null
+            ? titleCatalogWhere
+          : selectedMainCategoryTokens.length > 0
+            ? {
+                category: {
+                  in: selectedMainCategoryTokens,
+                  mode: "insensitive",
+                },
+              }
+            : {},
+        catalogFilter !== null || titleCatalogWhere !== null
+          ? {}
+          : subcategory
+            ? {
+                category: {
+                  equals: subcategory,
+                  mode: "insensitive",
+                },
+              }
+            : {},
         categories.length > 0
           ? {
               category: {
@@ -448,12 +555,11 @@ const getProductsForClient = asyncHandler(
       prisma.product.count({ where }),
     ]);
 
-    console.log(
-      Math.ceil(total / limit),
-      total,
-      limit,
-      "Math.ceil(total / limit)"
-    );
+    const deptRows = await prisma.department.count();
+    const availableCategories =
+      deptRows > 0
+        ? await getCatalogTreeWithCounts()
+        : PRODUCT_CATEGORY_CATALOG;
 
     return res.status(200).json(
       new ApiResponse(
@@ -463,7 +569,7 @@ const getProductsForClient = asyncHandler(
           currentPage: page,
           totalPages: Math.ceil(total / limit),
           totalProducts: total,
-          availableCategories: PRODUCT_CATEGORY_CATALOG,
+          availableCategories,
         },
         "Products fetched for the clients successfully.."
       )
@@ -473,6 +579,18 @@ const getProductsForClient = asyncHandler(
 
 const getProductCategories = asyncHandler(
   async (_req: AuthenticatedRequest, res: Response) => {
+    const deptRows = await prisma.department.count();
+    if (deptRows > 0) {
+      const categoriesWithCounts = await getCatalogTreeWithCounts();
+      return res.status(200).json(
+        new ApiResponse(
+          200,
+          categoriesWithCounts,
+          "Product categories fetched successfully"
+        )
+      );
+    }
+
     const productCountByCategory = await prisma.product.groupBy({
       by: ["category"],
       _count: {

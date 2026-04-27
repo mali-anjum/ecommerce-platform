@@ -1,6 +1,10 @@
 import bcrypt from "bcryptjs";
 import prisma from "../lib/prisma";
 import { PRODUCT_CATEGORY_CATALOG } from "../constants/productCategories";
+import {
+  upsertCatalogFromConstants,
+  linkOrphanProductsToSubcategories,
+} from "../services/catalogService";
 
 const BANNER_IMAGE_URLS = [
   "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1920&q=80",
@@ -477,6 +481,11 @@ async function main() {
   await seedBannersIfEmpty();
   await seedCatalogProducts();
   await pinFeaturedProducts();
+
+  const catalogUpsert = await upsertCatalogFromConstants();
+  console.log("Catalog upsert:", catalogUpsert);
+  const linked = await linkOrphanProductsToSubcategories();
+  console.log("Products linked to Subcategory rows:", linked);
 }
 
 main()

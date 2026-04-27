@@ -24,27 +24,59 @@ model User {
   userCoupons  UserCoupon[]
 }
 
+model Department {
+  id             String        @id @default(uuid())
+  title          String
+  slug           String        @unique
+  description    String?
+  sortOrder      Int           @default(0)
+  isActive       Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  subcategories  Subcategory[]
+}
+
+model Subcategory {
+  id           String      @id @default(uuid())
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  title        String
+  slug         String
+  sortOrder    Int         @default(0)
+  isActive     Boolean     @default(true)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  products     Product[]
+
+  @@unique([departmentId, slug])
+  @@index([departmentId])
+}
+
 model Product {
-  id          String      @id @default(uuid())
-  name        String
-  brand       String
-  description String
-  category    String
-  gender      String
-  sizes       String[]
-  colors      String[]
-  price       Float       // Use Float instead of Decimal
-  stock       Int         @default(0)
-  soldCount   Int         @default(0)
-  rating      Float?      // Use Float instead of Decimal
-  images      String[]
-  isActive    Boolean     @default(true)
-  isArchived  Boolean     @default(false)
-  isFeatured  Boolean     @default(false)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  cartItems   CartItem[]
-  orderItems  OrderItem[]
+  id             String       @id @default(uuid())
+  name           String
+  brand          String
+  description    String
+  category       String
+  gender         String
+  sizes          String[]
+  colors         String[]
+  price          Float       // Use Float instead of Decimal
+  stock          Int         @default(0)
+  soldCount      Int         @default(0)
+  rating         Float?      // Use Float instead of Decimal
+  images         String[]
+  isActive       Boolean     @default(true)
+  isArchived     Boolean     @default(false)
+  isFeatured     Boolean     @default(false)
+  subcategoryId  String?
+  subcategory    Subcategory? @relation(fields: [subcategoryId], references: [id], onDelete: SetNull)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  cartItems      CartItem[]
+  orderItems     OrderItem[]
+
+  @@index([subcategoryId])
 }
 
 model Cart {
