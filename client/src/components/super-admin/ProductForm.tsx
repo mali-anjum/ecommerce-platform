@@ -18,7 +18,7 @@
 // import { Upload } from "lucide-react";
 // import Image from "next/image";
 // import { useRouter, useSearchParams } from "next/navigation";
-// import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+// import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 
 // // Move all your existing component logic here
 // function ProductForm() {
@@ -62,7 +62,7 @@
 //         }
 //       });
 //     }
-//   }, [isEditMode, getCurrentEditedProductId, getProductById]);
+//   }, [isEditMode, getCurrentEditedProductId, getProductById, catalogDepartments]);
 
 //   useEffect(() => {
 //     console.log(getCurrentEditedProductId, "getCurrentEditedProductId");
@@ -360,8 +360,14 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import {
+  inferSubcategoryFromTitle,
+  type AdminCatalogDepartment,
+} from "@/lib/catalog/inferSubcategoryFromTitle";
 import { useProductStore } from "@/store/useProductStore";
-import { brands, categories, colors, sizes } from "@/utils/config";
+import { API_ROUTES } from "@/utils/routes/api";
+import { brands, colors, sizes } from "@/utils/config";
+import axios from "axios";
 import { 
   Upload, 
   Package, 
@@ -377,7 +383,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 
 // ==================== MODULAR COMPONENTS ====================
 
@@ -568,6 +574,7 @@ function FormField({ label, name, icon, children }: FormFieldProps) {
   );
 }
 
+
 // ==================== MAIN COMPONENT ====================
 
 function ProductForm() {
@@ -584,6 +591,10 @@ function ProductForm() {
   const [selectedSizes, setSelectSizes] = useState<string[]>([]);
   const [selectedColors, setSelectColors] = useState<string[]>([]);
   const [selectedFiles, setSelectFiles] = useState<File[]>([]);
+  const [catalogDepartments, setCatalogDepartments] = useState<AdminCatalogDepartment[]>([]);
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState("");
+  const [selectedSubcategoryId, setSelectedSubcategoryId] = useState("");
+  const [categoryAutoLocked, setCategoryAutoLocked] = useState(true);
   const { toast } = useToast();
   const searchParams = useSearchParams();
   const getCurrentEditedProductId = searchParams.get("id");
@@ -592,6 +603,52 @@ function ProductForm() {
   const router = useRouter();
   const { createProduct, updateProduct, getProductById, isLoading, error } =
     useProductStore();
+
+  const selectedDepartment = useMemo(
+    () => catalogDepartments.find((item) => item.id === selectedDepartmentId),
+    [catalogDepartments, selectedDepartmentId]
+  );
+
+  const selectedSubcategory = useMemo(
+    () =>
+      selectedDepartment?.subcategories.find(
+        (item) => item.id === selectedSubcategoryId
+      ) ?? null,
+    [selectedDepartment, selectedSubcategoryId]
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchCatalog = async () => {
+      try {
+        const response = await axios.get(`${API_ROUTES.CATALOG}/structure`, {
+          withCredentials: true,
+        });
+        const rows = response.data?.data ?? [];
+        if (!cancelled && Array.isArray(rows)) {
+          setCatalogDepartments(rows as AdminCatalogDepartment[]);
+        }
+      } catch (catalogError) {
+        if (process.env.NODE_ENV === "development") {
+          console.error("Failed to fetch catalog structure", catalogError);
+        }
+      }
+    };
+
+    void fetchCatalog();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!selectedSubcategory) return;
+    setFormState((prev) => ({
+      ...prev,
+      category: selectedSubcategory.title,
+    }));
+  }, [selectedSubcategory]);
 
   useEffect(() => {
     if (isEditMode) {
@@ -608,10 +665,28 @@ function ProductForm() {
           });
           setSelectSizes(product.sizes);
           setSelectColors(product.colors);
+
+          if (product.subcategoryId) {
+            setSelectedSubcategoryId(product.subcategoryId);
+            for (const dept of catalogDepartments) {
+              if (dept.subcategories.some((sub) => sub.id === product.subcategoryId)) {
+                setSelectedDepartmentId(dept.id);
+                break;
+              }
+            }
+            setCategoryAutoLocked(true);
+          } else {
+            const guess = inferSubcategoryFromTitle(product.name, catalogDepartments);
+            if (guess) {
+              setSelectedDepartmentId(guess.departmentId);
+              setSelectedSubcategoryId(guess.subcategoryId);
+              setCategoryAutoLocked(true);
+            }
+          }
         }
       });
     }
-  }, [isEditMode, getCurrentEditedProductId, getProductById]);
+  }, [isEditMode, getCurrentEditedProductId, getProductById, catalogDepartments]);
 
   useEffect(() => {
     if (getCurrentEditedProductId === null) {
@@ -627,16 +702,29 @@ function ProductForm() {
       setSelectColors([]);
       setSelectSizes([]);
       setSelectFiles([]);
+      setSelectedDepartmentId("");
+      setSelectedSubcategoryId("");
+      setCategoryAutoLocked(true);
     }
   }, [getCurrentEditedProductId]);
 
   const handleInputChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
+    const { name, value } = e.target;
+
     setFormState((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value,
+      [name]: value,
     }));
+
+    if (name === "name" && categoryAutoLocked && !selectedSubcategoryId) {
+      const guess = inferSubcategoryFromTitle(value, catalogDepartments);
+      if (guess) {
+        setSelectedDepartmentId(guess.departmentId);
+        setSelectedSubcategoryId(guess.subcategoryId);
+      }
+    }
   };
 
   const handleSelectChange = (name: string, value: string) => {
@@ -644,6 +732,17 @@ function ProductForm() {
       ...prev,
       [name]: value,
     }));
+  };
+
+  const handleDepartmentChange = (departmentId: string) => {
+    setSelectedDepartmentId(departmentId);
+    setSelectedSubcategoryId("");
+    setFormState((prev) => ({ ...prev, category: "" }));
+  };
+
+  const handleSubcategoryChange = (subcategoryId: string) => {
+    setSelectedSubcategoryId(subcategoryId);
+    setCategoryAutoLocked(true);
   };
 
   const handleToggleSize = (size: string) => {
@@ -686,6 +785,16 @@ function ProductForm() {
 
     formData.append("sizes", selectedSizes.join(","));
     formData.append("colors", selectedColors.join(","));
+
+    if (selectedSubcategoryId) {
+      formData.append("subcategoryId", selectedSubcategoryId);
+      if (selectedDepartment?.slug) {
+        formData.append("departmentSlug", selectedDepartment.slug);
+      }
+      if (selectedSubcategory?.slug) {
+        formData.append("subcategorySlug", selectedSubcategory.slug);
+      }
+    }
 
     if (!isEditMode) {
       selectedFiles.forEach((file) => {
@@ -807,26 +916,53 @@ function ProductForm() {
                 />
               </FormField>
 
-              <FormField label="Category" name="category" icon={<List className="h-4 w-4" />}>
-                <Select
-                  value={formState.category}
-                  onValueChange={(value) => handleSelectChange("category", value)}
-                  name="category"
-                >
+              <FormField label="Department" name="department" icon={<List className="h-4 w-4" />}>
+                <Select value={selectedDepartmentId} onValueChange={handleDepartmentChange}>
                   <SelectTrigger className="bg-input border-border">
-                    <SelectValue placeholder="Select category" />
+                    <SelectValue placeholder="Select department" />
                   </SelectTrigger>
                   <SelectContent className="bg-card border-border">
-                    {categories.map((item) => (
-                      <SelectItem key={item} value={item.toLowerCase()}>
-                        <div className="flex items-center gap-2">
-                          <div className="h-3 w-3 rounded-full bg-secondary/20"></div>
-                          {item}
-                        </div>
+                    {catalogDepartments.map((dept) => (
+                      <SelectItem key={dept.id} value={dept.id}>
+                        {dept.title}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+              </FormField>
+
+              <FormField label="Subcategory" name="subcategory" icon={<Tag className="h-4 w-4" />}>
+                <Select
+                  value={selectedSubcategoryId}
+                  onValueChange={handleSubcategoryChange}
+                  disabled={!selectedDepartment || selectedDepartment.subcategories.length === 0}
+                >
+                  <SelectTrigger className="bg-input border-border">
+                    <SelectValue placeholder="Select subcategory" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card border-border">
+                    {(selectedDepartment?.subcategories ?? []).map((sub) => (
+                      <SelectItem key={sub.id} value={sub.id}>
+                        {sub.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormField>
+
+              <FormField label="Category (resolved)" name="category" icon={<List className="h-4 w-4" />}>
+                <Input
+                  id="category"
+                  name="category"
+                  value={formState.category}
+                  onChange={(e) => {
+                    setCategoryAutoLocked(false);
+                    handleInputChange(e);
+                  }}
+                  placeholder="Auto-filled from subcategory"
+                  className="bg-input border-border focus:ring-primary/50"
+                  required
+                />
               </FormField>
 
               <FormField label="Gender" name="gender" icon={<Users className="h-4 w-4" />}>

@@ -3,6 +3,7 @@ export interface Product {
   name: string;               // Human-facing product title
   brand: string;              // Brand slug or name
   category: string;           // Category slug (e.g. "shirts")
+  subcategoryId?: string | null; // Normalized subcategory relation (optional during transition)
   description?: string;       // Optional longer description (may be absent)
   gender?: "male" | "female" | "unisex" | "other"; // if relevant to business logic
   sizes: string[];            // Allowed size identifiers, e.g. ["S","M","L"]
