@@ -41,7 +41,7 @@ This file defines the project laws for AI agents working in this repository.
   - Prefer reading validated env vars in config modules.
 - `server/src/lib/prisma.ts` uses a global singleton pattern in development.
   - Keep this pattern to avoid multiple clients/pools during hot reload.
-- `client/src/proxy.ts` handles auth and role redirects at the edge.
+- `client/src/middleware.ts` handles auth and role redirects at the edge.
   - Keep logic explicit, deterministic, and defensive on invalid/expired tokens.
 
 ## Writing Style to Follow
