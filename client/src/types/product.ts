@@ -29,6 +29,14 @@ export interface ProductFilters {
   maxPrice?: number;
   sortBy?: string;
   sortOrder?: "asc" | "desc";
+  /** Full-text style match on name, description, brand */
+  search?: string;
+  /** Aggregates Electronics + all electronics subs when set (e.g. Electronics) */
+  mainCategory?: string;
+  /** Single leaf category title (e.g. Smartphones) */
+  subcategory?: string;
+  /** all | new | trending | bestsellers | featured */
+  collection?: string;
 }
 
 export interface ProductResponse {
