@@ -1,3 +1,4 @@
+import "../config/loadEnv";
 import bcrypt from "bcryptjs";
 import prisma from "../lib/prisma";
 import { PRODUCT_CATEGORY_CATALOG } from "../constants/productCategories";
