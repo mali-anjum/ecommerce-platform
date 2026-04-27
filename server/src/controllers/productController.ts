@@ -324,15 +324,20 @@ const getProductsForClient = asyncHandler(
     const brands = ((req.query.brands as string) || "")
       .split(",")
       .filter(Boolean);
-    const mainCategory = (req.query.mainCategory as string) || "";
-    const subcategory = (req.query.subcategory as string) || "";
+    const search = ((req.query.search as string) || "").trim();
+    const mainCategory = ((req.query.mainCategory as string) || "").trim();
+    const subcategory = ((req.query.subcategory as string) || "").trim();
+    const collection = ((req.query.collection as string) || "all").toLowerCase();
 
     const minPrice = parseFloat(req.query.minPrice as string) || 0;
     const maxPrice =
       parseFloat(req.query.maxPrice as string) || Number.MAX_SAFE_INTEGER;
 
-    const sortBy = (req.query.sortBy as string) || "createdAt";
-    const sortOrder = (req.query.sortOrderas as "asc" | "desc") || "desc";
+    let sortBy = (req.query.sortBy as string) || "createdAt";
+    let sortOrder =
+      ((req.query.sortOrder as string) ||
+        (req.query.sortOrderas as string) ||
+        "desc") as "asc" | "desc";
 
     const skip = (page - 1) * limit;
 
@@ -343,8 +348,43 @@ const getProductsForClient = asyncHandler(
       ? [selectedMainCategory.title, ...selectedMainCategory.subcategories.map((item) => item.title)]
       : [];
 
+    const searchFilter: Prisma.ProductWhereInput =
+      search.length > 0
+        ? {
+            OR: [
+              { name: { contains: search, mode: "insensitive" } },
+              { description: { contains: search, mode: "insensitive" } },
+              { brand: { contains: search, mode: "insensitive" } },
+            ],
+          }
+        : {};
+
+    let collectionWhere: Prisma.ProductWhereInput = {};
+    if (collection === "featured") {
+      collectionWhere = { isFeatured: true };
+    }
+    if (collection === "trending" || collection === "bestsellers") {
+      sortBy = "soldCount";
+      sortOrder = "desc";
+    }
+    if (collection === "new") {
+      sortBy = "createdAt";
+      sortOrder = "desc";
+    }
+
+    const validSortFields = new Set([
+      "createdAt",
+      "price",
+      "soldCount",
+      "rating",
+      "name",
+    ]);
+    const safeSortBy = validSortFields.has(sortBy) ? sortBy : "createdAt";
+
     const where: Prisma.ProductWhereInput = {
       AND: [
+        collectionWhere,
+        searchFilter,
         selectedMainCategoryTokens.length > 0
           ? {
               category: {
@@ -402,7 +442,7 @@ const getProductsForClient = asyncHandler(
         skip,
         take: limit,
         orderBy: {
-          [sortBy]: sortOrder,
+          [safeSortBy]: sortOrder,
         },
       }),
       prisma.product.count({ where }),

@@ -188,30 +188,62 @@
 import { Button } from "@/components/ui/button";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useEffect, useState, useCallback, memo } from "react";
+import Link from "next/link";
+import axios from "axios";
+import { API_ROUTES } from "@/utils/routes/api";
+import type { Product } from "@/types/product";
 
-// Grid item data
-const gridItems = [
+/** Hero slides when DB has no banners yet (matches seeded defaults) */
+const FALLBACK_BANNERS = [
   {
-    title: "WOMEN",
-    subtitle: "From world's top designer",
-    image: "https://images.unsplash.com/photo-1614251056216-f748f76cd228?q=80&w=1974&auto=format&fit=crop",
+    id: "fallback-1",
+    imageUrl:
+      "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1920&q=80",
   },
   {
-    title: "FALL LEGENDS",
-    subtitle: "Timeless cool weather",
-    image: "https://avon-demo.myshopify.com/cdn/shop/files/demo1-winter1_600x.png?v=1733380268",
-  },
-  {
-    title: "ACCESSORIES",
-    subtitle: "Everything you need",
-    image: "https://avon-demo.myshopify.com/cdn/shop/files/demo1-winter4_600x.png?v=1733380275",
-  },
-  {
-    title: "HOLIDAY SPARKLE EDIT",
-    subtitle: "Party season ready",
-    image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1974&auto=format&fit=crop",
+    id: "fallback-2",
+    imageUrl:
+      "https://images.unsplash.com/photo-1556742049-0cfe3b1a2b88?auto=format&fit=crop&w=1920&q=80",
   },
 ];
+
+/** Shop-by-pillar tiles (aligned with mega-menu / category catalog) */
+const gridItems = [
+  {
+    title: "Electronics",
+    subtitle: "Phones, laptops, wearables & audio",
+    image:
+      "https://images.unsplash.com/photo-1498049794561-8590a66e234a?auto=format&fit=crop&w=1200&q=80",
+    shopHref: "/products?mainCategory=Electronics",
+  },
+  {
+    title: "Fashion",
+    subtitle: "Men, women, kids & accessories",
+    image:
+      "https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=1200&q=80",
+    shopHref: "/products?mainCategory=Fashion",
+  },
+  {
+    title: "Home & Living",
+    subtitle: "Furniture, décor, kitchen & lighting",
+    image:
+      "https://images.unsplash.com/photo-1484101403633-562f891dc89a?auto=format&fit=crop&w=1200&q=80",
+    shopHref: "/products?mainCategory=Home%20%26%20Living",
+  },
+  {
+    title: "Beauty",
+    subtitle: "Skincare, makeup, fragrance & haircare",
+    image:
+      "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1200&q=80",
+    shopHref: "/products?mainCategory=Beauty",
+  },
+];
+
+function formatPrice(value: number | string | undefined): string {
+  if (value === undefined || value === null) return "—";
+  if (typeof value === "number") return `$${value.toFixed(2)}`;
+  return String(value);
+}
 
 // Modular Components
 const BannerSlide = memo(({ banner, isActive }: { banner: any; isActive: boolean }) => (
@@ -247,8 +279,11 @@ const BannerSlide = memo(({ banner, isActive }: { banner: any; isActive: boolean
           <br />
           High Performance E-Commerce Theme
         </p>
-        <Button className="bg-primary text-primary-foreground hover:bg-primary-light px-8 py-6 text-lg rounded-lg glass-effect border-glass-border neon-border hover:scale-105 transition-transform duration-300">
-          SHOP NOW
+        <Button
+          asChild
+          className="bg-primary text-primary-foreground hover:bg-primary-light px-8 py-6 text-lg rounded-lg glass-effect border-glass-border neon-border hover:scale-105 transition-transform duration-300"
+        >
+          <Link href="/products">SHOP NOW</Link>
         </Button>
       </div>
     </div>
@@ -280,7 +315,7 @@ const SlideIndicator = memo(({ count, current, onChange }: {
 
 SlideIndicator.displayName = "SlideIndicator";
 
-const ProductCard = memo(({ product }: { product: any }) => (
+const ProductCard = memo(({ product }: { product: Product }) => (
   <div className="group relative overflow-hidden rounded-xl glass-effect border-glass-border hover:border-primary/50 transition-all duration-500 theme-transition hover:scale-[1.02]">
     <div className="aspect-[3/4] relative overflow-hidden">
       <img
@@ -294,13 +329,20 @@ const ProductCard = memo(({ product }: { product: any }) => (
     <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-background via-background/95 to-transparent transform translate-y-full group-hover:translate-y-0 transition-transform duration-500">
       <div className="text-center space-y-3">
         <h3 className="text-lg font-semibold text-foreground">{product.name}</h3>
-        <p className="text-primary font-bold text-xl">{product.price}</p>
+        <p className="text-primary font-bold text-xl">{formatPrice(product.price)}</p>
         <div className="flex gap-2 justify-center">
-          <Button className="bg-primary text-primary-foreground hover:bg-primary-light px-6 rounded-lg transition-all duration-300 hover:scale-105">
-            QUICK VIEW
+          <Button
+            asChild
+            className="bg-primary text-primary-foreground hover:bg-primary-light px-6 rounded-lg transition-all duration-300 hover:scale-105"
+          >
+            <Link href={`/products/${product.id}`}>QUICK VIEW</Link>
           </Button>
-          <Button variant="outline" className="border-primary/30 text-primary hover:bg-primary/10 rounded-lg">
-            ADD TO CART
+          <Button
+            asChild
+            variant="outline"
+            className="border-primary/30 text-primary hover:bg-primary/10 rounded-lg"
+          >
+            <Link href={`/products/${product.id}`}>VIEW</Link>
           </Button>
         </div>
       </div>
@@ -315,7 +357,7 @@ const ProductCard = memo(({ product }: { product: any }) => (
 
 ProductCard.displayName = "ProductCard";
 
-const GridItemCard = memo(({ item }: { item: typeof gridItems[0] }) => (
+const GridItemCard = memo(({ item }: { item: (typeof gridItems)[0] }) => (
   <div className="group relative overflow-hidden rounded-xl glass-effect border-glass-border hover:neon-border transition-all duration-500 theme-transition">
     <div className="aspect-[3/4] relative overflow-hidden">
       <img
@@ -331,8 +373,11 @@ const GridItemCard = memo(({ item }: { item: typeof gridItems[0] }) => (
       <div className="text-center p-8 space-y-4 backdrop-blur-glass bg-glass rounded-xl border-glass-border">
         <h3 className="text-2xl font-bold text-foreground">{item.title}</h3>
         <p className="text-muted-foreground">{item.subtitle}</p>
-        <Button className="bg-primary text-primary-foreground hover:bg-primary-light px-6 rounded-lg neon-border hover:scale-105 transition-transform duration-300">
-          SHOP NOW
+        <Button
+          asChild
+          className="bg-primary text-primary-foreground hover:bg-primary-light px-6 rounded-lg neon-border hover:scale-105 transition-transform duration-300"
+        >
+          <Link href={item.shopHref}>SHOP NOW</Link>
         </Button>
       </div>
     </div>
@@ -362,8 +407,12 @@ SectionHeader.displayName = "SectionHeader";
 // Main HomePage Component
 function HomePage() {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [catalogFallback, setCatalogFallback] = useState<Product[]>([]);
   const { banners, featuredProducts, fetchFeaturedProducts, fetchBanners } =
     useSettingsStore();
+
+  const heroSlides =
+    banners.length > 0 ? banners : FALLBACK_BANNERS;
 
   useEffect(() => {
     fetchBanners();
@@ -371,14 +420,41 @@ function HomePage() {
   }, [fetchBanners, fetchFeaturedProducts]);
 
   useEffect(() => {
-    if (banners.length > 0) {
-      const bannerTimer = setInterval(() => {
-        setCurrentSlide((prev) => (prev + 1) % banners.length);
-      }, 5000);
+    if (featuredProducts.length > 0) return;
+    let cancelled = false;
+    axios
+      .get(`${API_ROUTES.PRODUCTS}/fetch-client-products`, {
+        params: { limit: 8, page: 1, sortBy: "createdAt", sortOrder: "desc" },
+        withCredentials: true,
+      })
+      .then((res) => {
+        const d = res.data?.data ?? res.data;
+        const list = d?.products ?? [];
+        if (!cancelled && Array.isArray(list)) {
+          setCatalogFallback(list as Product[]);
+        }
+      })
+      .catch(() => {
+        /* empty DB or network */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [featuredProducts.length]);
 
-      return () => clearInterval(bannerTimer);
-    }
-  }, [banners.length]);
+  useEffect(() => {
+    if (heroSlides.length === 0) return;
+    const bannerTimer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+    }, 5000);
+
+    return () => clearInterval(bannerTimer);
+  }, [heroSlides.length]);
+
+  const showcaseProducts: Product[] =
+    featuredProducts.length > 0
+      ? (featuredProducts as unknown as Product[])
+      : catalogFallback;
 
   const handleSlideChange = useCallback((index: number) => {
     setCurrentSlide(index);
@@ -388,7 +464,7 @@ function HomePage() {
     <div className="min-h-screen bg-background text-foreground theme-transition">
       {/* Hero Banner Section */}
       <section className="relative h-[600px] md:h-[700px] lg:h-[800px] overflow-hidden">
-        {banners.map((banner, index) => (
+        {heroSlides.map((banner, index) => (
           <BannerSlide
             key={banner.id}
             banner={banner}
@@ -397,7 +473,7 @@ function HomePage() {
         ))}
         
         <SlideIndicator
-          count={banners.length}
+          count={heroSlides.length}
           current={currentSlide}
           onChange={handleSlideChange}
         />
@@ -412,8 +488,8 @@ function HomePage() {
       <section className="py-16 md:py-20 lg:py-24">
         <div className="container mx-auto px-4 md:px-6">
           <SectionHeader
-            title="THE WINTER EDIT"
-            subtitle="Designed to keep your satisfaction and warmth"
+            title="Shop by category"
+            subtitle="Browse our Electronics, Fashion, Home & Living, and Beauty departments—like leading storefronts."
           />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
             {gridItems.map((item, index) => (
@@ -427,15 +503,15 @@ function HomePage() {
       <section className="py-16 md:py-20 lg:py-24 bg-gradient-to-b from-background to-card/30">
         <div className="container mx-auto px-4 md:px-6">
           <SectionHeader
-            title="NEW ARRIVALS"
-            subtitle="Shop our new arrivals from established brands"
+            title="Featured picks"
+            subtitle="Staff picks and bestsellers—mirroring “featured collection” strips on Amazon and Shopify storefronts."
           />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-            {featuredProducts.map((product, index) => (
+            {showcaseProducts.map((product, index) => (
               <ProductCard key={product.id || index} product={product} />
             ))}
           </div>
-          {featuredProducts.length === 0 && (
+          {showcaseProducts.length === 0 && (
             <div className="text-center py-12">
               <div className="inline-block p-8 rounded-xl glass-effect border-glass-border">
                 <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">

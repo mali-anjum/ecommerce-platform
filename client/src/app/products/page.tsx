@@ -251,6 +251,7 @@ import {
   BarChart3
 } from "lucide-react";
 import { useEffect, useCallback, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -262,6 +263,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+
+/** Maps UI tab ids to backend `collection` query (see productController.getProductsForClient). */
+function toApiCollection(tab: string): string | undefined {
+  if (tab === "all") return undefined;
+  if (tab === "ai") return "featured";
+  return tab;
+}
 
 // ==================== MODULAR COMPONENTS ====================
 
@@ -343,24 +351,41 @@ interface FiltersBarProps {
   sortBy: string;
   sortOrder: string;
   onSortChange: (value: string) => void;
-  onOpenFilters: () => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
   activeFilterCount: number;
   viewMode: "grid" | "list";
   onViewModeChange: (mode: "grid" | "list") => void;
+  priceRange: number[];
+  setPriceRange: (range: number[]) => void;
+  selectedCategories: string[];
+  selectedSizes: string[];
+  selectedColors: string[];
+  selectedBrands: string[];
+  onToggleFilter: ProductFiltersToggle;
 }
+
+type ProductFiltersToggle = (
+  filterType: "categories" | "sizes" | "brands" | "colors",
+  value: string
+) => void;
 
 function FiltersBar({
   sortBy,
   sortOrder,
   onSortChange,
-  onOpenFilters,
   searchQuery,
   onSearchChange,
   activeFilterCount,
   viewMode,
-  onViewModeChange
+  onViewModeChange,
+  priceRange,
+  setPriceRange,
+  selectedCategories,
+  selectedSizes,
+  selectedColors,
+  selectedBrands,
+  onToggleFilter,
 }: FiltersBarProps) {
   return (
     <div className="glass-effect rounded-2xl p-4 border border-glass-border mb-8">
@@ -465,13 +490,13 @@ function FiltersBar({
                 </DialogTitle>
               </DialogHeader>
               <FiltersComponent
-                priceRange={[0, 1000]}
-                setPriceRange={() => {}}
-                selectedCategories={[]}
-                selectedSizes={[]}
-                selectedColors={[]}
-                selectedBrands={[]}
-                onToggleFilter={() => {}}
+                priceRange={priceRange}
+                setPriceRange={setPriceRange}
+                selectedCategories={selectedCategories}
+                selectedSizes={selectedSizes}
+                selectedColors={selectedColors}
+                selectedBrands={selectedBrands}
+                onToggleFilter={onToggleFilter}
               />
             </DialogContent>
           </Dialog>
@@ -481,19 +506,25 @@ function FiltersBar({
   );
 }
 
-// 3. Collection Tabs Component
-function CollectionTabs() {
+// 3. Collection Tabs — drives `/fetch-client-products?collection=` (featured / new / trending / bestsellers)
+interface CollectionTabsProps {
+  value: string;
+  onChange: (id: string) => void;
+  totalProducts: number;
+}
+
+function CollectionTabs({ value, onChange, totalProducts }: CollectionTabsProps) {
   const collections = [
-    { id: "all", label: "All Products", icon: Grid3x3, count: 156 },
-    { id: "new", label: "New Arrivals", icon: Zap, count: 24, badge: "HOT" },
-    { id: "trending", label: "Trending", icon: TrendingUp, count: 42 },
-    { id: "bestsellers", label: "Bestsellers", icon: Star, count: 18 },
-    { id: "ai", label: "AI Curated", icon: Sparkles, count: 12, badge: "AI" },
+    { id: "all", label: "All Products", icon: Grid3x3, badge: undefined as string | undefined },
+    { id: "new", label: "New Arrivals", icon: Zap, badge: "HOT" },
+    { id: "trending", label: "Trending", icon: TrendingUp, badge: undefined },
+    { id: "bestsellers", label: "Bestsellers", icon: Star, badge: undefined },
+    { id: "ai", label: "Featured", icon: Sparkles, badge: "★" },
   ];
 
   return (
     <div className="mb-8">
-      <Tabs defaultValue="all" className="w-full">
+      <Tabs value={value} onValueChange={onChange} className="w-full">
         <TabsList className="glass-effect p-1 border border-glass-border w-full overflow-x-auto flex-nowrap">
           {collections.map((collection) => {
             const Icon = collection.icon;
@@ -505,9 +536,11 @@ function CollectionTabs() {
               >
                 <Icon className="h-4 w-4" />
                 {collection.label}
-                <Badge variant="outline" className="ml-2 border-border">
-                  {collection.count}
-                </Badge>
+                {collection.id === "all" && (
+                  <Badge variant="outline" className="ml-2 border-border">
+                    {totalProducts}
+                  </Badge>
+                )}
                 {collection.badge && (
                   <Badge className="ml-1 bg-accent text-accent-foreground text-xs">
                     {collection.badge}
@@ -565,7 +598,9 @@ function ResultsSummary({
         <div className="h-2 w-24 bg-card rounded-full overflow-hidden">
           <div 
             className="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-500"
-            style={{ width: `${(currentPage / totalPages) * 100}%` }}
+            style={{
+              width: `${totalPages ? (currentPage / Math.max(totalPages, 1)) * 100 : 0}%`,
+            }}
           />
         </div>
       </div>
@@ -597,6 +632,9 @@ function ErrorState({ error, onRetry }: { error: string; onRetry: () => void }) 
 // ==================== MAIN COMPONENT ====================
 
 function ProductListingPage() {
+  const searchParams = useSearchParams();
+  const mainCategoryQs = searchParams.get("mainCategory") ?? undefined;
+
   const {
     priceRange,
     setPriceRange,
@@ -609,6 +647,7 @@ function ProductListingPage() {
     handleToggleFilter,
     handleSortChange,
     getFilters,
+    resetFilters,
   } = useProductFilters();
 
   const {
@@ -625,6 +664,7 @@ function ProductListingPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [collectionTab, setCollectionTab] = useState("all");
 
   // Debounce search
   useEffect(() => {
@@ -635,16 +675,28 @@ function ProductListingPage() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Fetch products with filters
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [collectionTab, debouncedSearch, mainCategoryQs, setCurrentPage]);
+
+  // Fetch products with filters + URL-driven department (`mainCategory`) + collection tabs
   const fetchAllProducts = useCallback(() => {
-    const filters = {
+    fetchProductsForClient({
       ...getFilters(),
-      search: debouncedSearch,
+      search: debouncedSearch || undefined,
       page: currentPage,
       limit: 12,
-    };
-    fetchProductsForClient(filters);
-  }, [currentPage, getFilters, fetchProductsForClient, debouncedSearch]);
+      mainCategory: mainCategoryQs,
+      collection: toApiCollection(collectionTab),
+    });
+  }, [
+    currentPage,
+    getFilters,
+    fetchProductsForClient,
+    debouncedSearch,
+    mainCategoryQs,
+    collectionTab,
+  ]);
 
   useEffect(() => {
     fetchAllProducts();
@@ -660,12 +712,13 @@ function ProductListingPage() {
   };
 
   // Calculate active filter count
-  const activeFilterCount = [
-    ...selectedCategories,
-    ...selectedSizes,
-    ...selectedColors,
-    ...selectedBrands,
-  ].length + (priceRange[0] > 0 || priceRange[1] < 1000 ? 1 : 0);
+  const activeFilterCount =
+    [
+      ...selectedCategories,
+      ...selectedSizes,
+      ...selectedColors,
+      ...selectedBrands,
+    ].length + (priceRange[0] > 0 || priceRange[1] < 100000 ? 1 : 0);
 
   // Handle errors
   useEffect(() => {
@@ -682,19 +735,35 @@ function ProductListingPage() {
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Collection Tabs */}
-        <CollectionTabs />
+        {mainCategoryQs && (
+          <p className="text-sm text-muted-foreground mb-4">
+            Department filter: <span className="text-foreground font-medium">{decodeURIComponent(mainCategoryQs)}</span>
+          </p>
+        )}
+
+        <CollectionTabs
+          value={collectionTab}
+          onChange={setCollectionTab}
+          totalProducts={totalProducts}
+        />
 
         {/* Filters Bar */}
         <FiltersBar
           sortBy={sortBy}
           sortOrder={sortOrder}
           onSortChange={handleSortChange}
-          onOpenFilters={() => {}}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           activeFilterCount={activeFilterCount}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
+          priceRange={priceRange}
+          setPriceRange={setPriceRange}
+          selectedCategories={selectedCategories}
+          selectedSizes={selectedSizes}
+          selectedColors={selectedColors}
+          selectedBrands={selectedBrands}
+          onToggleFilter={handleToggleFilter}
         />
 
         {/* Layout */}
@@ -713,9 +782,8 @@ function ProductListingPage() {
                       variant="ghost"
                       size="sm"
                       onClick={() => {
-                        // Reset all filters
-                        setPriceRange([0, 1000]);
-                        // You would need to add reset functions to your hook
+                        resetFilters();
+                        setSearchQuery("");
                       }}
                       className="text-primary hover:text-primary-light"
                     >

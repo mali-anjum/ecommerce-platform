@@ -9,6 +9,7 @@ export interface ProductCategory {
   subcategories: ProductSubcategory[];
 }
 
+/** Canonical catalog aligned with storefront mega-menu */
 export const PRODUCT_CATEGORY_CATALOG: ProductCategory[] = [
   {
     title: "Electronics",
@@ -51,8 +52,3 @@ export const PRODUCT_CATEGORY_CATALOG: ProductCategory[] = [
     ],
   },
 ];
-
-export const FLAT_CATEGORY_TITLES = PRODUCT_CATEGORY_CATALOG.flatMap((category) => [
-  category.title,
-  ...category.subcategories.map((subcategory) => subcategory.title),
-]);

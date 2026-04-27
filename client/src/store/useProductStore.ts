@@ -1,21 +1,7 @@
 import { API_ROUTES } from "@/utils/routes/api";
 import axios from "axios";
 import { create } from "zustand";
-import type { Product } from "@/types/product";
-import { renderToHTML } from "next/dist/server/render";
-
-interface ProductFilters {
-  page?: number;
-  limit?: number;
-  categories?: string[];
-  sizes?: string[];
-  colors?: string[];
-  brands?: string[];
-  minPrice?: number;
-  maxPrice?: number;
-  sortBy?: string;
-  sortOrder?: "asc" | "desc";
-}
+import type { Product, ProductFilters } from "@/types/product";
 
 interface ProductState {
   products: Product[];
@@ -170,6 +156,13 @@ export const useProductStore = create<ProductState>((set, get) => ({
         sizes: params.sizes?.join(","),
         colors: params.colors?.join(","),
         brands: params.brands?.join(","),
+        search: params.search || undefined,
+        mainCategory: params.mainCategory || undefined,
+        subcategory: params.subcategory || undefined,
+        collection:
+          params.collection && params.collection !== "all"
+            ? params.collection
+            : undefined,
       };
 
       // console.log("Fetching client products with params:", queryParams);

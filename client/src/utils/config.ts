@@ -31,4 +31,16 @@ export const colors = [
   { name: "Cyan", class: "bg-[#06B6D4]" },
   { name: "Blue", class: "bg-[#3B82F6]" },
 ];
-export const brands = ["Nike", "Adidas", "Puma", "Reebok", "Under Armour", "DJI"];
+export const brands = [
+  "Nike",
+  "Adidas",
+  "Puma",
+  "Sony",
+  "Apple",
+  "Samsung",
+  "Bose",
+  "Dell",
+  "IKEA",
+  "L'Oreal",
+  "Garmin",
+];
