@@ -1,11 +1,16 @@
 // src/store/useAuthStore.ts - CORRECTED VERSION
 import axios from "axios";
+import type { AxiosError } from "axios";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 // import { warmupService } from "@/utils/warmupService";
 import type { User } from "@/types/auth/User";
 import type { TokenExpiryInfoBackendRes } from "@/types/auth/TokenExpiryInfoFromBackend";
 import type { Session } from "@/types/auth/Session";
+import {
+  shouldRetryUnauthorizedRequest,
+  type RetryableRequestConfig,
+} from "@/lib/auth/shouldRetryAuthRequest";
 import { authLogger } from "@/utils/Logger";
 import { normalizeRefreshResponseTokenInfo } from "@/lib/auth/normalizeTokenInfo";
 
@@ -501,11 +506,11 @@ axiosInstance.interceptors.response.use(
     }
     return response;
   },
-  async (error) => {
-    const originalRequest = error.config;
+  async (error: AxiosError) => {
+    const originalRequest = (error.config || {}) as RetryableRequestConfig;
 
-    // Only retry for 401 errors and not already retried
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Only retry for 401 errors on protected API calls (never for auth mutations)
+    if (shouldRetryUnauthorizedRequest(error.response?.status, originalRequest)) {
       originalRequest._retry = true;
 
       if (process.env.NODE_ENV === "development") {
@@ -532,11 +537,12 @@ axiosInstance.interceptors.response.use(
     }
 
     // Log other errors
-    if (error.response?.status >= 500) {
+    const responseStatus = error.response?.status;
+    if (typeof responseStatus === "number" && responseStatus >= 500) {
       console.error(
         "🚨 Server error:",
-        error.response.status,
-        error.config.url
+        responseStatus,
+        error.config?.url ?? "unknown"
       );
     }
 
