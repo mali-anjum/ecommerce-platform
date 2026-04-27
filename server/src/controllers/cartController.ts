@@ -43,6 +43,63 @@ const addToCart = asyncHandler(
         .json(new ApiError(400, "Quantity must be greater than 0"));
     }
 
+    const normalizedSize =
+      typeof size === "string" && size.trim().length > 0 ? size.trim() : null;
+    const normalizedColor =
+      typeof color === "string" && color.trim().length > 0 ? color.trim() : null;
+
+    const sizeOptions = productExisted.sizes ?? [];
+    const colorOptions = productExisted.colors ?? [];
+
+    if (sizeOptions.length > 0) {
+      if (!normalizedSize) {
+        return res
+          .status(400)
+          .json(
+            new ApiError(
+              400,
+              "This product requires a size selection before adding to cart"
+            )
+          );
+      }
+
+      const selectedSizeIsValid = sizeOptions.some(
+        (item) => item.toLowerCase() === normalizedSize.toLowerCase()
+      );
+
+      if (!selectedSizeIsValid) {
+        return res
+          .status(400)
+          .json(new ApiError(400, "Selected size is not available for this product"));
+      }
+    }
+
+    if (colorOptions.length > 0) {
+      if (!normalizedColor) {
+        return res
+          .status(400)
+          .json(
+            new ApiError(
+              400,
+              "This product requires a color selection before adding to cart"
+            )
+          );
+      }
+
+      const selectedColorIsValid = colorOptions.some(
+        (item) => item.toLowerCase() === normalizedColor.toLowerCase()
+      );
+
+      if (!selectedColorIsValid) {
+        return res
+          .status(400)
+          .json(new ApiError(400, "Selected color is not available for this product"));
+      }
+    }
+
+    const cartColorValue = colorOptions.length > 0 ? normalizedColor! : "Default";
+    const cartSizeValue = sizeOptions.length > 0 ? normalizedSize! : "";
+
     const cart = await prisma.cart.upsert({
       where: { userId },
       create: { userId },
@@ -56,8 +113,8 @@ const addToCart = asyncHandler(
         cartId_productId_size_color: {
           cartId: cart.id,
           productId,
-          size: size ?? null,
-          color: color ?? null,
+          size: cartSizeValue,
+          color: cartColorValue,
         },
       },
       update: {
@@ -67,8 +124,8 @@ const addToCart = asyncHandler(
         cartId: cart.id,
         productId,
         quantity,
-        size: size ?? null,
-        color: color ?? null,
+        size: cartSizeValue,
+        color: cartColorValue,
       },
     });
 

@@ -14,6 +14,7 @@ import {
 import { parseMaybeArray } from "../utils/parsedArray";
 import { ApiResponse } from "../utils/ApiResponse";
 import { createLogger } from "../utils/logger";
+import { PRODUCT_CATEGORY_CATALOG } from "../constants/productCategories";
 
 // TODO: Consider cleaning up uploaded Cloudinary images if DB insert failed (use public_id to delete).
 // Use Promise.allSettled and handle partial failures gracefully.
@@ -323,6 +324,8 @@ const getProductsForClient = asyncHandler(
     const brands = ((req.query.brands as string) || "")
       .split(",")
       .filter(Boolean);
+    const mainCategory = (req.query.mainCategory as string) || "";
+    const subcategory = (req.query.subcategory as string) || "";
 
     const minPrice = parseFloat(req.query.minPrice as string) || 0;
     const maxPrice =
@@ -333,8 +336,30 @@ const getProductsForClient = asyncHandler(
 
     const skip = (page - 1) * limit;
 
+    const selectedMainCategory = PRODUCT_CATEGORY_CATALOG.find(
+      (category) => category.title.toLowerCase() === mainCategory.toLowerCase()
+    );
+    const selectedMainCategoryTokens = selectedMainCategory
+      ? [selectedMainCategory.title, ...selectedMainCategory.subcategories.map((item) => item.title)]
+      : [];
+
     const where: Prisma.ProductWhereInput = {
       AND: [
+        selectedMainCategoryTokens.length > 0
+          ? {
+              category: {
+                in: selectedMainCategoryTokens,
+              },
+            }
+          : {},
+        subcategory
+          ? {
+              category: {
+                equals: subcategory,
+                mode: "insensitive",
+              },
+            }
+          : {},
         categories.length > 0
           ? {
               category: {
@@ -398,8 +423,81 @@ const getProductsForClient = asyncHandler(
           currentPage: page,
           totalPages: Math.ceil(total / limit),
           totalProducts: total,
+          availableCategories: PRODUCT_CATEGORY_CATALOG,
         },
         "Products fetched for the clients successfully.."
+      )
+    );
+  }
+);
+
+const getProductCategories = asyncHandler(
+  async (_req: AuthenticatedRequest, res: Response) => {
+    const productCountByCategory = await prisma.product.groupBy({
+      by: ["category"],
+      _count: {
+        _all: true,
+      },
+    });
+
+    const categoryCountLookup = new Map<string, number>();
+    const subCategoryCountLookup = new Map<string, number>();
+
+    for (const row of productCountByCategory) {
+      const categoryKey = row.category.toLowerCase();
+      const categoryCatalog = PRODUCT_CATEGORY_CATALOG.find(
+        (category) => category.title.toLowerCase() === categoryKey
+      );
+      const count = row._count._all;
+
+      if (categoryCatalog) {
+        categoryCountLookup.set(
+          categoryKey,
+          (categoryCountLookup.get(categoryKey) ?? 0) + count
+        );
+      } else {
+        for (const category of PRODUCT_CATEGORY_CATALOG) {
+          const matchedSubCategory = category.subcategories.find(
+            (subCategory) => subCategory.title.toLowerCase() === categoryKey
+          );
+
+          if (matchedSubCategory) {
+            categoryCountLookup.set(
+              category.title.toLowerCase(),
+              (categoryCountLookup.get(category.title.toLowerCase()) ?? 0) + count
+            );
+            subCategoryCountLookup.set(
+              `${category.title.toLowerCase()}::${matchedSubCategory.title.toLowerCase()}`,
+              (subCategoryCountLookup.get(
+                `${category.title.toLowerCase()}::${matchedSubCategory.title.toLowerCase()}`
+              ) ?? 0) + count
+            );
+          }
+        }
+      }
+    }
+
+    const categoriesWithCounts = PRODUCT_CATEGORY_CATALOG.map((category) => {
+      const categoryTotal = categoryCountLookup.get(category.title.toLowerCase()) ?? 0;
+
+      return {
+        ...category,
+        productCount: categoryTotal,
+        subcategories: category.subcategories.map((subCategory) => ({
+          ...subCategory,
+          productCount:
+            subCategoryCountLookup.get(
+              `${category.title.toLowerCase()}::${subCategory.title.toLowerCase()}`
+            ) ?? 0,
+        })),
+      };
+    });
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        categoriesWithCounts,
+        "Product categories fetched successfully"
       )
     );
   }
@@ -412,4 +510,5 @@ export {
   updateProduct,
   deleteProduct,
   getProductsForClient,
+  getProductCategories,
 };

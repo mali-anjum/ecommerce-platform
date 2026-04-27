@@ -8,6 +8,7 @@ import {
   getProductByID,
   updateProduct,
   getProductsForClient,
+  getProductCategories,
 } from "../controllers/productController";
 
 const router = express.Router();
@@ -28,6 +29,7 @@ router.get(
 );
 
 router.get("/fetch-client-products", getProductsForClient);
+router.get("/categories", getProductCategories);
 router.get("/:id", authenticateJwt, getProductByID);
 router.put("/:id", authenticateJwt, isSuperAdmin, updateProduct);
 router.delete("/:id", authenticateJwt, isSuperAdmin, deleteProduct);

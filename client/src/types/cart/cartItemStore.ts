@@ -4,8 +4,8 @@ export interface CartItem {
   name: string;
   price: number;
   image: string;
-  color: string;
-  size: string;
+  color?: string | null;
+  size?: string | null;
   quantity: number;
   maxQuantity?: number;
   isAvailable?: boolean;
@@ -17,8 +17,8 @@ export interface CartItemWithProduct {
   id: string;
   productId: string;
   quantity: number;
-  size: string;
-  color: string;
+  size?: string | null;
+  color?: string | null;
   product: {
     id: string;
     name: string;

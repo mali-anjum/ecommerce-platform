@@ -18,8 +18,8 @@ export interface CartItemWithProduct {
   id: string;
   productId: string;
   quantity: number;
-  size?: string;
-  color?: string;
+  size?: string | null;
+  color?: string | null;
   product: {
     id: string;
     name: string;
@@ -48,8 +48,8 @@ export interface PaymentOrderRequest {
     productName: string;
     productCategory?: string;
     quantity: number;
-    size?: string;
-    color?: string;
+    size?: string | null;
+    color?: string | null;
     price: number;
   }>;
   total: number;

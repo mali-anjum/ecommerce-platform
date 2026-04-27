@@ -562,7 +562,7 @@ function ProductDetailsContent({ id }: { id: string }) {
   const { toast } = useToast();
   const router = useRouter();
   const [selectedImage, setSelectedImage] = useState(0);
-  const [selectedColor, setSelectedColor] = useState(0);
+  const [selectedColor, setSelectedColor] = useState<number | null>(null);
   const [selectedSize, setSelectedSize] = useState("");
   const [quantity, setQuantity] = useState(1);
 
@@ -573,9 +573,16 @@ function ProductDetailsContent({ id }: { id: string }) {
 
       if (productData) {
         setProduct(productData);
-        // Set default size if available
+        // Set default variant selections only when options exist.
         if (productData.sizes?.length > 0) {
           setSelectedSize(productData.sizes[0]);
+        } else {
+          setSelectedSize("");
+        }
+        if (productData.colors?.length > 0) {
+          setSelectedColor(0);
+        } else {
+          setSelectedColor(null);
         }
       } else {
         router.push("/404");
@@ -585,15 +592,24 @@ function ProductDetailsContent({ id }: { id: string }) {
     fetchProduct();
   }, [id, getProductById, router]);
 
+  const hasSizeOptions = Array.isArray(product?.sizes) && product.sizes.length > 0;
+  const hasColorOptions = Array.isArray(product?.colors) && product.colors.length > 0;
+  const selectedColorValue =
+    selectedColor !== null && hasColorOptions ? product?.colors?.[selectedColor] : undefined;
+  const canAddToCart =
+    !!product &&
+    (!hasSizeOptions || !!selectedSize) &&
+    (!hasColorOptions || selectedColorValue !== undefined);
+
   const handleAddToCart = useCallback(() => {
-    if (product && selectedSize) {
+    if (product && canAddToCart) {
       addToCart({
         productId: product.id,
         name: product.name,
         price: product.price,
         image: product.images[0],
-        color: product.colors[selectedColor],
-        size: selectedSize,
+        color: selectedColorValue ?? "Default",
+        size: hasSizeOptions ? selectedSize : "",
         quantity: quantity,
       });
 
@@ -604,12 +620,21 @@ function ProductDetailsContent({ id }: { id: string }) {
       });
     } else {
       toast({
-        title: "⚠️ Select Size",
-        description: "Please select a size before adding to cart",
+        title: "⚠️ Select Options",
+        description: "Please select required options before adding to cart",
         variant: "destructive",
       });
     }
-  }, [product, selectedColor, selectedSize, quantity, addToCart, toast]);
+  }, [
+    product,
+    canAddToCart,
+    selectedColorValue,
+    hasSizeOptions,
+    selectedSize,
+    quantity,
+    addToCart,
+    toast,
+  ]);
 
   const handleIncrement = useCallback(() => {
     setQuantity(prev => prev + 1);
@@ -671,17 +696,29 @@ function ProductDetailsContent({ id }: { id: string }) {
             <ProductInfo product={product} />
 
             <div className="space-y-8 mt-8">
-              <ColorSelector
-                colors={product.colors}
-                selectedColor={selectedColor}
-                onSelect={setSelectedColor}
-              />
+              {hasColorOptions ? (
+                <ColorSelector
+                  colors={product.colors}
+                  selectedColor={selectedColor ?? 0}
+                  onSelect={setSelectedColor}
+                />
+              ) : (
+                <div className="rounded-lg border border-border p-4 text-sm text-muted-foreground">
+                  This product has no color variants.
+                </div>
+              )}
 
-              <SizeSelector
-                sizes={product.sizes}
-                selectedSize={selectedSize}
-                onSelect={setSelectedSize}
-              />
+              {hasSizeOptions ? (
+                <SizeSelector
+                  sizes={product.sizes}
+                  selectedSize={selectedSize}
+                  onSelect={setSelectedSize}
+                />
+              ) : (
+                <div className="rounded-lg border border-border p-4 text-sm text-muted-foreground">
+                  No size selection is required for this product.
+                </div>
+              )}
 
               <QuantitySelector
                 quantity={quantity}
@@ -693,9 +730,9 @@ function ProductDetailsContent({ id }: { id: string }) {
                 <Button
                   className="w-full py-6 text-lg rounded-xl bg-primary text-primary-foreground hover:bg-primary-light neon-border hover:scale-[1.02] transition-all duration-300"
                   onClick={handleAddToCart}
-                  disabled={!selectedSize}
+                  disabled={!canAddToCart}
                 >
-                  {!selectedSize ? "SELECT SIZE" : "ADD TO CART"}
+                  {!canAddToCart ? "SELECT REQUIRED OPTIONS" : "ADD TO CART"}
                 </Button>
 
                 <div className="grid grid-cols-2 gap-3">
