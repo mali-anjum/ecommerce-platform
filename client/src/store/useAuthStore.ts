@@ -7,6 +7,7 @@ import type { User } from "@/types/auth/User";
 import type { TokenExpiryInfoBackendRes } from "@/types/auth/TokenExpiryInfoFromBackend";
 import type { Session } from "@/types/auth/Session";
 import { authLogger } from "@/utils/Logger";
+import { normalizeRefreshResponseTokenInfo } from "@/lib/auth/normalizeTokenInfo";
 
 interface AuthStore {
   user: User | null;
@@ -30,6 +31,7 @@ interface AuthStore {
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   refreshAccessToken: () => Promise<boolean>;
+  heartbeat: () => Promise<void>;
   getTokenExpiryInfo: () => {
     isValid: boolean;
     timeUntilExpiry: number;
@@ -271,6 +273,17 @@ export const useAuthStore = create<AuthStore>()(
         }
       },
 
+
+      heartbeat: async () => {
+        try {
+          await axiosInstance.post("/heartbeat");
+        } catch (error) {
+          if (process.env.NODE_ENV === "development") {
+            console.warn("AuthStore: heartbeat failed", error);
+          }
+        }
+      },
+
       refreshAccessToken: async () => {
         const state = get();
 
@@ -295,31 +308,22 @@ export const useAuthStore = create<AuthStore>()(
             const duration = performance.now() - startTime;
 
             if (res.data.success && res.data.tokenInfo) {
-              const serverRefreshedAt = res.data.tokenInfo.refreshedAt
-                ? Date.parse(res.data.tokenInfo.refreshedAt)
-                : Date.now();
-
-              // ✅ CORRECT: Convert ALL server seconds to milliseconds
-              const accessTokenExpiresInMs =
-                res.data.tokenInfo.accessTokenExpiresIn * 1000;
-              const suggestedRefreshTimeMs =
-                res.data.tokenInfo.suggestedRefreshTime * 1000;
+              const norm = normalizeRefreshResponseTokenInfo(res.data.tokenInfo);
 
               const expiryData: TokenExpiryInfoBackendRes = {
-                refreshedAt: serverRefreshedAt,
-                accessTokenExpiresIn: accessTokenExpiresInMs, // duration in ms
-                suggestedRefreshTime:
-                  serverRefreshedAt + suggestedRefreshTimeMs, // absolute timestamp
+                refreshedAt: norm.refreshedAt,
+                accessTokenExpiresIn: norm.accessTokenExpiresInMs,
+                suggestedRefreshTime: norm.suggestedRefreshAtMs,
               };
 
               authLogger.auth("Token refresh successful", {
                 duration: `${duration.toFixed(2)}ms`,
-                accessTokenExpiresIn: `${accessTokenExpiresInMs}ms`,
+                accessTokenExpiresIn: `${norm.accessTokenExpiresInMs}ms`,
                 suggestedRefreshTime: new Date(
                   expiryData.suggestedRefreshTime
                 ).toISOString(),
                 expiresAt: new Date(
-                  serverRefreshedAt + accessTokenExpiresInMs
+                  norm.refreshedAt + norm.accessTokenExpiresInMs
                 ).toISOString(),
               });
 

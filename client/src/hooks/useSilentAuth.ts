@@ -6,7 +6,7 @@ import { authLogger } from "@/utils/Logger";
 import { getSafeISOString } from "@/utils/getSafeISOString";
 
 export default function useSilentAuth(enabled = true) {
-  const { refreshAccessToken, checkSession, getTokenExpiryInfo } =
+  const { refreshAccessToken, checkSession, getTokenExpiryInfo, heartbeat } =
     useAuthStore();
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -211,6 +211,10 @@ export default function useSilentAuth(enabled = true) {
           authLogger.debug("No valid session found, not scheduling refresh");
         }
       } else {
+        if (sessionInfo.hasAccessToken) {
+          // Keep backend activity timestamp fresh while user is active.
+          await heartbeat();
+        }
         authLogger.debug("Token does not need immediate refresh", {
           timeUntilExpiry: expiryInfo.timeUntilExpiry,
           shouldRefresh: expiryInfo.shouldRefresh,
@@ -224,6 +228,7 @@ export default function useSilentAuth(enabled = true) {
     scheduleTokenRefresh,
     getTokenExpiryInfo,
     performTokenRefresh,
+    heartbeat,
   ]);
 
   useEffect(() => {
