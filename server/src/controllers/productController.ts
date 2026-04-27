@@ -278,6 +278,7 @@ const getProductByID = asyncHandler(
         images: true,
         brand: true,
         category: true,
+        subcategoryId: true,
         sizes: true,
         colors: true,
         createdAt: true,
