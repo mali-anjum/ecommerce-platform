@@ -17,7 +17,8 @@ function SuperAdminLayout({ children }: { children: React.ReactNode }) {
       <div
         className={cn(
           "transition-all duration-300",
-          isSidebarOpen ? "ml-64" : "ml-16",
+          // Align with sidebar: w-72 expanded, w-20 collapsed
+          isSidebarOpen ? "ml-72" : "ml-20",
           "min-h-screen"
         )}
       >

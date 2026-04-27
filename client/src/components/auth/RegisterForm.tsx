@@ -59,7 +59,8 @@ export const RegisterForm = () => {
               height={45} 
               alt="Company Logo" 
               priority 
-              className="relative z-10"
+              className="relative z-10 max-w-[180px] h-auto"
+              style={{ width: "auto", height: "auto" }}
               onError={(e) => {
                 console.error('Logo failed to load');
                 e.currentTarget.style.display = 'none';
