@@ -281,7 +281,10 @@ export const useAuthStore = create<AuthStore>()(
 
       heartbeat: async () => {
         try {
-          await axiosInstance.post("/heartbeat");
+          const res = await axiosInstance.post("/heartbeat");
+          if (res.data?.tokenInfo) {
+            get().updateTokenExpiry(res.data.tokenInfo);
+          }
         } catch (error) {
           if (process.env.NODE_ENV === "development") {
             console.warn("AuthStore: heartbeat failed", error);

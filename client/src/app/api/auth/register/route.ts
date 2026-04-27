@@ -1,6 +1,7 @@
 // app/api/auth/register/route.ts
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { extractSetCookieHeaders } from "@/lib/api/extractSetCookieHeaders";
 
 export async function POST(req: NextRequest) {
     const BACKEND_URL =
@@ -62,13 +63,9 @@ export async function POST(req: NextRequest) {
     const responseData = await backendRes.json();
     const response = NextResponse.json(responseData, { status: backendRes.status });
 
-    // ✅ Proper cookie handling for multiple cookies
-    const setCookieHeaders = backendRes.headers.getSetCookie();
-    if (setCookieHeaders?.length > 0) {
-      for (const cookie of setCookieHeaders) {
-        response.headers.append('Set-Cookie', cookie);
-      }
-      console.log(`🍪 Registered and set ${setCookieHeaders.length} cookies`);
+    const setCookieHeaders = extractSetCookieHeaders(backendRes);
+    for (const cookie of setCookieHeaders) {
+      response.headers.append("Set-Cookie", cookie);
     }
 
     return response;

@@ -1,6 +1,7 @@
 // app/api/auth/login/route.ts - PRODUCTION READY
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { extractSetCookieHeaders } from "@/lib/api/extractSetCookieHeaders";
 
 // Constants for better maintainability
 const ERROR_MESSAGES = {
@@ -123,16 +124,19 @@ export async function POST(req: NextRequest) {
       status: backendRes.status,
     });
 
-    const setCookieHeaders = backendRes.headers.getSetCookie();
+    const setCookieHeaders = extractSetCookieHeaders(backendRes);
 
-    if (setCookieHeaders?.length > 0) {
+    if (setCookieHeaders.length > 0) {
       console.log(
         `🍪 Forwarding ${setCookieHeaders.length} cookies from backend`
       );
-      // ✅ Improved cookie handling with for...of
       for (const cookie of setCookieHeaders) {
         response.headers.append("Set-Cookie", cookie);
       }
+    } else {
+      console.warn(
+        "[CLIENT_LOGIN_PROXY] No Set-Cookie headers from backend — tokens will not persist in browser. Check Express login + Node fetch getSetCookie."
+      );
     }
 
     // Add security headers

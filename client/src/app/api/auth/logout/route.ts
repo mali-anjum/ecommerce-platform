@@ -1,6 +1,7 @@
 // app/api/auth/logout/route.ts
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { extractSetCookieHeaders } from "@/lib/api/extractSetCookieHeaders";
 
 export async function POST(req: NextRequest) {
    const BACKEND_URL =
@@ -51,20 +52,36 @@ export async function POST(req: NextRequest) {
     const response = NextResponse.json(responseData, { status: backendRes.status });
 
     // ✅ Clear cookies properly on logout
-    const setCookieHeaders = backendRes.headers.getSetCookie();
-    if (setCookieHeaders?.length > 0) {
+    const setCookieHeaders = extractSetCookieHeaders(backendRes);
+    if (setCookieHeaders.length > 0) {
       for (const cookie of setCookieHeaders) {
         response.headers.append('Set-Cookie', cookie);
       }
       console.log(`🔒 Logout processed - cleared ${setCookieHeaders.length} cookies`);
     } else {
-      // Fallback: Clear cookies manually if backend doesn't
-      const domain = process.env.NODE_ENV === 'production' 
-        ? '.ecommerce-platform-with-prisma.vercel.app' 
-        : 'localhost';
-      
-      response.headers.append('Set-Cookie', `accessToken=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0; Domain=${domain}`);
-      response.headers.append('Set-Cookie', `refreshToken=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0; Domain=${domain}`);
+      // Fallback: must match how `authController` sets cookies (dev: no Secure; prod: Secure + SameSite=None).
+      const isProd = process.env.NODE_ENV === "production";
+      if (isProd) {
+        const domain = ".ecommerce-platform-with-prisma.vercel.app";
+        response.headers.append(
+          "Set-Cookie",
+          `accessToken=; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=0; Domain=${domain}`
+        );
+        response.headers.append(
+          "Set-Cookie",
+          `refreshToken=; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=0; Domain=${domain}`
+        );
+      } else {
+        // localhost: host-only cookies (no Domain); Secure would not match login cookies on http://
+        response.headers.append(
+          "Set-Cookie",
+          `accessToken=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`
+        );
+        response.headers.append(
+          "Set-Cookie",
+          `refreshToken=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`
+        );
+      }
     }
 
     return response;
