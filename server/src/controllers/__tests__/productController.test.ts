@@ -1,6 +1,7 @@
 import type { NextFunction, Response } from "express";
 
 const findUniqueMock = jest.fn();
+const createMock = jest.fn();
 
 jest.mock("../../config/cloudinary", () => ({
   __esModule: true,
@@ -15,11 +16,12 @@ jest.mock("../../lib/prisma", () => ({
   prisma: {
     product: {
       findUnique: (...args: unknown[]) => findUniqueMock(...args),
+      create: (...args: unknown[]) => createMock(...args),
     },
   },
 }));
 
-import { getProductByID } from "../productController";
+import { createProduct, getProductByID } from "../productController";
 
 describe("getProductByID", () => {
   it("returns product data including subcategoryId", async () => {
@@ -67,5 +69,71 @@ describe("getProductByID", () => {
       })
     );
     expect(next).not.toHaveBeenCalled();
+  });
+});
+
+describe("createProduct validation", () => {
+  it("rejects create requests without sizes", async () => {
+    const req = {
+      body: {
+        name: "Trail Running Shoes",
+        brand: "peak",
+        description: "Lightweight",
+        category: "Shoes",
+        gender: "men",
+        sizes: "",
+        colors: "black",
+        price: "120",
+        stock: "10",
+        image: "https://img.test/1.png",
+      },
+      files: [],
+    } as any;
+    const status = jest.fn().mockReturnThis();
+    const json = jest.fn().mockReturnThis();
+    const res = { status, json } as unknown as Response;
+    const next = jest.fn() as NextFunction;
+
+    createProduct(req, res, next);
+    await new Promise(process.nextTick);
+
+    expect(createMock).not.toHaveBeenCalled();
+    expect(next).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: "At least one size is required",
+      })
+    );
+  });
+
+  it("rejects create requests without colors", async () => {
+    const req = {
+      body: {
+        name: "Trail Running Shoes",
+        brand: "peak",
+        description: "Lightweight",
+        category: "Shoes",
+        gender: "men",
+        sizes: "42,43",
+        colors: "",
+        price: "120",
+        stock: "10",
+        image: "https://img.test/1.png",
+      },
+      files: [],
+    } as any;
+    const status = jest.fn().mockReturnThis();
+    const json = jest.fn().mockReturnThis();
+    const res = { status, json } as unknown as Response;
+    const next = jest.fn() as NextFunction;
+
+    createProduct(req, res, next);
+    await new Promise(process.nextTick);
+
+    expect(createMock).not.toHaveBeenCalled();
+    expect(next).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: "At least one color is required",
+      })
+    );
   });
 });

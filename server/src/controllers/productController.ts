@@ -57,11 +57,12 @@ const createProduct = asyncHandler(
         !name ||
         !brand ||
         !category ||
+        !gender ||
         price === undefined ||
         stock === undefined
       ) {
         throw new ValidationError(
-          "Missing required fields: name, brand, category, price, stock"
+          "Missing required fields: name, brand, category, gender, price, stock"
         );
       }
 
@@ -109,6 +110,12 @@ const createProduct = asyncHandler(
 
       const processedSizes = parseMaybeArray(sizes);
       const processedColors = parseMaybeArray(colors);
+      if (processedSizes.length === 0) {
+        throw new ValidationError("At least one size is required");
+      }
+      if (processedColors.length === 0) {
+        throw new ValidationError("At least one color is required");
+      }
 
       const parsedPrice = typeof price === "number" ? price : Number(price);
       const parsedStock = typeof stock === "number" ? stock : Number(stock);
@@ -311,6 +318,14 @@ const updateProduct = asyncHandler(
       stock,
       rating,
     } = req.body;
+    const processedSizes = parseMaybeArray(sizes);
+    const processedColors = parseMaybeArray(colors);
+    if (processedSizes.length === 0) {
+      throw new ValidationError("At least one size is required");
+    }
+    if (processedColors.length === 0) {
+      throw new ValidationError("At least one color is required");
+    }
 
     let resolvedCategory = category as string | undefined;
     let subcategoryIdUpdate: string | null | undefined = undefined;
@@ -351,11 +366,16 @@ const updateProduct = asyncHandler(
           ? { subcategoryId: subcategoryIdUpdate }
           : {}),
         gender,
-        sizes: sizes.split(","),
-        colors: colors.split(","), // ✅ FIXED: colors.split instead of sizes.split
+        sizes: processedSizes,
+        colors: processedColors,
         price: parseFloat(price),
         stock: parseInt(stock), // ✅ Better: parseInt for stock
-        rating: parseInt(rating),
+        ...(rating !== undefined &&
+        rating !== null &&
+        String(rating).trim() !== "" &&
+        !Number.isNaN(Number(rating))
+          ? { rating: Number(rating) }
+          : {}),
       },
     });
 

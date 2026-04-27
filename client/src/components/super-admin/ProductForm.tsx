@@ -537,6 +537,7 @@ function SizeSelection({
         {sizes.map((item) => (
           <Button
             key={item}
+            type="button"
             onClick={() => onToggleSize(item)}
             variant="outline"
             size="sm"
@@ -766,6 +767,33 @@ function ProductForm() {
 
   const handleFormSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (selectedSizes.length === 0) {
+      toast({
+        title: "Validation Error",
+        description: "Please select at least one size.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (selectedColors.length === 0) {
+      toast({
+        title: "Validation Error",
+        description: "Please select at least one color.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!isEditMode && selectedFiles.length === 0) {
+      toast({
+        title: "Validation Error",
+        description: "Please upload at least one product image.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     const checkFirstLevelFormSanitization = await protectProductFormAction();
 
