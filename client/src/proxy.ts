@@ -1,20 +1,31 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
 const publicRoutes = ["/auth/register", "/auth/login"];
-const superAdminRoutes = ["/super-admin", "/super-admin/:path*"];
+const superAdminRoutes = ["/super-admin"];
 const userRoutes = ["/home"];
 
+const jwtSecret = process.env.JWT_SECRET;
+
 export async function proxy(request: NextRequest) {
-  const accessToken = request.cookies.get("accessToken")?.value;
   const { pathname } = request.nextUrl;
 
-  // If user is trying to access a public page and already has a valid token, redirect
+  if (!jwtSecret) {
+    console.error("proxy: JWT_SECRET is not set");
+    if (publicRoutes.includes(pathname)) {
+      return NextResponse.next();
+    }
+    return NextResponse.redirect(new URL("/auth/login", request.url));
+  }
+
+  const accessToken = request.cookies.get("accessToken")?.value;
+
   if (accessToken) {
     try {
       const { payload } = await jwtVerify(
         accessToken,
-        new TextEncoder().encode(process.env.JWT_SECRET)
+        new TextEncoder().encode(jwtSecret)
       );
       const { role } = payload as { role: string };
 
@@ -24,7 +35,6 @@ export async function proxy(request: NextRequest) {
         );
       }
 
-      // role-based redirects
       if (
         role === "SUPER_ADMIN" &&
         userRoutes.some((route) => pathname.startsWith(route))
@@ -39,9 +49,7 @@ export async function proxy(request: NextRequest) {
       }
 
       return NextResponse.next();
-    } catch (_err) {
-      // token is invalid or expired: let the client handle refresh
-      // do NOT attempt server-side refresh here
+    } catch {
       if (!publicRoutes.includes(pathname)) {
         return NextResponse.redirect(new URL("/auth/login", request.url));
       }
@@ -49,7 +57,6 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // No access token and not a public route -> redirect to login
   if (!publicRoutes.includes(pathname)) {
     return NextResponse.redirect(new URL("/auth/login", request.url));
   }

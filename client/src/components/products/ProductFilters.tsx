@@ -1,10 +1,12 @@
 "use client";
 
+import { useEffect, useMemo } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { brands, categories, sizes } from "@/utils/config";
+import { brands, categories as defaultCategories, sizes } from "@/utils/config";
+import { useCategoryStore } from "@/store/useCategoryStore";
 
 const colors = [
   { name: "Navy", class: "bg-[#0F172A]" },
@@ -24,7 +26,12 @@ interface ProductFiltersProps {
   selectedSizes: string[];
   selectedColors: string[];
   selectedBrands: string[];
-  onToggleFilter: (filterType: "categories" | "sizes" | "brands" | "colors", value: string) => void;
+  onToggleFilter: (
+    filterType: "categories" | "sizes" | "brands" | "colors",
+    value: string
+  ) => void;
+  /** Hide category checkboxes when department is chosen via URL / header dropdown */
+  hideCategories?: boolean;
 }
 
 export function ProductFilters({
@@ -35,26 +42,44 @@ export function ProductFilters({
   selectedColors,
   selectedBrands,
   onToggleFilter,
+  hideCategories = false,
 }: ProductFiltersProps) {
+  const { categories, fetchCategories } = useCategoryStore();
+
+  useEffect(() => {
+    void fetchCategories();
+  }, [fetchCategories]);
+
+  const flatCategoryOptions = useMemo(() => {
+    if (categories.length === 0) return defaultCategories;
+
+    return categories.flatMap((category) => [
+      category.title,
+      ...category.subcategories.map((subCategory) => subCategory.title),
+    ]);
+  }, [categories]);
+
   return (
     <div className="space-y-6">
-      <div>
-        <h3 className="mb-3 font-semibold">Categories</h3>
-        <div className="space-y-2">
-          {categories.map((category) => (
-            <div key={category} className="flex items-center">
-              <Checkbox
-                checked={selectedCategories.includes(category)}
-                onCheckedChange={() => onToggleFilter("categories", category)}
-                id={`category-${category}`}
-              />
-              <Label htmlFor={`category-${category}`} className="ml-2 text-sm">
-                {category}
-              </Label>
-            </div>
-          ))}
+      {!hideCategories && (
+        <div>
+          <h3 className="mb-3 font-semibold">Categories</h3>
+          <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+            {flatCategoryOptions.map((category) => (
+              <div key={category} className="flex items-center">
+                <Checkbox
+                  checked={selectedCategories.includes(category)}
+                  onCheckedChange={() => onToggleFilter("categories", category)}
+                  id={`category-${category}`}
+                />
+                <Label htmlFor={`category-${category}`} className="ml-2 text-sm">
+                  {category}
+                </Label>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       <div>
         <h3 className="mb-3 font-semibold">Brands</h3>

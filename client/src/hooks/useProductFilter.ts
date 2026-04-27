@@ -55,6 +55,10 @@ export const useProductFilters = () => {
     setSortOrder("desc");
   }, []);
 
+  const clearSelectedCategories = useCallback(() => {
+    setSelectedCategories([]);
+  }, []);
+
   return {
     priceRange,
     setPriceRange,
@@ -68,5 +72,6 @@ export const useProductFilters = () => {
     handleSortChange,
     getFilters,
     resetFilters,
+    clearSelectedCategories,
   };
 };

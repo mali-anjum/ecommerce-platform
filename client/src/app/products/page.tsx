@@ -246,16 +246,13 @@ import {
   AlertCircle,
   ChevronDown,
   Eye,
-  ShoppingBag,
   Target,
-  BarChart3
 } from "lucide-react";
-import { useEffect, useCallback, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect, useCallback, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import { useCategoryStore } from "@/store/useCategoryStore";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Tooltip,
@@ -387,28 +384,85 @@ function FiltersBar({
   selectedBrands,
   onToggleFilter,
 }: FiltersBarProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { categories, fetchCategories } = useCategoryStore();
+
+  useEffect(() => {
+    void fetchCategories();
+  }, [fetchCategories]);
+
+  const departmentValue = useMemo(() => {
+    const main = searchParams.get("mainCategory")?.trim() ?? "";
+    const sub = searchParams.get("subcategory")?.trim() ?? "";
+    if (!main) return "all";
+    return sub ? `${main}::${sub}` : main;
+  }, [searchParams]);
+
+  const handleDepartmentChange = (value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("mainCategory");
+    params.delete("subcategory");
+    if (value !== "all") {
+      const idx = value.indexOf("::");
+      const main = idx === -1 ? value : value.slice(0, idx);
+      const sub = idx === -1 ? "" : value.slice(idx + 2);
+      if (main) params.set("mainCategory", main);
+      if (sub) params.set("subcategory", sub);
+    }
+    const qs = params.toString();
+    router.replace(qs ? `/products?${qs}` : "/products");
+  };
+
   return (
     <div className="glass-effect rounded-2xl p-4 border border-glass-border mb-8">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        {/* Search Bar */}
-        <div className="relative flex-1 max-w-lg">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search futuristic products..."
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-10 bg-input border-border focus:ring-primary/50"
-          />
-          {searchQuery && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onSearchChange("")}
-              className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6"
-            >
-              <X className="h-3 w-3" />
-            </Button>
-          )}
+        {/* Department (Amazon-style) + search */}
+        <div className="flex flex-1 flex-col gap-2 min-w-0 max-w-full lg:max-w-3xl sm:flex-row sm:items-stretch">
+          <label className="sr-only" htmlFor="shop-department">
+            Department
+          </label>
+          <select
+            id="shop-department"
+            value={departmentValue}
+            onChange={(e) => handleDepartmentChange(e.target.value)}
+            className="h-10 w-full sm:w-[200px] shrink-0 rounded-l-md sm:rounded-l-md sm:rounded-r-none border border-border bg-input px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+          >
+            <option value="all">All Departments</option>
+            {categories.map((category) => (
+              <optgroup key={category.slug} label={category.title}>
+                <option value={category.title}>{category.title}</option>
+                {category.subcategories.map((sub) => (
+                  <option
+                    key={`${category.slug}-${sub.slug}`}
+                    value={`${category.title}::${sub.title}`}
+                  >
+                    {sub.title}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+          <div className="relative flex-1 min-w-0">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search futuristic products..."
+              value={searchQuery}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="h-10 pl-10 pr-9 bg-input border-border focus:ring-primary/50 rounded-md sm:rounded-l-none sm:rounded-r-md w-full"
+            />
+            {searchQuery && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => onSearchChange("")}
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Controls */}
@@ -497,6 +551,7 @@ function FiltersBar({
                 selectedColors={selectedColors}
                 selectedBrands={selectedBrands}
                 onToggleFilter={onToggleFilter}
+                hideCategories
               />
             </DialogContent>
           </Dialog>
@@ -632,8 +687,11 @@ function ErrorState({ error, onRetry }: { error: string; onRetry: () => void }) 
 // ==================== MAIN COMPONENT ====================
 
 function ProductListingPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const mainCategoryQs = searchParams.get("mainCategory") ?? undefined;
+  const subcategoryQs = searchParams.get("subcategory") ?? undefined;
+  const urlSearchQs = searchParams.get("search") ?? "";
 
   const {
     priceRange,
@@ -648,6 +706,7 @@ function ProductListingPage() {
     handleSortChange,
     getFilters,
     resetFilters,
+    clearSelectedCategories,
   } = useProductFilters();
 
   const {
@@ -661,10 +720,18 @@ function ProductListingPage() {
     error,
   } = useProductStore();
 
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(urlSearchQs);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [collectionTab, setCollectionTab] = useState("all");
+
+  useEffect(() => {
+    setSearchQuery(urlSearchQs);
+  }, [urlSearchQs]);
+
+  useEffect(() => {
+    clearSelectedCategories();
+  }, [mainCategoryQs, subcategoryQs, clearSelectedCategories]);
 
   // Debounce search
   useEffect(() => {
@@ -677,16 +744,20 @@ function ProductListingPage() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [collectionTab, debouncedSearch, mainCategoryQs, setCurrentPage]);
+  }, [collectionTab, debouncedSearch, mainCategoryQs, subcategoryQs, setCurrentPage]);
 
   // Fetch products with filters + URL-driven department (`mainCategory`) + collection tabs
   const fetchAllProducts = useCallback(() => {
+    const filters = getFilters();
     fetchProductsForClient({
-      ...getFilters(),
+      ...filters,
+      categories:
+        mainCategoryQs || subcategoryQs ? undefined : filters.categories,
       search: debouncedSearch || undefined,
       page: currentPage,
       limit: 12,
       mainCategory: mainCategoryQs,
+      subcategory: subcategoryQs,
       collection: toApiCollection(collectionTab),
     });
   }, [
@@ -695,6 +766,7 @@ function ProductListingPage() {
     fetchProductsForClient,
     debouncedSearch,
     mainCategoryQs,
+    subcategoryQs,
     collectionTab,
   ]);
 
@@ -735,9 +807,17 @@ function ProductListingPage() {
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Collection Tabs */}
-        {mainCategoryQs && (
+        {(mainCategoryQs || subcategoryQs || urlSearchQs) && (
           <p className="text-sm text-muted-foreground mb-4">
-            Department filter: <span className="text-foreground font-medium">{decodeURIComponent(mainCategoryQs)}</span>
+            {mainCategoryQs && (
+              <>Department: <span className="text-foreground font-medium">{decodeURIComponent(mainCategoryQs)}</span></>
+            )}
+            {subcategoryQs && (
+              <> {" "}• Subcategory: <span className="text-foreground font-medium">{decodeURIComponent(subcategoryQs)}</span></>
+            )}
+            {urlSearchQs && (
+              <> {" "}• Search: <span className="text-foreground font-medium">{decodeURIComponent(urlSearchQs)}</span></>
+            )}
           </p>
         )}
 
@@ -766,81 +846,7 @@ function ProductListingPage() {
           onToggleFilter={handleToggleFilter}
         />
 
-        {/* Layout */}
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar Filters - Desktop */}
-          <div className="hidden lg:block w-72 flex-shrink-0">
-            <Card className="glass-effect border border-glass-border sticky top-8">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-                    <Filter className="h-5 w-5 text-primary" />
-                    Filters
-                  </h3>
-                  {activeFilterCount > 0 && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        resetFilters();
-                        setSearchQuery("");
-                      }}
-                      className="text-primary hover:text-primary-light"
-                    >
-                      <X className="h-4 w-4 mr-1" />
-                      Clear All
-                    </Button>
-                  )}
-                </div>
-                
-                <FiltersComponent
-                  priceRange={priceRange}
-                  setPriceRange={setPriceRange}
-                  selectedCategories={selectedCategories}
-                  selectedSizes={selectedSizes}
-                  selectedColors={selectedColors}
-                  selectedBrands={selectedBrands}
-                  onToggleFilter={handleToggleFilter}
-                />
-              </CardContent>
-            </Card>
-
-            {/* Quick Stats */}
-            <Card className="glass-effect border border-glass-border mt-4">
-              <CardContent className="p-6">
-                <h4 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-                  <BarChart3 className="h-4 w-4 text-primary" />
-                  Collection Stats
-                </h4>
-                <div className="space-y-3">
-                  <div>
-                    <div className="flex items-center justify-between text-sm mb-1">
-                      <span className="text-muted-foreground">New Arrivals</span>
-                      <span className="font-medium text-foreground">24</span>
-                    </div>
-                    <Progress value={80} className="h-1" />
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between text-sm mb-1">
-                      <span className="text-muted-foreground">Trending</span>
-                      <span className="font-medium text-foreground">42</span>
-                    </div>
-                    <Progress value={65} className="h-1" />
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between text-sm mb-1">
-                      <span className="text-muted-foreground">AI Picks</span>
-                      <span className="font-medium text-foreground">12</span>
-                    </div>
-                    <Progress value={90} className="h-1" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Main Content Area */}
-          <div className="flex-1">
+        <div>
             {/* Results Summary */}
             <ResultsSummary
               isLoading={isLoading}
@@ -891,14 +897,15 @@ function ProductListingPage() {
                       </div>
                       <Button
                         onClick={() => {
+                          resetFilters();
                           setSearchQuery("");
-                          // Reset filters
+                          router.replace("/products");
                         }}
                         variant="outline"
                         className="mt-2"
                       >
                         <RefreshCw className="h-4 w-4 mr-2" />
-                        Reset Filters
+                        Clear filters and department
                       </Button>
                     </div>
                   </div>
@@ -920,7 +927,6 @@ function ProductListingPage() {
                 </Button>
               </div>
             )}
-          </div>
         </div>
       </div>
 

@@ -1,187 +1,3 @@
-// "use client";
-
-// import { Button } from "@/components/ui/button";
-// import { useSettingsStore } from "@/store/useSettingsStore";
-// import { useEffect, useState } from "react";
-
-// const gridItems = [
-//   {
-//     title: "WOMEN",
-//     subtitle: "From world's top designer",
-//     image:
-//       "https://images.unsplash.com/photo-1614251056216-f748f76cd228?q=80&w=1974&auto=format&fit=crop",
-//   },
-//   {
-//     title: "FALL LEGENDS",
-//     subtitle: "Timeless cool weather",
-//     image:
-//       "https://avon-demo.myshopify.com/cdn/shop/files/demo1-winter1_600x.png?v=1733380268",
-//   },
-//   {
-//     title: "ACCESSORIES",
-//     subtitle: "Everything you need",
-//     image:
-//       "https://avon-demo.myshopify.com/cdn/shop/files/demo1-winter4_600x.png?v=1733380275",
-//   },
-//   {
-//     title: "HOLIDAY SPARKLE EDIT",
-//     subtitle: "Party season ready",
-//     image:
-//       "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1974&auto=format&fit=crop",
-//   },
-// ];
-
-// function HomePage() {
-//   const [currentSlide, setCurrentSlide] = useState(0);
-//   const { banners, featuredProducts, fetchFeaturedProducts, fetchBanners } =
-//     useSettingsStore();
-
-//   useEffect(() => {
-//     fetchBanners();
-//     fetchFeaturedProducts();
-//   }, [fetchBanners, fetchFeaturedProducts]);
-
-//   useEffect(() => {
-//     const bannerTimer = setInterval(() => {
-//       setCurrentSlide((prev) => (prev + 1) % banners.length);
-//     }, 5000);
-
-//     return () => clearInterval(bannerTimer);
-//   }, [banners.length]);
-
-//   console.log(banners, featuredProducts);
-
-//   return (
-//     <div className="min-h-screen bg-white">
-//       <section className="relative h-[600px] overflow-hidden">
-//         {banners.map((bannerItem, index) => (
-//           <div
-//             className={`absolute inset-0 transition-opacity duration-1000 ${
-//               currentSlide === index ? "opacity-100" : "opacity-0"
-//             }`}
-//             key={bannerItem.id}
-//           >
-//             <div className="absolute inset-0">
-//               <img
-//                 src={bannerItem.imageUrl}
-//                 alt={`Banner ${index + 1}`}
-//                 className="w-full h-full object-cover"
-//               />
-//               <div className="absolute inset-0 bg-black bg-opacity-20" />
-//             </div>
-//             <div className="relative h-full container mx-auto px-4 flex items-center">
-//               <div className="text-white space-y-6">
-//                 <span className="text-sm uppercase tracking-wider">
-//                   I AM JOHN
-//                 </span>
-//                 <h1 className="text-5xl lg:text-7xl font-bold leading-tight">
-//                   BEST SELLING
-//                   <br />
-//                   E-COMMERCE WEBSITE
-//                 </h1>
-//                 <p className="text-lg">
-//                   A Creative, Flexible , Clean, Easy to use and
-//                   <br />
-//                   High Performance E-Commerce Theme
-//                 </p>
-//                 <Button className="bg-white text-black hover:bg-gray-100 px-8 py-6 text-lg">
-//                   SHOP NOW
-//                 </Button>
-//               </div>
-//             </div>
-//           </div>
-//         ))}
-//         <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2">
-//           {banners.map((_, index) => (
-//             <button
-//               key={index}
-//               onClick={() => setCurrentSlide(index)}
-//               className={`w-2 h-2 rounded-full transition-all ${
-//                 currentSlide === index
-//                   ? "bg-white w-6"
-//                   : "bg-white/50 hover:bg-white/75"
-//               }`}
-//             />
-//           ))}
-//         </div>
-//       </section>
-
-//       {/* grid section */}
-//       <section className="py-16">
-//         <div className="container mx-auto px-4">
-//           <h2 className="text-center text-3xl font-semibold mb-2">
-//             THE WINTER EDIT
-//           </h2>
-//           <p className="text-center text-gray-500 mb-8">
-//             Designed to keep your satisfaction and warmth
-//           </p>
-//           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-//             {gridItems.map((gridItem, index) => (
-//               <div key={index} className="relative group overflow-hidden">
-//                 <div className="aspect-[3/4]">
-//                   <img
-//                     src={gridItem.image}
-//                     alt={gridItem.title}
-//                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-//                   />
-//                 </div>
-//                 <div className="absolute inset-0 bg-black bg-opacity-25 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-//                   <div className="text-center text-white p-4">
-//                     <h3 className="text-xl font-semibold mb-2">
-//                       {gridItem.title}
-//                     </h3>
-//                     <p className="text-sm">{gridItem.subtitle}</p>
-//                     <Button className="mt-4 bg-white text-black hover:bg-gray-100">
-//                       SHOP NOW
-//                     </Button>
-//                   </div>
-//                 </div>
-//               </div>
-//             ))}
-//           </div>
-//         </div>
-//       </section>
-
-//       {/* Feature products section */}
-//       <section className="py-16">
-//         <div className="container mx-auto px-4">
-//           <h2 className="text-center text-3xl font-semibold mb-2">
-//             NEW ARRIVALS
-//           </h2>
-//           <p className="text-center text-gray-500 mb-8">
-//             Shop our new arrivals from established brands
-//           </p>
-//           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-//             {featuredProducts.map((productItem, index) => (
-//               <div key={index} className="relative group overflow-hidden">
-//                 <div className="aspect-[3/4]">
-//                   <img
-//                     src={productItem.images[0]}
-//                     alt={productItem.name}
-//                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-//                   />
-//                 </div>
-//                 <div className="absolute inset-0 bg-black bg-opacity-25 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-//                   <div className="text-center text-white p-4">
-//                     <h3 className="text-xl font-semibold mb-2">
-//                       {productItem.name}
-//                     </h3>
-//                     <p className="text-sm">{productItem.price}</p>
-//                     <Button className="mt-4 bg-white text-black hover:bg-gray-100">
-//                       QUICK ViEW
-//                     </Button>
-//                   </div>
-//                 </div>
-//               </div>
-//             ))}
-//           </div>
-//         </div>
-//       </section>
-//     </div>
-//   );
-// }
-
-// export default HomePage;
 
 "use client";
 
@@ -192,6 +8,9 @@ import Link from "next/link";
 import axios from "axios";
 import { API_ROUTES } from "@/utils/routes/api";
 import type { Product } from "@/types/product";
+
+const TILE_IMAGE_FALLBACK =
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='1600' viewBox='0 0 1200 1600'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%' stop-color='%230f172a'/><stop offset='100%' stop-color='%23334155'/></linearGradient></defs><rect width='1200' height='1600' fill='url(%23g)'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23e2e8f0' font-size='62' font-family='Arial, sans-serif'>Category Image</text></svg>";
 
 /** Hero slides when DB has no banners yet (matches seeded defaults) */
 const FALLBACK_BANNERS = [
@@ -258,6 +77,12 @@ const BannerSlide = memo(({ banner, isActive }: { banner: any; isActive: boolean
         alt={`Banner ${banner.id}`}
         className="w-full h-full object-cover"
         loading="lazy"
+        onError={(event) => {
+          const element = event.currentTarget;
+          if (element.src !== FALLBACK_BANNERS[0].imageUrl) {
+            element.src = FALLBACK_BANNERS[0].imageUrl;
+          }
+        }}
       />
       <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-background/50 to-transparent" />
       <div className="absolute inset-0 cosmic-gradient opacity-20" />
@@ -357,36 +182,50 @@ const ProductCard = memo(({ product }: { product: Product }) => (
 
 ProductCard.displayName = "ProductCard";
 
-const GridItemCard = memo(({ item }: { item: (typeof gridItems)[0] }) => (
-  <div className="group relative overflow-hidden rounded-xl glass-effect border-glass-border hover:neon-border transition-all duration-500 theme-transition">
-    <div className="aspect-[3/4] relative overflow-hidden">
-      <img
-        src={item.image}
-        alt={item.title}
-        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-        loading="lazy"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
-      <div className="hologram-effect absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-    </div>
-    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 theme-transition">
-      <div className="text-center p-8 space-y-4 backdrop-blur-glass bg-glass rounded-xl border-glass-border">
+const GridItemCard = memo(({ item }: { item: (typeof gridItems)[0] }) => {
+  const [imageSrc, setImageSrc] = useState(item.image);
+
+  useEffect(() => {
+    setImageSrc(item.image);
+  }, [item.image]);
+
+  return (
+    <div className="group relative overflow-hidden rounded-xl glass-effect border-glass-border hover:neon-border transition-all duration-500 theme-transition">
+      <div className="aspect-[3/4] relative overflow-hidden">
+        <img
+          src={imageSrc}
+          alt={item.title}
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+          loading="lazy"
+          onError={(event) => {
+            const element = event.currentTarget;
+            if (element.src !== TILE_IMAGE_FALLBACK) {
+              setImageSrc(TILE_IMAGE_FALLBACK);
+            }
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
+        <div className="hologram-effect absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      </div>
+      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 theme-transition">
+        <div className="text-center p-8 space-y-4 backdrop-blur-glass bg-glass rounded-xl border-glass-border">
+          <h3 className="text-2xl font-bold text-foreground">{item.title}</h3>
+          <p className="text-muted-foreground">{item.subtitle}</p>
+          <Button
+            asChild
+            className="bg-primary text-primary-foreground hover:bg-primary-light px-6 rounded-lg neon-border hover:scale-105 transition-transform duration-300"
+          >
+            <Link href={item.shopHref}>SHOP NOW</Link>
+          </Button>
+        </div>
+      </div>
+      <div className="absolute bottom-6 left-6">
         <h3 className="text-2xl font-bold text-foreground">{item.title}</h3>
-        <p className="text-muted-foreground">{item.subtitle}</p>
-        <Button
-          asChild
-          className="bg-primary text-primary-foreground hover:bg-primary-light px-6 rounded-lg neon-border hover:scale-105 transition-transform duration-300"
-        >
-          <Link href={item.shopHref}>SHOP NOW</Link>
-        </Button>
+        <p className="text-muted-foreground text-sm">{item.subtitle}</p>
       </div>
     </div>
-    <div className="absolute bottom-6 left-6">
-      <h3 className="text-2xl font-bold text-foreground">{item.title}</h3>
-      <p className="text-muted-foreground text-sm">{item.subtitle}</p>
-    </div>
-  </div>
-));
+  );
+});
 
 GridItemCard.displayName = "GridItemCard";
 
