@@ -13,6 +13,7 @@ import {
 } from "@/lib/auth/shouldRetryAuthRequest";
 import { authLogger } from "@/utils/Logger";
 import { normalizeRefreshResponseTokenInfo } from "@/lib/auth/normalizeTokenInfo";
+import { runWithRefreshLock } from "@/lib/auth/runWithRefreshLock";
 
 interface AuthStore {
   user: User | null;
@@ -305,7 +306,7 @@ export const useAuthStore = create<AuthStore>()(
         set({ isRefreshing: true });
         authLogger.info("Starting token refresh process");
 
-        const refreshPromise = (async () => {
+        const refreshPromise = runWithRefreshLock(async () => {
           const startTime = performance.now();
           try {
             authLogger.http("POST", "/api/auth/refresh-token", undefined, {
@@ -397,7 +398,7 @@ export const useAuthStore = create<AuthStore>()(
             });
             return false;
           }
-        })();
+        });
 
         set({ refreshPromise });
         return refreshPromise;
