@@ -13,6 +13,7 @@ export default function useSilentAuth(enabled = true) {
   const initialCheckTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isRefreshingRef = useRef<boolean>(false);
   const retryCountRef = useRef<number>(0);
+  const storageDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const calculateRefreshTime = useCallback(async (): Promise<number | null> => {
     try {
@@ -170,7 +171,9 @@ export default function useSilentAuth(enabled = true) {
 
   const checkAndRefreshIfNeeded = useCallback(async () => {
     try {
-      authLogger.debug("Checking if token refresh is needed...");
+      if (process.env.NODE_ENV === "development") {
+        authLogger.debug("Checking if token refresh is needed...");
+      }
 
       // ✅ FIRST: Check session to see what cookies we have
       const sessionInfo = await checkSession();
@@ -236,7 +239,7 @@ export default function useSilentAuth(enabled = true) {
       return;
     }
 
-    authLogger.info("useSilentAuth hook initialized");
+    authLogger.debug("useSilentAuth hook initialized");
 
     initialCheckTimeoutRef.current = setTimeout(() => {
       checkAndRefreshIfNeeded();
@@ -261,20 +264,32 @@ export default function useSilentAuth(enabled = true) {
 
     // Sync across tabs
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "token_expiry" || e.key?.includes("auth-storage")) {
-        authLogger.debug("Auth storage changed, syncing across tabs", {
-          changedKey: e.key,
-          newValue: e.newValue?.substring(0, 50) + "...", // Log truncated value
-        });
-
-        setTimeout(() => checkAndRefreshIfNeeded(), 500);
+      if (e.key !== "token_expiry" && !e.key?.includes("auth-storage")) {
+        return;
       }
+      if (storageDebounceRef.current) {
+        clearTimeout(storageDebounceRef.current);
+      }
+      storageDebounceRef.current = setTimeout(() => {
+        storageDebounceRef.current = null;
+        if (process.env.NODE_ENV === "development") {
+          authLogger.debug("Auth storage changed, syncing across tabs", {
+            changedKey: e.key,
+          });
+        }
+        void checkAndRefreshIfNeeded();
+      }, 750);
     };
 
     window.addEventListener("storage", handleStorageChange);
 
     return () => {
-      authLogger.info("useSilentAuth hook cleaning up...");
+      authLogger.debug("useSilentAuth hook cleaning up...");
+
+      if (storageDebounceRef.current) {
+        clearTimeout(storageDebounceRef.current);
+        storageDebounceRef.current = null;
+      }
 
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
