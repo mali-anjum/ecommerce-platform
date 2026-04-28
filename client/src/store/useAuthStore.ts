@@ -58,9 +58,74 @@ const axiosInstance = axios.create({
 });
 
 const SESSION_CHECK_COOLDOWN_MS = 2500;
+const TOKEN_EXPIRY_STORAGE_KEY = "token_expiry";
 let checkSessionInFlight: Promise<Session> | null = null;
 let lastSessionCheckAt = 0;
 let lastSessionCheckResult: Session | null = null;
+
+const toPositiveMs = (value: unknown, fallbackMs: number): number => {
+  if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
+    return fallbackMs;
+  }
+  return value <= 1000 ? value * 1000 : value;
+};
+
+const isTokenExpiryInfo = (
+  value: unknown
+): value is TokenExpiryInfoBackendRes => {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Record<string, unknown>;
+  return (
+    typeof candidate.refreshedAt === "number" &&
+    Number.isFinite(candidate.refreshedAt) &&
+    typeof candidate.accessTokenExpiresIn === "number" &&
+    Number.isFinite(candidate.accessTokenExpiresIn) &&
+    candidate.accessTokenExpiresIn > 0 &&
+    typeof candidate.suggestedRefreshTime === "number" &&
+    Number.isFinite(candidate.suggestedRefreshTime)
+  );
+};
+
+const persistTokenExpiry = (tokenExpiry: TokenExpiryInfoBackendRes | null) => {
+  if (typeof window === "undefined") return;
+
+  if (tokenExpiry === null) {
+    localStorage.removeItem(TOKEN_EXPIRY_STORAGE_KEY);
+    return;
+  }
+
+  localStorage.setItem(TOKEN_EXPIRY_STORAGE_KEY, JSON.stringify(tokenExpiry));
+};
+
+const getStoredTokenExpiry = (): TokenExpiryInfoBackendRes | null => {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const raw = localStorage.getItem(TOKEN_EXPIRY_STORAGE_KEY);
+    if (!raw) return null;
+
+    const parsed: unknown = JSON.parse(raw);
+    if (!isTokenExpiryInfo(parsed)) {
+      localStorage.removeItem(TOKEN_EXPIRY_STORAGE_KEY);
+      return null;
+    }
+
+    return parsed;
+  } catch {
+    localStorage.removeItem(TOKEN_EXPIRY_STORAGE_KEY);
+    return null;
+  }
+};
+
+const getTokenExpiryStatus = (tokenExpiry: TokenExpiryInfoBackendRes) => {
+  const now = Date.now();
+  const expiresAt = tokenExpiry.refreshedAt + tokenExpiry.accessTokenExpiresIn;
+  return {
+    isValid: now < expiresAt,
+    timeUntilExpiry: Math.max(0, expiresAt - now),
+    shouldRefresh: now > tokenExpiry.suggestedRefreshTime,
+  };
+};
 
 export const useAuthStore = create<AuthStore>()(
   persist(
@@ -89,7 +154,7 @@ export const useAuthStore = create<AuthStore>()(
           error: null,
           tokenExpiry: null,
         });
-        localStorage.removeItem("token_expiry");
+        persistTokenExpiry(null);
       },
 
       clearError: () => set({ error: null }),
@@ -208,75 +273,52 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       updateTokenExpiry: (tokenInfo: any) => {
-        if (!tokenInfo?.accessTokenExpiresIn) return;
+        if (!tokenInfo) return;
 
-        const now = Date.now();
-
-        // Ensure values are in milliseconds
-        const accessTokenExpiresInMs =
-          typeof tokenInfo.accessTokenExpiresIn === "number"
-            ? tokenInfo.accessTokenExpiresIn <= 1000
-              ? tokenInfo.accessTokenExpiresIn * 1000
-              : tokenInfo.accessTokenExpiresIn
-            : 15 * 60 * 1000; // Default 15 minutes
-
-        const suggestedRefreshTimeMs = tokenInfo.suggestedRefreshTime
-          ? tokenInfo.suggestedRefreshTime <= 1000
-            ? tokenInfo.suggestedRefreshTime * 1000
-            : tokenInfo.suggestedRefreshTime
-          : accessTokenExpiresInMs * 0.8; // Default 80%
+        const accessTokenExpiresInMs = toPositiveMs(
+          tokenInfo.accessTokenExpiresIn,
+          15 * 60 * 1000
+        );
+        const refreshedAt =
+          typeof tokenInfo.refreshedAt === "number" &&
+          Number.isFinite(tokenInfo.refreshedAt)
+            ? tokenInfo.refreshedAt
+            : Date.now();
+        const suggestedRefreshTime = toPositiveMs(
+          tokenInfo.suggestedRefreshTime,
+          accessTokenExpiresInMs * 0.8
+        );
 
         const tokenExpiry: TokenExpiryInfoBackendRes = {
-          refreshedAt: now,
-          accessTokenExpiresIn: accessTokenExpiresInMs, // duration in ms
-          suggestedRefreshTime: now + suggestedRefreshTimeMs, // absolute timestamp
+          refreshedAt,
+          accessTokenExpiresIn: accessTokenExpiresInMs,
+          suggestedRefreshTime:
+            suggestedRefreshTime > refreshedAt
+              ? suggestedRefreshTime
+              : refreshedAt + suggestedRefreshTime,
         };
 
         set({ tokenExpiry });
-        localStorage.setItem("token_expiry", JSON.stringify(tokenExpiry));
+        persistTokenExpiry(tokenExpiry);
       },
 
       clearTokenExpiry: () => {
         set({ tokenExpiry: null });
-        localStorage.removeItem("token_expiry");
+        persistTokenExpiry(null);
       },
 
       getTokenExpiryInfo: () => {
         const { tokenExpiry } = get();
 
         if (tokenExpiry) {
-          const now = Date.now();
-          return {
-            isValid:
-              now < tokenExpiry.refreshedAt + tokenExpiry.accessTokenExpiresIn,
-            timeUntilExpiry: Math.max(
-              0,
-              tokenExpiry.refreshedAt + tokenExpiry.accessTokenExpiresIn - now
-            ),
-            shouldRefresh: now > tokenExpiry.suggestedRefreshTime,
-          };
+          return getTokenExpiryStatus(tokenExpiry);
         }
 
-        // Fallback to localStorage
-        try {
-          const stored = localStorage.getItem("token_expiry");
-          if (!stored) return null;
+        const storedExpiry = getStoredTokenExpiry();
+        if (!storedExpiry) return null;
 
-          const expiry = JSON.parse(stored);
-          set({ tokenExpiry: expiry });
-
-          const now = Date.now();
-          return {
-            isValid: now < expiry.refreshedAt + expiry.accessTokenExpiresIn,
-            timeUntilExpiry: Math.max(
-              0,
-              expiry.refreshedAt + expiry.accessTokenExpiresIn - now
-            ),
-            shouldRefresh: now > expiry.suggestedRefreshTime,
-          };
-        } catch {
-          return null;
-        }
+        set({ tokenExpiry: storedExpiry });
+        return getTokenExpiryStatus(storedExpiry);
       },
 
 
@@ -336,8 +378,7 @@ export const useAuthStore = create<AuthStore>()(
                 ).toISOString(),
               });
 
-              // Store in localStorage for persistence
-              localStorage.setItem("token_expiry", JSON.stringify(expiryData));
+              persistTokenExpiry(expiryData);
               set({
                 tokenExpiry: expiryData,
                 error: null,
@@ -480,15 +521,7 @@ export const useAuthStore = create<AuthStore>()(
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {
-          // Sync localStorage with Zustand state on rehydration
-          const stored = localStorage.getItem("token_expiry");
-          if (stored) {
-            try {
-              state.tokenExpiry = JSON.parse(stored);
-            } catch {
-              state.tokenExpiry = null;
-            }
-          }
+          state.tokenExpiry = getStoredTokenExpiry();
         }
       },
     }
