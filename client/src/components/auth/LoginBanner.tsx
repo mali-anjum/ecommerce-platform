@@ -22,6 +22,7 @@ export const LoginBanner = ({
             src={leftbanner}
             alt="Login Banner"
             fill
+            sizes="(max-width: 1023px) 100vw, 50vw"
             style={{ objectFit: "cover", objectPosition: "center" }}
             priority
             onError={() => setImageError(true)}

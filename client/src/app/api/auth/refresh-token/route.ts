@@ -1,6 +1,7 @@
 // app/api/auth/refresh-token/route.ts - CORRECTED
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { extractSetCookieHeaders } from "@/lib/api/extractSetCookieHeaders";
 import { proxyLogger } from "@/utils/Logger";
 
 const ERROR_MESSAGES = {
@@ -144,10 +145,7 @@ export async function POST(req: NextRequest) {
       status: backendRes.status,
     });
 
-    const setCookieHeaders =
-      typeof backendRes.headers.getSetCookie === "function"
-        ? backendRes.headers.getSetCookie()
-        : [];
+    const setCookieHeaders = extractSetCookieHeaders(backendRes);
 
     if (setCookieHeaders.length > 0) {
       proxyLogger.log(

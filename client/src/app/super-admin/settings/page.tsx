@@ -257,20 +257,20 @@ function FileUploadSection({
   onRemoveFile: (index: number) => void;
 }) {
   return (
-    <div className="glass-effect rounded-2xl p-6 border border-glass-border">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+    <div className="glass-effect rounded-2xl p-5 md:p-6 border border-glass-border">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-6">
+        <div className="flex items-start gap-3 min-w-0">
+          <div className="h-10 w-10 shrink-0 rounded-lg bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
             <ImageLucide className="h-5 w-5 text-primary" />
           </div>
-          <div>
+          <div className="min-w-0">
             <h3 className="text-lg font-bold text-foreground">Upload Banner Images</h3>
             <p className="text-sm text-muted-foreground">
               Upload images for hero banners (Recommended: 1920x600px)
             </p>
           </div>
         </div>
-        <Badge variant="outline" className="border-primary text-primary">
+        <Badge variant="outline" className="border-primary/60 text-primary shrink-0 self-start sm:self-center">
           <TrendingUp className="h-3 w-3 mr-1" />
           High Impact
         </Badge>
@@ -279,7 +279,7 @@ function FileUploadSection({
       {/* Upload Area */}
       <Label
         htmlFor="banner-upload"
-        className="group relative flex flex-col items-center justify-center w-full min-h-[200px] border-2 border-dashed rounded-2xl cursor-pointer transition-all duration-300 hover:border-primary hover:bg-primary/5"
+        className="group relative flex flex-col items-center justify-center w-full min-h-[200px] rounded-2xl cursor-pointer transition-all duration-300 border-2 border-dashed border-primary/45 bg-muted/25 hover:border-primary/90 hover:bg-primary/[0.06] dark:border-primary/50 dark:bg-muted/15"
       >
         <div className="flex flex-col items-center space-y-4 p-8">
           <div className="relative">
@@ -296,7 +296,7 @@ function FileUploadSection({
               Supports JPG, PNG, WEBP • Max 5MB per image
             </p>
           </div>
-          <Button variant="outline" className="border-border hover:border-primary">
+          <Button variant="outline" className="border-primary/40 bg-background/50 hover:border-primary hover:bg-primary/5">
             <Plus className="h-4 w-4 mr-2" />
             Browse Files
           </Button>
@@ -675,10 +675,10 @@ function SuperAdminSettingsPage() {
   const isAtLimit = selectedProducts.length >= MAX_FEATURED_PRODUCTS;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-card/20 p-4 md:p-6">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-gradient-to-b from-background to-card/20 p-4 md:p-6 pb-10">
+      <div className="max-w-7xl mx-auto space-y-5 md:space-y-6">
         {/* Header */}
-        <header className="glass-effect rounded-2xl p-6 border border-glass-border">
+        <header className="glass-effect rounded-2xl p-5 md:p-6 border border-glass-border">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <div className="flex items-center gap-4">
               <div className="relative">
@@ -719,39 +719,39 @@ function SuperAdminSettingsPage() {
           </div>
         </header>
 
-        {/* Stats Bar */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="glass-effect rounded-xl p-4 border border-glass-border">
-            <div className="flex items-center justify-between">
-              <div>
+        {/* Stats Bar — equal-width columns on sm+ */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-4 lg:gap-5 items-stretch">
+          <div className="glass-effect rounded-xl p-4 md:p-5 border border-glass-border min-h-[92px] min-w-0 flex">
+            <div className="flex w-full items-center justify-between gap-3">
+              <div className="min-w-0">
                 <p className="text-sm text-muted-foreground">Active Banners</p>
-                <p className="text-2xl font-bold text-foreground">{banners.length}</p>
+                <p className="text-2xl font-bold text-foreground tabular-nums">{banners.length}</p>
               </div>
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <div className="h-10 w-10 shrink-0 rounded-lg bg-primary/10 flex items-center justify-center">
                 <ImageLucide className="h-5 w-5 text-primary" />
               </div>
             </div>
           </div>
-          
-          <div className="glass-effect rounded-xl p-4 border border-glass-border">
-            <div className="flex items-center justify-between">
-              <div>
+
+          <div className="glass-effect rounded-xl p-4 md:p-5 border border-glass-border min-h-[92px] min-w-0 flex">
+            <div className="flex w-full items-center justify-between gap-3">
+              <div className="min-w-0">
                 <p className="text-sm text-muted-foreground">Featured Products</p>
-                <p className="text-2xl font-bold text-foreground">{selectedProducts.length}</p>
+                <p className="text-2xl font-bold text-foreground tabular-nums">{selectedProducts.length}</p>
               </div>
-              <div className="h-10 w-10 rounded-lg bg-secondary/10 flex items-center justify-center">
+              <div className="h-10 w-10 shrink-0 rounded-lg bg-secondary/10 flex items-center justify-center">
                 <Star className="h-5 w-5 text-secondary" />
               </div>
             </div>
           </div>
-          
-          <div className="glass-effect rounded-xl p-4 border border-glass-border">
-            <div className="flex items-center justify-between">
-              <div>
+
+          <div className="glass-effect rounded-xl p-4 md:p-5 border border-glass-border min-h-[92px] min-w-0 flex">
+            <div className="flex w-full items-center justify-between gap-3">
+              <div className="min-w-0">
                 <p className="text-sm text-muted-foreground">Total Products</p>
-                <p className="text-2xl font-bold text-foreground">{products.length}</p>
+                <p className="text-2xl font-bold text-foreground tabular-nums">{products.length}</p>
               </div>
-              <div className="h-10 w-10 rounded-lg bg-accent/10 flex items-center justify-center">
+              <div className="h-10 w-10 shrink-0 rounded-lg bg-accent/10 flex items-center justify-center">
                 <Grid3x3 className="h-5 w-5 text-accent" />
               </div>
             </div>
@@ -759,7 +759,7 @@ function SuperAdminSettingsPage() {
         </div>
 
         {/* Banner Management */}
-        <div className="space-y-8">
+        <div className="space-y-6">
           {/* Upload Section */}
           <FileUploadSection 
             uploadedFiles={uploadedFiles} 

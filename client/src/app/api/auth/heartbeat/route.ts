@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { extractSetCookieHeaders } from "@/lib/api/extractSetCookieHeaders";
 
 const ERROR_MESSAGES = {
   BACKEND_NOT_CONFIGURED: "Backend URL not configured",
@@ -58,10 +59,7 @@ export async function POST(req: NextRequest) {
       status: backendRes.status,
     });
 
-    const setCookieHeaders =
-      typeof backendRes.headers.getSetCookie === "function"
-        ? backendRes.headers.getSetCookie()
-        : [];
+    const setCookieHeaders = extractSetCookieHeaders(backendRes);
 
     for (const cookie of setCookieHeaders) {
       response.headers.append("Set-Cookie", cookie);

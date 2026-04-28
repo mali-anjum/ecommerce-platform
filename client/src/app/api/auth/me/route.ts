@@ -1,6 +1,7 @@
 // app/api/auth/me/route.ts - OPTIMIZED VERSION
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { extractSetCookieHeaders } from "@/lib/api/extractSetCookieHeaders";
 
 export async function GET(req: NextRequest) {
    const BACKEND_URL =
@@ -49,13 +50,9 @@ export async function GET(req: NextRequest) {
     const responseData = await backendRes.json();
     const response = NextResponse.json(responseData, { status: backendRes.status });
 
-    // Optimized cookie forwarding
-    const setCookieHeaders = backendRes.headers.getSetCookie();
-    if (setCookieHeaders?.length > 0) {
-      // Use for-loop instead of forEach for slightly better performance
-      for (let i = 0; i < setCookieHeaders.length; i++) {
-        response.headers.append('Set-Cookie', setCookieHeaders[i]);
-      }
+    const setCookieHeaders = extractSetCookieHeaders(backendRes);
+    for (const cookie of setCookieHeaders) {
+      response.headers.append("Set-Cookie", cookie);
     }
 
     return response;

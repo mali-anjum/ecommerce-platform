@@ -189,10 +189,10 @@ function MenuItem({
       onClick={onClick}
       className={cn(
         "group relative flex w-full items-center px-4 py-3 text-sm transition-all duration-300",
-        "hover:bg-primary/10 hover:border-l-4 hover:border-l-primary",
+        "hover:bg-primary/10 hover:border-l-2 hover:border-l-primary",
         "rounded-lg mx-2 my-1",
         isActive 
-          ? "bg-primary/10 border-l-4 border-l-primary text-primary" 
+          ? "bg-primary/10 border-l-2 border-l-primary text-primary" 
           : "text-muted-foreground hover:text-foreground"
       )}
     >
@@ -469,7 +469,17 @@ function SuperAdminSidebar({ isOpen, toggle }: SidebarProps) {
         </div>
 
         {/* Navigation Sections */}
-        <div className="flex-1 overflow-y-auto py-4 scrollbar-thin">
+        <div
+          className={cn(
+            "flex-1 min-h-0 overflow-y-auto py-4",
+            "[scrollbar-width:thin]",
+            "[scrollbar-color:hsl(var(--primary)/0.35)_transparent]",
+            "[&::-webkit-scrollbar]:w-1.5",
+            "[&::-webkit-scrollbar-thumb]:rounded-full",
+            "[&::-webkit-scrollbar-thumb]:bg-primary/30",
+            "[&::-webkit-scrollbar-track]:bg-transparent"
+          )}
+        >
           {menuSections.map((section) => (
             <div key={section.title} className="mb-6">
               <SectionHeader 
@@ -501,13 +511,15 @@ function SuperAdminSidebar({ isOpen, toggle }: SidebarProps) {
         </div>
 
         {/* Footer */}
-        <div className={cn(
-          "border-t border-glass-border p-4",
-          !isOpen && "p-2"
-        )}>
+        <div
+          className={cn(
+            "border-t border-glass-border p-4 pb-6 mt-auto shrink-0",
+            !isOpen && "p-2 pb-4"
+          )}
+        >
           {isOpen ? (
             <div className="space-y-3">
-              <div className="rounded-lg bg-gradient-to-r from-primary/10 to-secondary/10 p-3">
+              <div className="rounded-lg bg-gradient-to-r from-primary/10 to-secondary/10 p-3 border border-glass-border/60">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center">
                     <Sparkles className="h-5 w-5 text-white" />
