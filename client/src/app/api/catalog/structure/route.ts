@@ -1,15 +1,13 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { getServerBackendUrl } from "@/lib/api/getServerBackendUrl";
 
 /**
  * Proxies catalog structure to the Express API so the browser uses the same
  * origin (avoids CORS / wrong hardcoded API port) and env-based backend URL.
  */
 export async function GET(req: NextRequest) {
-  const BACKEND_URL =
-    process.env.NODE_ENV === "production"
-      ? process.env.BACKEND_URL
-      : process.env.DEVE_URL;
+  const BACKEND_URL = getServerBackendUrl();
 
   if (!BACKEND_URL) {
     return NextResponse.json(
