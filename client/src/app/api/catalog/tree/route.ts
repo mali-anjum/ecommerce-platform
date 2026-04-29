@@ -1,12 +1,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { getServerBackendUrl } from "@/lib/api/getServerBackendUrl";
 
 /** Proxies public catalog tree (departments + subcategories + product counts) from Express. */
 export async function GET(req: NextRequest) {
-  const BACKEND_URL =
-    process.env.NODE_ENV === "production"
-      ? process.env.BACKEND_URL
-      : process.env.DEVE_URL;
+  const BACKEND_URL = getServerBackendUrl();
 
   if (!BACKEND_URL) {
     return NextResponse.json(
