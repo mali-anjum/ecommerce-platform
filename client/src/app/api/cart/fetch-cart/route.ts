@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-
-const BACKEND_URL =
-  process.env.NODE_ENV === "production"
-    ? process.env.BACKEND_URL
-    : process.env.DEVE_URL;
+import { getServerBackendUrl } from "@/lib/api/getServerBackendUrl";
 
 export async function GET(request: NextRequest) {
+  const BACKEND_URL = getServerBackendUrl();
+
   if (!BACKEND_URL) {
     return NextResponse.json(
       { success: false, error: "Backend URL not configured" },
@@ -24,11 +22,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log("🛒 Proxying cart fetch to backend...");
-
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
-console.log(`This is the url: ${BACKEND_URL}`)
+
     const backendRes = await fetch(`${BACKEND_URL}/api/cart/fetch-cart`, {
       method: "GET",
       headers: {
@@ -43,16 +39,14 @@ console.log(`This is the url: ${BACKEND_URL}`)
     const data = await backendRes.json();
 
     if (!backendRes.ok) {
-      console.warn(`Cart fetch failed: ${backendRes.status}`);
       return NextResponse.json(data, { status: backendRes.status });
     }
 
-    console.log("✅ Cart fetched successfully");
     return NextResponse.json(data);
-  } catch (error: any) {
-    console.error("Cart fetch proxy error:", error);
+  } catch (error: unknown) {
+    const name = error instanceof Error ? error.name : "";
 
-    if (error.name === "AbortError") {
+    if (name === "AbortError") {
       return NextResponse.json(
         { success: false, error: "Request timeout" },
         { status: 504 }
