@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { extractSetCookieHeaders } from "@/lib/api/extractSetCookieHeaders";
+import { getServerBackendUrl } from "@/lib/api/getServerBackendUrl";
 
 // Constants for better maintainability
 const ERROR_MESSAGES = {
@@ -16,14 +17,11 @@ const TIMEOUT_MS = 20000; // 10 seconds
 export async function POST(req: NextRequest) {
   console.log("[TRACE][CLIENT_LOGIN_PROXY] /api/auth/login hit");
 
- const BACKEND_URL =
-    process.env.NODE_ENV === "production"
-      ? process.env.BACKEND_URL
-      : process.env.DEVE_URL;
+  const BACKEND_URL = getServerBackendUrl();
 
   // Early validation with better error handling
   if (!BACKEND_URL) {
-    console.error("Configuration error: BACKEND_URL not set");
+    console.error("Configuration error: backend URL not set (BACKEND_URL / DEV_URL)");
 
     return NextResponse.json(
       {
