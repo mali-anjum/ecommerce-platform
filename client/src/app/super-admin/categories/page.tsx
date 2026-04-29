@@ -236,10 +236,10 @@ function SuperAdminCategoriesPage() {
               <p className="font-medium text-destructive">Could not load catalog</p>
               <p className="mt-1 text-muted-foreground">{error}</p>
               <p className="mt-2 text-muted-foreground">
-                Confirm{" "}
-                <code className="rounded bg-muted px-1 py-0.5">DEVE_URL</code> in{" "}
-                <code className="rounded bg-muted px-1 py-0.5">client/.env.local</code>{" "}
-                matches your API, then try Refresh.
+                Confirm <code className="rounded bg-muted px-1 py-0.5">NEXT_PUBLIC_API_URL</code>{" "}
+                and the server proxy URL (<code className="rounded bg-muted px-1 py-0.5">DEV_URL</code>{" "}
+                in development) in <code className="rounded bg-muted px-1 py-0.5">client/.env.local</code>{" "}
+                all point at the same API, then try Refresh.
               </p>
             </div>
           </div>
