@@ -15,11 +15,6 @@ import { genericWebhook, paypalWebhook, stripeWebhook } from "../controllers/web
 
 const router = express.Router();
 
-router.use(authenticateJwt);
-
-router.post("/create-order", createPaymentOrder);
-router.post("/capture-order", capturePayment);
-
 router.post("/webhooks/paypal", 
   express.raw({ type: "application/json" }), 
   paypalWebhook
@@ -40,6 +35,11 @@ router.get('/methods', (req, res) => {
   const methods = PaymentFactory.getAvailableMethods();
   res.json(new ApiResponse(200, methods, "Available payment methods"));
 });
+
+router.use(authenticateJwt);
+
+router.post("/create-order", createPaymentOrder);
+router.post("/capture-order", capturePayment);
 
 // router.post("/create-final-order", createFinalOrderInDB);
 // router.get("/get-single-order/:orderId", getOrder);
