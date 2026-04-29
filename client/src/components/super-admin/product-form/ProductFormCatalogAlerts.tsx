@@ -25,9 +25,10 @@ export function ProductFormCatalogAlerts({
             <p className="font-medium text-destructive">Could not load catalog</p>
             <p className="mt-1 text-muted-foreground">{catalogError}</p>
             <p className="mt-2 text-muted-foreground">
-              Check that <code className="rounded bg-muted px-1 py-0.5">DEVE_URL</code> in{" "}
-              <code className="rounded bg-muted px-1 py-0.5">client/.env.local</code> matches
-              your API server URL, and that the API is running.
+              Check <code className="rounded bg-muted px-1 py-0.5">NEXT_PUBLIC_API_URL</code> and{" "}
+              <code className="rounded bg-muted px-1 py-0.5">DEV_URL</code> in{" "}
+              <code className="rounded bg-muted px-1 py-0.5">client/.env.local</code> match your
+              API server URL, and that the API is running.
             </p>
           </div>
         </div>
