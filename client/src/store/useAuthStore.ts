@@ -183,7 +183,10 @@ export const useAuthStore = create<AuthStore>()(
             const expiryInfo = get().getTokenExpiryInfo();
 
             if (expiryInfo?.shouldRefresh) {
-              await get().refreshAccessToken();
+              const refreshed = await get().refreshAccessToken();
+              if (refreshed && !get().user) {
+                await get().fetchMe();
+              }
             } else if (sessionData.hasAccessToken) {
               // If we have valid access token, fetch user data
               await get().fetchMe();
