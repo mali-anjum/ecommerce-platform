@@ -9,8 +9,9 @@
     "build": "npx prisma generate --schema=src/prisma/schema.prisma && tsc --skipLibCheck",
     "start": "node dist/server.js",
     "prisma:generate": "npx prisma generate --schema=src/prisma/schema.prisma",
-    "prisma:migrate:dev": "npx prisma migrate dev --schema=src/prisma/schema.prisma --name init",
+    "prisma:migrate:dev": "npx prisma migrate dev --schema=src/prisma/schema.prisma",
     "prisma:migrate:deploy": "npx prisma migrate deploy --schema=src/prisma/schema.prisma",
+    "prisma:migrate:reset": "npx prisma migrate reset --schema=src/prisma/schema.prisma",
     "prisma:seed": "ts-node src/prisma/seed.ts",
     "render-build": "npm ci --include=dev && npx prisma generate --schema=src/prisma/schema.prisma && npm run build && npx prisma migrate deploy --schema=src/prisma/schema.prisma",
     "test": "jest"

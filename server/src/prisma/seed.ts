@@ -405,6 +405,31 @@ async function ensureSuperAdmin() {
   console.log("Super admin created:", email);
 }
 
+async function ensureDemoSeller() {
+  const email = "seller@demo.com";
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing) return;
+
+  const hashedPassword = await bcrypt.hash("123456", 10);
+  const user = await prisma.user.create({
+    data: {
+      email,
+      name: "Demo Seller",
+      password: hashedPassword,
+      role: "SELLER",
+    },
+  });
+  await prisma.seller.create({
+    data: {
+      name: "Demo Store",
+      slug: "demo-store",
+      userId: user.id,
+      isActive: true,
+    },
+  });
+  console.log("Demo seller created:", email, "(password: 123456)");
+}
+
 async function seedBannersIfEmpty() {
   const n = await prisma.featureBanner.count();
   if (n > 0) return;
@@ -479,6 +504,7 @@ async function pinFeaturedProducts() {
 
 async function main() {
   await ensureSuperAdmin();
+  await ensureDemoSeller();
   await seedBannersIfEmpty();
   await seedCatalogProducts();
   await pinFeaturedProducts();

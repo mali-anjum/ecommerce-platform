@@ -1,5 +1,9 @@
 import express from "express";
 import { authenticateJwt, isSuperAdmin } from "../middleware/authMiddleware";
+import {
+  attachSellerProfile,
+  requireSellerOrSuperAdmin,
+} from "../middleware/sellerMiddleware";
 import { uploadMultiple, uploadSingle } from "../middleware/uploadMiddleware"; // ← Import the specific one
 import {
   createProduct,
@@ -16,23 +20,38 @@ const router = express.Router();
 router.post(
   "/create-new-product",
   authenticateJwt,
-  isSuperAdmin,
-  uploadMultiple, 
+  requireSellerOrSuperAdmin,
+  attachSellerProfile,
+  uploadMultiple,
   createProduct
 );
 
 router.get(
   "/fetch-admin-products",
   authenticateJwt,
-  isSuperAdmin,
+  requireSellerOrSuperAdmin,
+  attachSellerProfile,
   fetchAllProductsForAdmin
 );
 
 router.get("/fetch-client-products", getProductsForClient);
 router.get("/categories", getProductCategories);
 router.get("/:id", getProductByID);
-router.put("/:id", authenticateJwt, isSuperAdmin, uploadMultiple, updateProduct);
-router.delete("/:id", authenticateJwt, isSuperAdmin, deleteProduct);
+router.put(
+  "/:id",
+  authenticateJwt,
+  requireSellerOrSuperAdmin,
+  attachSellerProfile,
+  uploadMultiple,
+  updateProduct
+);
+router.delete(
+  "/:id",
+  authenticateJwt,
+  requireSellerOrSuperAdmin,
+  attachSellerProfile,
+  deleteProduct
+);
 import { upload } from "../middleware/uploadMiddleware"; // the upload object
 
 router.post('/debug-multer', authenticateJwt, isSuperAdmin, upload.any(), (req, res) => {

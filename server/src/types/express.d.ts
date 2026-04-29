@@ -11,6 +11,8 @@ declare global {
         email: string;
         role?: string;
       };
+      /** Set by `attachSellerProfile` for users with role SELLER */
+      sellerProfile?: { id: string };
       files?: Express.Multer.File[];
     }
 
@@ -71,5 +73,6 @@ export interface AuthenticatedRequest<
     email: string;
     role?: string;
   };
+  sellerProfile?: { id: string };
   validatedData?: any;
 }

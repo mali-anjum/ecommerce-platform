@@ -346,4 +346,35 @@ const logout = async (req: Request, res: Response): Promise<void> => {
   });
 };
 
+/**
+ * Issue a new access+refresh pair and set cookies (same as refresh flow).
+ * Used after role changes (e.g. becoming a seller) so the JWT role claim updates.
+ */
+export const issueSessionForUser = async (
+  res: Response,
+  userId: string
+): Promise<{
+  id: string;
+  name: string | null;
+  email: string;
+  role: string;
+}> => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, name: true, email: true, role: true },
+  });
+  if (!user) {
+    throw new Error("User not found");
+  }
+  const newAccessToken = signAccessToken(user.id, user.email, user.role);
+  const newRefreshToken = uuidv4();
+  const newHashedRefreshToken = hashToken(newRefreshToken);
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { refreshToken: newHashedRefreshToken, lastLogin: new Date() },
+  });
+  await setTokens(res, newAccessToken, newRefreshToken);
+  return user;
+};
+
 export { register, login, getCurrentUser, refreshAccessToken, heartbeat, logout };

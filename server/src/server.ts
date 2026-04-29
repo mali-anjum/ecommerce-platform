@@ -10,6 +10,7 @@ import cartRoutes from "./routes/cartRoutes";
 import addressRoutes from "./routes/addressRoutes";
 import orderRoutes from "./routes/orderRoutes";
 import catalogRoutes from "./routes/catalogRoutes";
+import sellerRoutes from "./routes/sellerRoutes";
 import warmRoutes from "./routes/warm"
 import { ApiError } from "./utils/ApiError";
 import { errorHandler } from "./middleware/errHandler";
@@ -69,6 +70,7 @@ app.use("/api/warm", warmRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/catalog", catalogRoutes);
+app.use("/api/sellers", sellerRoutes);
 app.use("/api/coupon", couponRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/cart", cartRoutes);
