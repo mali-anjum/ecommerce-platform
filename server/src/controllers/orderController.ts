@@ -1,52 +1,24 @@
 import { AuthenticatedRequest } from "../types/express";
-import { NextFunction, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { asyncHandler } from "../utils/asyncHandler";
 import { ApiResponse } from "../utils/ApiResponse";
-import {
-  ApiError,
-  InternalServerError,
-  UnauthorizedError,
-} from "../utils/ApiError";
+import { ApiError, UnauthorizedError } from "../utils/ApiError";
 import { PaymentFactory } from "../services/payment/payment.factory";
 import { PaymentOrderData } from "../services/interfaces/payment.interface";
 import type { MinimalProduct } from "../services/interfaces/product";
 import { PayPalService } from "../services/payment/providers/paypal.service";
-
-async function updateStockAndClearCart(userId: string, items: any[]) {
-  // Update stock for each product
-  for (const item of items) {
-    if (item.productId) {
-      await prisma.product.update({
-        where: { id: item.productId },
-        data: {
-          stock: { decrement: item.quantity },
-          soldCount: { increment: item.quantity },
-        },
-      });
-      if (item.couponId) {
-        await prisma.coupon.update({
-          where: { id: item.couponId },
-          data: {
-            usageCount: { increment: 1 },
-          },
-        });
-      }
-    }
-  }
-
-  // Clear cart
-  try {
-    await prisma.cartItem.deleteMany({
-      where: { cart: { userId } },
-    });
-
-    await prisma.cart.delete({ where: { userId } });
-  } catch (error) {
-    // Cart might not exist, that's okay
-    console.log("Cart already cleared or doesn't exist");
-  }
-}
+import {
+  applyPurchaseFulfillment,
+  fetchSellerOrderLinesPage,
+  findOrderForPublicTracking,
+  findOrdersForAdmin,
+  findOrdersForUser,
+  prepareGetOrderByIdQuery,
+  resolveSellerIdsForProductIds,
+  updateOrderStatusById,
+} from "../services/order";
+import type { OrderStatus } from "@prisma/client";
 
 const createPaymentOrder = asyncHandler(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -74,6 +46,18 @@ const createPaymentOrder = asyncHandler(
         );
       }
 
+      const productIds = Array.from(
+        new Set(
+          (items as MinimalProduct[])
+            .map((item) => item.productId)
+            .filter((pid): pid is string => typeof pid === "string" && pid.length > 0),
+        ),
+      );
+      const sellerIdByProductId =
+        productIds.length > 0
+          ? await resolveSellerIdsForProductIds(productIds)
+          : new Map<string, string | null>();
+
       const draftOrder = await prisma.order.create({
         data: {
           userId,
@@ -87,6 +71,9 @@ const createPaymentOrder = asyncHandler(
           items: {
             create: items.map((item: MinimalProduct) => ({
               productId: item.productId,
+              sellerId: item.productId
+                ? sellerIdByProductId.get(item.productId) ?? null
+                : null,
               productName: item.productName,
               productCategory: item.productCategory,
               quantity: item.quantity,
@@ -268,7 +255,7 @@ const capturePayment = asyncHandler(
       });
 
       // 4. Update stock and clear cart
-      await updateStockAndClearCart(userId, existingOrder.items);
+      await applyPurchaseFulfillment(userId, existingOrder.items);
 
       // 5. Apply coupon usage if exists
       if (existingOrder.couponId) {
@@ -334,14 +321,10 @@ const updateOrderStatusAdminOnly = asyncHandler(
     const { orderId } = req.params;
     const { status } = req.body;
 
-    const statusUpdated = await prisma.order.update({
-      where: {
-        id: orderId,
-      },
-      data: {
-        status,
-      },
-    });
+    const statusUpdated = await updateOrderStatusById(
+      orderId,
+      status as OrderStatus,
+    );
 
     if (!statusUpdated) {
       return res
@@ -367,19 +350,7 @@ const getAllOrdersAdminOnly = asyncHandler(
         .json(new UnauthorizedError("Unauthenticated user"));
     }
 
-    const orders = await prisma.order.findMany({
-      include: {
-        items: true,
-        address: true,
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
-    });
+    const orders = await findOrdersForAdmin();
 
     if (!orders || orders.length === 0) {
       return res.status(404).json(new ApiError(404, "No orders found."));
@@ -397,39 +368,21 @@ const getAllOrdersAdminOnly = asyncHandler(
   },
 );
 
-// const getOrdersByUserId = asyncHandler(
-//   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-//     const userId = req.user?.userId;
-//     if (!userId) {
-//       return res.status(401).json(new ApiResponse(401, "Unauthenticated user"));
-//     }
-//     const { orderId } = req.params;
+const getAllOrdersForUser = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.user?.userId;
+    if (!userId) {
+      return next(new UnauthorizedError("Unauthenticated user"));
+    }
 
-//     const order = await prisma.order.findUnique({
-//       where: { id: orderId, userId: userId }, // users see it's own orders
-//       include: {
-//         items: true,
-//         address: true,
-//         user: {
-//           select: {
-//             id: true,
-//             name: true,
-//             email: true,
-//           },
-//         },
-//       },
-//     });
-//     if (!order) {
-//       return res.status(403).json(new ApiError(403, "No order found."));
-//     }
+    const orders = await findOrdersForUser(userId);
 
-//     return res
-//       .status(200)
-//       .json(
-//         new ApiResponse(200, order, "Order fetched for the user succesfully"),
-//       );
-//   },
-// );
+    return res
+      .status(200)
+      .json(new ApiResponse(200, orders, "User orders fetched successfully."));
+  }
+);
+
 
 const getOrderById = asyncHandler(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const userId = req.user?.userId;
@@ -440,31 +393,19 @@ const getOrderById = asyncHandler(async (req: AuthenticatedRequest, res: Respons
     return next(new UnauthorizedError("Unauthorized user"));
   }
 
-  // Build include options based on role
-  const includeOptions: any = {
-    items: true,
-    address: true,
-    coupon: true, // Everyone needs coupon info
-  };
+  const query = await prepareGetOrderByIdQuery({
+    orderId,
+    userId,
+    userRole,
+  });
 
-  // Only admins get user details
-  if (userRole === "ADMIN" || userRole === "SUPER_ADMIN") {
-    includeOptions.user = {
-      select: {
-        id: true,
-        name: true,
-        email: true,
-      },
-    };
+  if (!query.ok) {
+    return next(new ApiError(403, "Seller profile not found"));
   }
 
   const order = await prisma.order.findFirst({
-    where: {
-      id: orderId,
-      // Regular users can only see their own orders
-      ...(userRole === "USER" && { userId }),
-    },
-    include: includeOptions,
+    where: query.where,
+    include: query.include,
   });
 
   if (!order) {
@@ -474,12 +415,72 @@ const getOrderById = asyncHandler(async (req: AuthenticatedRequest, res: Respons
   return res.status(200).json(new ApiResponse(200, order, "Order fetched successfully"));
 });
 
+const trackOrderPublic = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const orderId = String(req.body?.orderId || "").trim();
+    const email = String(req.body?.email || "")
+      .trim()
+      .toLowerCase();
+
+    if (!orderId || !email) {
+      return next(new ApiError(400, "orderId and email are required"));
+    }
+
+    const trackedOrder = await findOrderForPublicTracking(orderId, email);
+
+    if (!trackedOrder) {
+      return next(new ApiError(404, "No order found for provided details"));
+    }
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        trackedOrder,
+        "Order tracking details fetched successfully"
+      )
+    );
+  }
+);
+
+/** Line items for the authenticated seller (marketplace revenue / fulfillment). */
+const getSellerOrderLines = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return next(new UnauthorizedError("Unauthorized user"));
+    }
+    if (req.user.role !== "SELLER") {
+      return next(new ApiError(403, "Seller access required"));
+    }
+    const sellerId = req.sellerProfile?.id;
+    if (!sellerId) {
+      return next(new ApiError(403, "Seller profile not found"));
+    }
+
+    const { items, meta } = await fetchSellerOrderLinesPage(
+      sellerId,
+      req.query.page,
+      req.query.limit
+    );
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        { items, meta },
+        "Seller order lines fetched"
+      )
+    );
+  }
+);
+
 export {
   createPaymentOrder,
   capturePayment,
   // getOrder,
   updateOrderStatusAdminOnly,
   getAllOrdersAdminOnly,
+  getAllOrdersForUser,
   // getOrdersByUserId,
-  getOrderById
+  getOrderById,
+  getSellerOrderLines,
+  trackOrderPublic,
 };
