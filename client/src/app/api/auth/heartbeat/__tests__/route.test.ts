@@ -16,6 +16,7 @@ describe("auth heartbeat route", () => {
   const originalNodeEnv = process.env.NODE_ENV;
   const originalBackendUrl = process.env.BACKEND_URL;
   const originalDeveUrl = process.env.DEVE_URL;
+  const originalDevUrl = process.env.DEV_URL;
   const originalFetch = global.fetch;
 
   beforeEach(() => {
@@ -23,12 +24,14 @@ describe("auth heartbeat route", () => {
     process.env.NODE_ENV = "development";
     delete process.env.BACKEND_URL;
     delete process.env.DEVE_URL;
+    delete process.env.DEV_URL;
   });
 
   afterAll(() => {
     process.env.NODE_ENV = originalNodeEnv;
     process.env.BACKEND_URL = originalBackendUrl;
     process.env.DEVE_URL = originalDeveUrl;
+    process.env.DEV_URL = originalDevUrl;
     global.fetch = originalFetch;
   });
 
@@ -46,7 +49,7 @@ describe("auth heartbeat route", () => {
   });
 
   it("proxies backend heartbeat response", async () => {
-    process.env.DEVE_URL = "http://backend.local";
+    process.env.DEV_URL = "http://backend.local";
     global.fetch = jest.fn().mockResolvedValue({
       status: 200,
       json: async () => ({ success: true }),
