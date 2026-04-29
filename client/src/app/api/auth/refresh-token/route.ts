@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { extractSetCookieHeaders } from "@/lib/api/extractSetCookieHeaders";
+import { getServerBackendUrl } from "@/lib/api/getServerBackendUrl";
 import { proxyLogger } from "@/utils/Logger";
 
 const ERROR_MESSAGES = {
@@ -11,16 +12,14 @@ const ERROR_MESSAGES = {
 } as const;
 
 const TIMEOUT_MS = 8000;
-const getBackendUrl = () =>
-  process.env.NODE_ENV === "production"
-    ? process.env.BACKEND_URL
-    : process.env.DEV_URL || process.env.BACKEND_URL;
 
 export async function POST(req: NextRequest) {
-  const BACKEND_URL = getBackendUrl();
+  const BACKEND_URL = getServerBackendUrl();
 
   if (!BACKEND_URL) {
-    proxyLogger.error("Configuration error: BACKEND_URL not set");
+    proxyLogger.error(
+      "Configuration error: backend URL not set (BACKEND_URL / DEV_URL)",
+    );
     return NextResponse.json(
       {
         success: false,
@@ -32,7 +31,6 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const allCookies = req.cookies.getAll();
     const refreshToken = req.cookies.get("refreshToken")?.value;
 
     if (!refreshToken) {
