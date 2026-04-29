@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { useOrderStore } from "@/store/useOrderStore";
+import type { Order } from "@/types/order/orderTypes";
 import { useEffect, useState } from "react";
 import { 
   Package, 
@@ -43,7 +44,8 @@ import {
   Calendar,
   Hash,
   Sparkles,
-  Zap
+  Zap,
+  XCircle
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -56,7 +58,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { format } from "date-fns";
 
-type OrderStatus = "PENDING" | "PROCESSING" | "SHIPPED" | "DELIVERED";
+type OrderStatus = Order["status"];
 
 // ==================== MODULAR COMPONENTS ====================
 
@@ -86,6 +88,36 @@ function OrderStatusBadge({ status }: OrderStatusBadgeProps) {
       color: "bg-success/20 text-success border-success/20",
       icon: <CheckCircle className="h-3 w-3" />,
       label: "Delivered",
+    },
+    DRAFT: {
+      color: "bg-muted text-muted-foreground border-border",
+      icon: <Clock className="h-3 w-3" />,
+      label: "Draft",
+    },
+    PENDING_PAYMENT: {
+      color: "bg-warning/20 text-warning border-warning/20",
+      icon: <CreditCard className="h-3 w-3" />,
+      label: "Pending Payment",
+    },
+    PAYMENT_APPROVED: {
+      color: "bg-primary/20 text-primary border-primary/20",
+      icon: <CheckCircle className="h-3 w-3" />,
+      label: "Payment Approved",
+    },
+    CANCELLED: {
+      color: "bg-destructive/20 text-destructive border-destructive/20",
+      icon: <XCircle className="h-3 w-3" />,
+      label: "Cancelled",
+    },
+    PAYMENT_FAILED: {
+      color: "bg-destructive/20 text-destructive border-destructive/20",
+      icon: <XCircle className="h-3 w-3" />,
+      label: "Payment Failed",
+    },
+    CAPTURE_FAILED: {
+      color: "bg-destructive/20 text-destructive border-destructive/20",
+      icon: <XCircle className="h-3 w-3" />,
+      label: "Capture Failed",
     },
   };
 
