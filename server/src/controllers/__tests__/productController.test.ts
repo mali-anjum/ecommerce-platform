@@ -54,6 +54,7 @@ describe("getProductByID", () => {
         where: { id: "prod-1" },
         select: expect.objectContaining({
           subcategoryId: true,
+          sellerId: true,
         }),
       })
     );

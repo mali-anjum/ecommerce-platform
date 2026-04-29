@@ -11,12 +11,13 @@ const ERROR_MESSAGES = {
 } as const;
 
 const TIMEOUT_MS = 8000;
+const getBackendUrl = () =>
+  process.env.NODE_ENV === "production"
+    ? process.env.BACKEND_URL
+    : process.env.DEV_URL || process.env.BACKEND_URL;
 
 export async function POST(req: NextRequest) {
-  const BACKEND_URL =
-    process.env.NODE_ENV === "production"
-      ? process.env.BACKEND_URL
-      : process.env.DEVE_URL;
+  const BACKEND_URL = getBackendUrl();
 
   if (!BACKEND_URL) {
     proxyLogger.error("Configuration error: BACKEND_URL not set");
@@ -31,145 +32,88 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    // Get ALL cookies from the request
     const allCookies = req.cookies.getAll();
-    const cookieNames = allCookies.map((cookie) => cookie.name);
-
-    proxyLogger.info("🔍 All cookies present:", cookieNames);
-    proxyLogger.info("🔍 Has refreshToken:", req.cookies.has("refreshToken"));
-
-    // Get the refreshToken cookie specifically
     const refreshToken = req.cookies.get("refreshToken")?.value;
 
     if (!refreshToken) {
-      proxyLogger.error("❌ No refreshToken cookie found in request");
-      proxyLogger.error(
-        "Available cookies:",
-        allCookies.map((c) => ({
-          name: c.name,
-          value: c.value ? `[${c.value.length} chars]` : "empty",
-        }))
-      );
+      proxyLogger.warn("No refreshToken cookie found in refresh request");
 
       return NextResponse.json(
         {
           success: false,
           error: "No refresh token available",
           code: "NO_REFRESH_TOKEN",
-          debug: {
-            availableCookies: cookieNames,
-            cookieCount: allCookies.length,
-          },
         },
         { status: 401 }
       );
     }
 
-    proxyLogger.log("✅ Refresh token found, length:", refreshToken.length);
-
-    // Prepare headers for backend request
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
       "User-Agent": "NextJS-Auth-Proxy/1.0",
     };
 
-    // OPTION 1: Forward ALL cookies (recommended)
-    // Get the full cookie string
     const cookieHeader = req.headers.get("cookie");
     if (cookieHeader) {
       headers["Cookie"] = cookieHeader;
-      proxyLogger.log("📦 Forwarding all cookies via Cookie header");
     } else {
-      // OPTION 2: Construct cookie header with just the refresh token
       headers["Cookie"] = `refreshToken=${refreshToken}`;
-      proxyLogger.log("📦 Constructed Cookie header with refresh token only");
     }
 
-    // Add timeout protection
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    try {
+      const backendRes = await fetch(`${BACKEND_URL}/api/auth/refresh-token`, {
+        method: "POST",
+        headers,
+        signal: controller.signal,
+      });
 
-    proxyLogger.log("🚀 Sending request to backend:", {
-      url: `${BACKEND_URL}/api/auth/refresh-token`,
-      hasCookieHeader: !!headers["Cookie"],
-      cookieHeaderLength: headers["Cookie"]?.length,
-    });
-
-    const backendRes = await fetch(`${BACKEND_URL}/api/auth/refresh-token`, {
-      method: "POST",
-      headers,
-      credentials: "include", // Important: include cookies
-      signal: controller.signal,
-    });
-
-    proxyLogger.log("🔧 Backend Response:", {
-      status: backendRes.status,
-      statusText: backendRes.statusText,
-      ok: backendRes.ok,
-      url: `${BACKEND_URL}/api/auth/refresh-token`,
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!backendRes.ok) {
-      let errorText = "";
+      let backendPayload: unknown = null;
       try {
-        errorText = await backendRes.text();
-      } catch (e) {
-        errorText = "Could not read error response";
+        backendPayload = await backendRes.json();
+      } catch {
+        if (backendRes.ok) {
+          proxyLogger.error("Refresh backend returned invalid JSON payload");
+          return NextResponse.json(
+            {
+              success: false,
+              error: ERROR_MESSAGES.SERVICE_UNAVAILABLE,
+              code: "INVALID_BACKEND_RESPONSE",
+            },
+            { status: 502 }
+          );
+        }
       }
 
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Token refresh failed",
-          code: `REFRESH_FAILED_${backendRes.status}`,
-          debug: {
-            backendStatus: backendRes.status,
-            backendResponse: errorText.substring(0, 200),
-            nextJsHadRefreshToken: !!refreshToken,
-            cookieNames: cookieNames,
+      if (!backendRes.ok) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Token refresh failed",
+            code: `REFRESH_FAILED_${backendRes.status}`,
           },
-        },
-        { status: backendRes.status }
-      );
-    }
-
-    const responseData = await backendRes.json();
-    proxyLogger.log("✅ Token refresh successful:", {
-      hasAccessToken: !!responseData.accessToken,
-      hasTokenInfo: !!responseData.tokenInfo,
-    });
-
-    const response = NextResponse.json(responseData, {
-      status: backendRes.status,
-    });
-
-    const setCookieHeaders = extractSetCookieHeaders(backendRes);
-
-    if (setCookieHeaders.length > 0) {
-      proxyLogger.log(
-        `🍪 Backend Set-Cookie headers count:`,
-        setCookieHeaders.length
-      );
-
-      for (const cookie of setCookieHeaders) {
-        response.headers.append("Set-Cookie", cookie);
-        proxyLogger.log(
-          "   Set-Cookie:",
-          cookie.substring(0, 80) + (cookie.length > 80 ? "..." : "")
+          { status: backendRes.status }
         );
       }
-    } else {
-      proxyLogger.log("📭 No Set-Cookie headers from backend");
-    }
 
-    return response;
+      const response = NextResponse.json(backendPayload ?? {}, {
+        status: backendRes.status,
+      });
+
+      const setCookieHeaders = extractSetCookieHeaders(backendRes);
+      for (const cookie of setCookieHeaders) {
+        response.headers.append("Set-Cookie", cookie);
+      }
+
+      return response;
+    } finally {
+      clearTimeout(timeoutId);
+    }
   } catch (error: any) {
-    proxyLogger.error("❌ Refresh token proxy error:", {
+    proxyLogger.error("Refresh token proxy error", {
       name: error.name,
       message: error.message,
-      stack: error.stack,
     });
 
     if (error.name === "AbortError") {

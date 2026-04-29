@@ -1,17 +1,15 @@
 // app/api/warm/route.ts
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { getServerBackendUrl } from "@/lib/api/getServerBackendUrl";
 
 const TIMEOUT_MS = 10000;
 
 export async function GET(req: NextRequest) {
-   const BACKEND_URL =
-    process.env.NODE_ENV === "production"
-      ? process.env.BACKEND_URL
-      : process.env.DEVE_URL;
+  const BACKEND_URL = getServerBackendUrl();
 
   if (!BACKEND_URL) {
-    console.error("Configuration error: BACKEND_URL not set");
+    console.error("Configuration error: backend URL not set (BACKEND_URL / DEV_URL)");
     return NextResponse.json(
       {
         status: "cold",
