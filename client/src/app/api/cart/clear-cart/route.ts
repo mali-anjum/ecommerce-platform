@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-
-const BACKEND_URL =
-  process.env.NODE_ENV === "production"
-    ? process.env.BACKEND_URL
-    : process.env.DEVE_URL;
+import { getServerBackendUrl } from "@/lib/api/getServerBackendUrl";
 
 export async function POST(request: NextRequest) {
+  const BACKEND_URL = getServerBackendUrl();
+
   if (!BACKEND_URL) {
     return NextResponse.json(
       { success: false, error: "Backend URL not configured" },
