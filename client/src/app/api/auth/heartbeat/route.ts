@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { extractSetCookieHeaders } from "@/lib/api/extractSetCookieHeaders";
+import { getServerBackendUrl } from "@/lib/api/getServerBackendUrl";
 
 const ERROR_MESSAGES = {
   BACKEND_NOT_CONFIGURED: "Backend URL not configured",
@@ -11,10 +12,7 @@ const ERROR_MESSAGES = {
 const TIMEOUT_MS = 8000;
 
 export async function POST(req: NextRequest) {
-  const BACKEND_URL =
-    process.env.NODE_ENV === "production"
-      ? process.env.BACKEND_URL
-      : process.env.DEVE_URL;
+  const BACKEND_URL = getServerBackendUrl();
 
   if (!BACKEND_URL) {
     return NextResponse.json(
