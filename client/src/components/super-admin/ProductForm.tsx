@@ -65,7 +65,14 @@ function mergeImageFiles(prev: File[], incoming: File[]): File[] {
   return out;
 }
 
-function ProductForm() {
+type ProductFormProps = {
+  /** Where "Back to list" / success redirect goes (seller vs super-admin) */
+  listPath?: string;
+};
+
+function ProductForm({
+  listPath = "/super-admin/products/list",
+}: ProductFormProps = {}) {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [selectedDepartmentId, setSelectedDepartmentId] = useState("");
   const [selectedSubcategoryId, setSelectedSubcategoryId] = useState("");
@@ -303,7 +310,7 @@ function ProductForm() {
             : "Product created successfully",
           className: "bg-success/10 border-success/20 text-success",
         });
-        router.push("/super-admin/products/list");
+        router.push(listPath);
       }
     } catch (submitErr) {
       const message = axios.isAxiosError(submitErr)
@@ -345,7 +352,7 @@ function ProductForm() {
                 <Button
                   variant="outline"
                   type="button"
-                  onClick={() => router.push("/super-admin/products/list")}
+                  onClick={() => router.push(listPath)}
                   className="border-border hover:border-primary"
                 >
                   Back to List

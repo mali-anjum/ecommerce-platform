@@ -2,6 +2,12 @@ export interface Product {
   id: string;                 // UUID or DB id (e.g. "6364f..."). Keep as string for flexibility.
   name: string;               // Human-facing product title
   brand: string;              // Brand slug or name
+  condition?: "NEW" | "REFURBISHED" | "USED";
+  sellerId?: string | null;
+  sellerName?: string | null;
+  discountPercent?: number | null;
+  dealStartsAt?: string | null;
+  dealEndsAt?: string | null;
   category: string;           // Category slug (e.g. "shirts")
   subcategoryId?: string | null; // Normalized subcategory relation (optional during transition)
   description?: string;       // Optional longer description (may be absent)
@@ -26,6 +32,10 @@ export interface ProductFilters {
   sizes?: string[];
   colors?: string[];
   brands?: string[];
+  conditions?: string[];
+  sellerIds?: string[];
+  onDeal?: boolean;
+  minDiscount?: number;
   minPrice?: number;
   maxPrice?: number;
   sortBy?: string;
@@ -38,6 +48,11 @@ export interface ProductFilters {
   subcategory?: string;
   /** all | new | trending | bestsellers | featured */
   collection?: string;
+}
+
+export interface SellerFilterOption {
+  id: string;
+  name: string;
 }
 
 export interface ProductResponse {

@@ -14,7 +14,12 @@ export const useLogin = () => {
   useEffect(() => {
     if (user) {
       console.log("🎯 User authenticated, redirecting...");
-      const targetPath = user.role === "SUPER_ADMIN" ? ROUTES.SUPER_ADMIN : ROUTES.HOME;
+      const targetPath =
+        user.role === "SUPER_ADMIN"
+          ? ROUTES.SUPER_ADMIN
+          : user.role === "SELLER"
+            ? ROUTES.SELLER
+            : ROUTES.HOME;
       
       setTimeout(() => {
         router.push(targetPath);

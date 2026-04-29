@@ -10,7 +10,6 @@ import {
   updateOrderStatusAdminOnly,
   getOrderById,
   getSellerOrderLines,
-  trackOrderPublic,
 } from "../controllers/orderController";
 import { attachSellerProfile } from "../middleware/sellerMiddleware";
 import { ApiResponse } from "../utils/ApiResponse";
@@ -19,7 +18,6 @@ import { genericWebhook, paypalWebhook, stripeWebhook } from "../controllers/web
 
 const router = express.Router();
 
-router.post("/track", trackOrderPublic);
 router.post("/webhooks/paypal", 
   express.raw({ type: "application/json" }), 
   paypalWebhook

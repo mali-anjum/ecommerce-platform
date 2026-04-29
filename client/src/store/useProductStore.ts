@@ -1,7 +1,7 @@
 import { API_ROUTES } from "@/utils/routes/api";
 import axios from "axios";
 import { create } from "zustand";
-import type { Product, ProductFilters } from "@/types/product";
+import type { Product, ProductFilters, SellerFilterOption } from "@/types/product";
 
 interface ProductState {
   products: Product[];
@@ -10,6 +10,7 @@ interface ProductState {
   currentPage: number;
   totalPages: number;
   totalProducts: number;
+  availableSellers: SellerFilterOption[];
   fetchAllProductsForAdmin: () => Promise<void>;
   createProduct: (productData: FormData) => Promise<Product>;
   updateProduct: (id: string, productData: FormData) => Promise<Product>;
@@ -27,6 +28,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
   currentPage: 1,
   totalPages: 1,
   totalProducts: 0,
+  availableSellers: [],
 
   fetchAllProductsForAdmin: async () => {
     set({ isLoading: true, error: null });
@@ -157,6 +159,10 @@ export const useProductStore = create<ProductState>((set, get) => ({
         sizes: params.sizes?.join(","),
         colors: params.colors?.join(","),
         brands: params.brands?.join(","),
+        conditions: params.conditions?.join(","),
+        sellerIds: params.sellerIds?.join(","),
+        onDeal: params.onDeal ? "true" : undefined,
+        minDiscount: params.minDiscount || undefined,
         search: params.search || undefined,
         mainCategory: params.mainCategory || undefined,
         subcategory: params.subcategory || undefined,
@@ -193,6 +199,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
         currentPage: responseData.currentPage || 1,
         totalPages: responseData.totalPages || 1,
         totalProducts: responseData.totalProducts || 0,
+        availableSellers: responseData.availableSellers || [],
         isLoading: false,
       });
     } catch (error: any) {

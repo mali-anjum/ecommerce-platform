@@ -26,8 +26,21 @@ interface ProductFiltersProps {
   selectedSizes: string[];
   selectedColors: string[];
   selectedBrands: string[];
+  selectedConditions: string[];
+  selectedSellerIds: string[];
+  onDeal: boolean;
+  minDiscount: number;
+  sellerOptions: Array<{ id: string; name: string }>;
+  setOnDeal: (value: boolean) => void;
+  setMinDiscount: (value: number) => void;
   onToggleFilter: (
-    filterType: "categories" | "sizes" | "brands" | "colors",
+    filterType:
+      | "categories"
+      | "sizes"
+      | "brands"
+      | "colors"
+      | "conditions"
+      | "sellerIds",
     value: string
   ) => void;
   /** Hide category checkboxes when department is chosen via URL / header dropdown */
@@ -41,6 +54,13 @@ export function ProductFilters({
   selectedSizes,
   selectedColors,
   selectedBrands,
+  selectedConditions,
+  selectedSellerIds,
+  onDeal,
+  minDiscount,
+  sellerOptions,
+  setOnDeal,
+  setMinDiscount,
   onToggleFilter,
   hideCategories = false,
 }: ProductFiltersProps) {
@@ -96,6 +116,76 @@ export function ProductFilters({
               </Label>
             </div>
           ))}
+        </div>
+      </div>
+
+      <div>
+        <h3 className="mb-3 font-semibold">Condition</h3>
+        <div className="space-y-2">
+          {["NEW", "REFURBISHED", "USED"].map((condition) => (
+            <div key={condition} className="flex items-center">
+              <Checkbox
+                checked={selectedConditions.includes(condition)}
+                onCheckedChange={() => onToggleFilter("conditions", condition)}
+                id={`condition-${condition}`}
+              />
+              <Label htmlFor={`condition-${condition}`} className="ml-2 text-sm">
+                {condition}
+              </Label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <h3 className="mb-3 font-semibold">Seller</h3>
+        <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+          {sellerOptions.length === 0 ? (
+            <p className="text-xs text-muted-foreground">No seller data available yet.</p>
+          ) : (
+            sellerOptions.map((seller) => (
+              <div key={seller.id} className="flex items-center">
+                <Checkbox
+                  checked={selectedSellerIds.includes(seller.id)}
+                  onCheckedChange={() => onToggleFilter("sellerIds", seller.id)}
+                  id={`seller-${seller.id}`}
+                />
+                <Label htmlFor={`seller-${seller.id}`} className="ml-2 text-sm">
+                  {seller.name}
+                </Label>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      <div>
+        <h3 className="mb-3 font-semibold">Deals & Discounts</h3>
+        <div className="space-y-3">
+          <div className="flex items-center">
+            <Checkbox
+              checked={onDeal}
+              onCheckedChange={(checked) => setOnDeal(checked === true)}
+              id="onDeal"
+            />
+            <Label htmlFor="onDeal" className="ml-2 text-sm">
+              On deal only
+            </Label>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {[0, 10, 20, 30, 40, 50].map((value) => (
+              <Button
+                key={value}
+                type="button"
+                size="sm"
+                variant={minDiscount === value ? "default" : "outline"}
+                onClick={() => setMinDiscount(value)}
+                className="h-8"
+              >
+                {value === 0 ? "Any discount" : `${value}%+`}
+              </Button>
+            ))}
+          </div>
         </div>
       </div>
 

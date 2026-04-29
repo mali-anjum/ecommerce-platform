@@ -16,9 +16,19 @@ export interface Order {
   items: OrderItem[];
   couponId?: string;
   total: number;
-  status: "PENDING" | "PROCESSING" | "SHIPPED" | "DELIVERED";
-  paymentMethod: "CREDIT_CARD";
-  paymentStatus: "PENDING" | "COMPLETED";
+  status:
+    | "PENDING"
+    | "DRAFT"
+    | "PENDING_PAYMENT"
+    | "PAYMENT_APPROVED"
+    | "PROCESSING"
+    | "SHIPPED"
+    | "DELIVERED"
+    | "CANCELLED"
+    | "PAYMENT_FAILED"
+    | "CAPTURE_FAILED";
+  paymentMethod: "CREDIT_CARD" | "PAYPAL" | "STRIPE";
+  paymentStatus: "PENDING" | "APPROVED" | "COMPLETED" | "FAILED" | "REFUNDED" | "CANCELLED";
   paymentId?: string;
   createdAt: string;
   updatedAt: string;
@@ -31,9 +41,19 @@ export interface AdminOrder {
   items: OrderItem[];
   couponId?: string;
   total: number;
-  status: "PENDING" | "PROCESSING" | "SHIPPED" | "DELIVERED";
-  paymentMethod: "CREDIT_CARD";
-  paymentStatus: "PENDING" | "COMPLETED";
+  status:
+    | "PENDING"
+    | "DRAFT"
+    | "PENDING_PAYMENT"
+    | "PAYMENT_APPROVED"
+    | "PROCESSING"
+    | "SHIPPED"
+    | "DELIVERED"
+    | "CANCELLED"
+    | "PAYMENT_FAILED"
+    | "CAPTURE_FAILED";
+  paymentMethod: "CREDIT_CARD" | "PAYPAL" | "STRIPE";
+  paymentStatus: "PENDING" | "APPROVED" | "COMPLETED" | "FAILED" | "REFUNDED" | "CANCELLED";
   paymentId?: string;
   createdAt: string;
   updatedAt: string;
@@ -50,9 +70,23 @@ export interface CreateOrderData {
   items: Omit<OrderItem, "id">[];
   couponId?: string;
   total: number;
-  paymentMethod: "CREDIT_CARD";
-  paymentStatus: "PENDING" | "COMPLETED";
+  paymentMethod: "CREDIT_CARD" | "PAYPAL" | "STRIPE";
+  paymentStatus: "PENDING" | "APPROVED" | "COMPLETED" | "FAILED" | "REFUNDED" | "CANCELLED";
   paymentId?: string;
+}
+
+export interface SellerOrderLine {
+  id: string;
+  quantity: number;
+  price: number;
+  orderId: string;
+  order: {
+    id: string;
+    status: string;
+    createdAt: string;
+    paymentStatus: string;
+  };
+  product: { id: string; name: string } | null;
 }
 
 export interface OrderStore {
@@ -84,5 +118,9 @@ export interface OrderStore {
   ) => Promise<boolean>;
   getAllOrders: () => Promise<Order[] | null>;
   getOrderForAdmin: (orderId: string) => Promise<Order | null>;
+  getSellerSalesLines: (params?: {
+    page?: number;
+    limit?: number;
+  }) => Promise<SellerOrderLine[] | null>;
   setCurrentOrder: (order: Order | null) => void;
 }

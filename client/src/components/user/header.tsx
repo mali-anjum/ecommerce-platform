@@ -15,7 +15,6 @@ import {
   Mail,
   Shield,
   HelpCircle,
-  Gift,
   Star,
   TrendingUp
 } from "lucide-react";
@@ -44,7 +43,15 @@ import ThemeToggle from "../common/ThemeToggler";
 import { Input } from "../ui/input";
 import { useCategoryStore } from "@/store/useCategoryStore";
 
-const mainNavItems = [
+type HeaderNavItem = {
+  title: string;
+  to: string;
+  icon: JSX.Element;
+  badge?: string;
+  megaMenu?: boolean;
+};
+
+const mainNavItems: HeaderNavItem[] = [
   {
     title: "HOME",
     to: "/",
@@ -61,17 +68,6 @@ const mainNavItems = [
     to: "/new-arrivals",
     icon: <Star className="h-4 w-4 mr-2" />,
     badge: "HOT",
-  },
-  {
-    title: "DEALS",
-    to: "/deals",
-    icon: <Gift className="h-4 w-4 mr-2" />,
-    badge: "SALE",
-  },
-  {
-    title: "BRANDS",
-    to: "/brands",
-    icon: <TrendingUp className="h-4 w-4 mr-2" />,
   },
 ];
 
@@ -103,6 +99,20 @@ function Header() {
   const { categories, fetchCategories } = useCategoryStore();
 
   const categoryItems = useMemo(() => categories, [categories]);
+  const departmentOptions = useMemo(
+    () =>
+      categoryItems.flatMap((category) => [
+        {
+          label: `${category.title} (All)`,
+          value: category.title,
+        },
+        ...category.subcategories.map((sub) => ({
+          label: `${category.title} > ${sub.title}`,
+          value: `${category.title}::${sub.title}`,
+        })),
+      ]),
+    [categoryItems]
+  );
 
   useEffect(() => {
     if (!user) return;
@@ -146,6 +156,24 @@ function Header() {
 
     const query = params.toString();
     router.push(query ? `/products?${query}` : "/products");
+  };
+
+  const handleDepartmentSelect = (value: string) => {
+    setSelectedDepartment(value);
+    if (pathname !== "/products") return;
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("mainCategory");
+    params.delete("subcategory");
+
+    if (value !== "all") {
+      const [mainCategory, subcategory] = value.split("::");
+      if (mainCategory) params.set("mainCategory", mainCategory);
+      if (subcategory) params.set("subcategory", subcategory);
+    }
+
+    const next = params.toString();
+    router.replace(next ? `/products?${next}` : "/products");
   };
 
   const renderMobileMenuItems = () => {
@@ -461,19 +489,14 @@ function Header() {
             <form onSubmit={handleSearch} className="relative w-full flex items-center">
               <select
                 value={selectedDepartment}
-                onChange={(e) => setSelectedDepartment(e.target.value)}
-                className="h-10 rounded-l-full border border-border/50 border-r-0 bg-card px-3 text-sm text-muted-foreground focus:outline-none"
+                onChange={(e) => handleDepartmentSelect(e.target.value)}
+                className="h-10 min-w-[220px] rounded-l-full border border-border/50 border-r-0 bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
               >
                 <option value="all">All Departments</option>
-                {categoryItems.map((category) => (
-                  <optgroup key={category.slug} label={category.title}>
-                    <option value={`${category.title}`}>{category.title}</option>
-                    {category.subcategories.map((sub) => (
-                      <option key={`${category.slug}-${sub.slug}`} value={`${category.title}::${sub.title}`}>
-                        {sub.title}
-                      </option>
-                    ))}
-                  </optgroup>
+                {departmentOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
                 ))}
               </select>
 
@@ -569,6 +592,20 @@ function Header() {
                         {item.title}
                       </DropdownMenuItem>
                     ))}
+                    {user.role === "SELLER" && (
+                      <DropdownMenuItem
+                        onClick={() => router.push("/seller")}
+                      >
+                        Seller dashboard
+                      </DropdownMenuItem>
+                    )}
+                    {user.role === "USER" && (
+                      <DropdownMenuItem
+                        onClick={() => router.push("/seller/register")}
+                      >
+                        Become a seller
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuSeparator />
                     <div className="p-2">
                       <ThemeToggle />
@@ -661,7 +698,9 @@ function Header() {
                       {item.badge}
                     </span>
                   )}
-                  <ChevronDown className="ml-1 h-3 w-3" />
+                  {item.megaMenu && (
+                    <ChevronDown className="ml-1 h-3 w-3" />
+                  )}
                 </Link>
                 
                 {/* Mega Menu for Shop */}
@@ -690,6 +729,7 @@ function Header() {
                     </div>
                   </div>
                 )}
+
               </div>
             ))}
           </nav>
