@@ -71,8 +71,10 @@ export default function NotificationsPage() {
     () => notifications.filter((item) => !item.read).length,
     [notifications],
   );
+  const hasUnread = unreadCount > 0;
 
   const markAllRead = () => {
+    if (!hasUnread) return;
     setNotifications((prev) => prev.map((item) => ({ ...item, read: true })));
   };
 
@@ -106,9 +108,14 @@ export default function NotificationsPage() {
               <Badge variant="outline" className="border-primary text-primary">
                 {unreadCount} unread
               </Badge>
-              <Button variant="outline" onClick={markAllRead}>
+              <Button
+                variant="outline"
+                onClick={markAllRead}
+                disabled={!hasUnread}
+                className={!hasUnread ? "opacity-60 cursor-not-allowed" : ""}
+              >
                 <CheckCheck className="mr-2 h-4 w-4" />
-                Mark all as read
+                {hasUnread ? "Mark all as read" : "All caught up"}
               </Button>
             </div>
           </div>
@@ -119,7 +126,9 @@ export default function NotificationsPage() {
             <Card
               key={item.id}
               className={`border-border/70 bg-card/95 transition-all ${
-                item.read ? "opacity-85" : "border-primary/50"
+                item.read
+                  ? "opacity-75"
+                  : "border-primary/60 shadow-[0_0_0_1px_hsl(var(--primary)/0.25)]"
               }`}
             >
               <CardContent className="p-5">
