@@ -17,6 +17,11 @@ import {
   HelpCircle,
   Star,
   TrendingUp,
+  Package,
+  Bookmark,
+  MapPin,
+  Store,
+  LogOut,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -78,6 +83,32 @@ const accountItems = [
   { title: "Saved Items", to: "/saved" },
   { title: "Addresses", to: "/addresses" },
 ];
+
+const accountItemVisuals: Record<
+  string,
+  { icon: ReactNode; helper: string }
+> = {
+  "My Account": {
+    icon: <User className="h-4 w-4 text-primary" />,
+    helper: "Profile and preferences",
+  },
+  Orders: {
+    icon: <Package className="h-4 w-4 text-primary" />,
+    helper: "Track and manage purchases",
+  },
+  Wishlist: {
+    icon: <Heart className="h-4 w-4 text-primary" />,
+    helper: "Saved favorites",
+  },
+  "Saved Items": {
+    icon: <Bookmark className="h-4 w-4 text-primary" />,
+    helper: "Items for later",
+  },
+  Addresses: {
+    icon: <MapPin className="h-4 w-4 text-primary" />,
+    helper: "Delivery locations",
+  },
+};
 
 const infoItems = [
   {
@@ -616,42 +647,69 @@ function Header() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
                   align="end"
-                  className="w-72 rounded-xl border border-border bg-card text-card-foreground shadow-2xl backdrop-blur-none"
+                  className="w-80 rounded-2xl border border-border bg-card text-card-foreground shadow-2xl backdrop-blur-none"
                 >
                   {user ? (
                     <>
-                      <div className="rounded-t-xl border-b border-border bg-muted/40 px-4 py-3">
-                        <p className="font-medium text-foreground">
+                      <div className="rounded-t-2xl border-b border-border bg-muted/40 px-4 py-4">
+                        <p className="text-base font-semibold text-foreground">
                           {user.name}
                         </p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-muted-foreground break-all">
                           {user.email}
                         </p>
                       </div>
-                      <DropdownMenuSeparator />
+                      <div className="px-2 pb-2 pt-2">
+                        <p className="px-2 pb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                          Account
+                        </p>
                       {accountItems.map((item) => (
                         <DropdownMenuItem
                           key={item.title}
                           onClick={() => router.push(item.to)}
-                          className="mx-1 rounded-md px-3 py-2 focus:bg-accent/20"
+                          className="mx-1 my-1 rounded-lg px-3 py-2.5 focus:bg-accent/20"
                         >
-                          {item.title}
+                          <div className="flex w-full items-center justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                              <span className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10">
+                                {accountItemVisuals[item.title]?.icon ?? (
+                                  <User className="h-4 w-4 text-primary" />
+                                )}
+                              </span>
+                              <div className="flex flex-col">
+                                <span className="text-sm font-medium text-foreground">
+                                  {item.title}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                  {accountItemVisuals[item.title]?.helper ?? "Open section"}
+                                </span>
+                              </div>
+                            </div>
+                            <ChevronDown className="h-3 w-3 -rotate-90 text-muted-foreground" />
+                          </div>
                         </DropdownMenuItem>
                       ))}
+                      </div>
                       {user.role === "SELLER" && (
                         <DropdownMenuItem
                           onClick={() => router.push("/seller")}
-                          className="mx-1 rounded-md px-3 py-2 focus:bg-accent/20"
+                          className="mx-3 my-1 rounded-lg px-3 py-2.5 focus:bg-accent/20"
                         >
-                          Seller dashboard
+                          <span className="mr-3 flex h-8 w-8 items-center justify-center rounded-md bg-secondary/15">
+                            <Store className="h-4 w-4 text-secondary" />
+                          </span>
+                          <span className="font-medium">Seller dashboard</span>
                         </DropdownMenuItem>
                       )}
                       {user.role === "USER" && (
                         <DropdownMenuItem
                           onClick={() => router.push("/seller/register")}
-                          className="mx-1 rounded-md px-3 py-2 focus:bg-accent/20"
+                          className="mx-3 my-1 rounded-lg px-3 py-2.5 focus:bg-accent/20"
                         >
-                          Become a seller
+                          <span className="mr-3 flex h-8 w-8 items-center justify-center rounded-md bg-secondary/15">
+                            <Store className="h-4 w-4 text-secondary" />
+                          </span>
+                          <span className="font-medium">Become a seller</span>
                         </DropdownMenuItem>
                       )}
                       <DropdownMenuSeparator />
@@ -660,22 +718,25 @@ function Header() {
                       </div>
                       <DropdownMenuItem
                         onClick={handleLogout}
-                        className="mx-1 rounded-md px-3 py-2 text-destructive focus:bg-destructive/10 focus:text-destructive"
+                        className="mx-2 mb-2 rounded-lg px-3 py-2.5 text-destructive focus:bg-destructive/10 focus:text-destructive"
                       >
-                        Logout
+                        <span className="mr-3 flex h-8 w-8 items-center justify-center rounded-md bg-destructive/15">
+                          <LogOut className="h-4 w-4 text-destructive" />
+                        </span>
+                        <span className="font-medium">Logout</span>
                       </DropdownMenuItem>
                     </>
                   ) : (
                     <>
                       <DropdownMenuItem
                         onClick={() => router.push("/auth/login")}
-                        className="mx-1 rounded-md px-3 py-2 focus:bg-accent/20"
+                        className="mx-2 mt-2 rounded-lg px-3 py-2.5 focus:bg-accent/20"
                       >
                         Sign In
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => router.push("/auth/register")}
-                        className="mx-1 rounded-md px-3 py-2 focus:bg-accent/20"
+                        className="mx-2 my-1 rounded-lg px-3 py-2.5 focus:bg-accent/20"
                       >
                         Create Account
                       </DropdownMenuItem>
@@ -684,8 +745,11 @@ function Header() {
                         <DropdownMenuItem
                           key={item.title}
                           onClick={() => router.push(item.to)}
-                          className="mx-1 rounded-md px-3 py-2 focus:bg-accent/20"
+                          className="mx-2 my-1 rounded-lg px-3 py-2.5 focus:bg-accent/20"
                         >
+                          <span className="mr-3 flex h-8 w-8 items-center justify-center rounded-md bg-primary/10">
+                            {item.icon}
+                          </span>
                           {item.title}
                         </DropdownMenuItem>
                       ))}
