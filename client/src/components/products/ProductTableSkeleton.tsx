@@ -7,7 +7,7 @@ export function ProducSkeleton() {
   const { user } = useAuthStore();
 
   // Return the appropriate skeleton based on role
-  if (user?.role === "SUPER_ADMIN") {
+  if (user?.role === "SUPER_ADMIN" || user?.role === "SELLER") {
     return <ProductTableSkeleton />;
   }
 
