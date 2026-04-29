@@ -14,6 +14,7 @@ import {
 import { authLogger } from "@/utils/Logger";
 import { normalizeRefreshResponseTokenInfo } from "@/lib/auth/normalizeTokenInfo";
 import { runWithRefreshLock } from "@/lib/auth/runWithRefreshLock";
+import { API_ROUTES } from "@/utils/routes/api";
 
 interface AuthStore {
   user: User | null;
@@ -25,7 +26,7 @@ interface AuthStore {
   // Actions
   setUser: (user: User | null) => void;
   isAuthenticated: () => boolean;
-  getUserRole: () => "USER" | "SUPER_ADMIN" | null;
+  getUserRole: () => "USER" | "SELLER" | "SUPER_ADMIN" | null;
   reset: () => void;
   clearError: () => void;
   initialize: () => Promise<void>;
@@ -34,6 +35,10 @@ interface AuthStore {
     email: string,
     password: string
   ) => Promise<string | null>;
+  registerSeller: (payload: {
+    storeName: string;
+    slug: string;
+  }) => Promise<boolean>;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   refreshAccessToken: () => Promise<boolean>;
@@ -216,6 +221,37 @@ export const useAuthStore = create<AuthStore>()(
             : "Registration failed";
           set({ isLoading: false, error: errorMessage });
           return null;
+        }
+      },
+
+      registerSeller: async ({ storeName, slug }) => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await axios.post(
+            `${API_ROUTES.SELLERS}/register`,
+            {
+              storeName: storeName.trim(),
+              slug: slug.trim().toLowerCase(),
+            },
+            { withCredentials: true }
+          );
+
+          const nextUser = response.data?.data?.user as User | undefined;
+          if (nextUser) {
+            set({ user: nextUser });
+          }
+
+          set({ isLoading: false });
+          return true;
+        } catch (error) {
+          const errorMessage = axios.isAxiosError(error)
+            ? error.response?.data?.message ||
+              error.response?.data?.error ||
+              error.message ||
+              "Seller registration failed"
+            : "Seller registration failed";
+          set({ isLoading: false, error: String(errorMessage) });
+          return false;
         }
       },
 
@@ -422,8 +458,28 @@ export const useAuthStore = create<AuthStore>()(
               set({ error: errorMessage });
 
               if (statusCode === 401) {
-                authLogger.auth("Refresh token invalid, logging out");
-                setTimeout(() => get().logout(), 100);
+                authLogger.warn(
+                  "Refresh returned 401; verifying session before forced logout"
+                );
+                try {
+                  const session = await get().checkSession();
+                  if (!session.hasRefreshToken) {
+                    authLogger.auth(
+                      "No refresh cookie present after 401, performing logout"
+                    );
+                    setTimeout(() => get().logout(), 100);
+                  } else {
+                    authLogger.info(
+                      "Refresh cookie still present after 401; keeping session and retrying later"
+                    );
+                  }
+                } catch (sessionError) {
+                  authLogger.error(
+                    "Session re-check failed after refresh 401; falling back to logout",
+                    sessionError
+                  );
+                  setTimeout(() => get().logout(), 100);
+                }
               }
             } else {
               authLogger.error("Token refresh network/unknown error", error, {
@@ -567,9 +623,20 @@ axiosInstance.interceptors.response.use(
           }
           return axiosInstance(originalRequest);
         }
+        const session = await useAuthStore.getState().checkSession();
+        if (!session.hasRefreshToken) {
+          useAuthStore.getState().logout();
+        }
       } catch (refreshError) {
         console.error("❌ Interceptor: Token refresh failed", refreshError);
-        useAuthStore.getState().logout();
+        try {
+          const session = await useAuthStore.getState().checkSession();
+          if (!session.hasRefreshToken) {
+            useAuthStore.getState().logout();
+          }
+        } catch {
+          useAuthStore.getState().logout();
+        }
       }
     }
 
