@@ -36,7 +36,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "../ui/sheet";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useCartStore } from "@/store/useCartStore";
 // import ThemeToggle from "../layout/Themetoggle";
 import ThemeToggle from "../common/ThemeToggler";
@@ -46,7 +46,7 @@ import { useCategoryStore } from "@/store/useCategoryStore";
 type HeaderNavItem = {
   title: string;
   to: string;
-  icon: JSX.Element;
+  icon: ReactNode;
   badge?: string;
   megaMenu?: boolean;
 };
