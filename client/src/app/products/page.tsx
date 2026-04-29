@@ -359,11 +359,24 @@ interface FiltersBarProps {
   selectedSizes: string[];
   selectedColors: string[];
   selectedBrands: string[];
+  selectedConditions: string[];
+  selectedSellerIds: string[];
+  onDeal: boolean;
+  minDiscount: number;
+  sellerOptions: Array<{ id: string; name: string }>;
+  setOnDeal: (value: boolean) => void;
+  setMinDiscount: (value: number) => void;
   onToggleFilter: ProductFiltersToggle;
 }
 
 type ProductFiltersToggle = (
-  filterType: "categories" | "sizes" | "brands" | "colors",
+  filterType:
+    | "categories"
+    | "sizes"
+    | "brands"
+    | "colors"
+    | "conditions"
+    | "sellerIds",
   value: string
 ) => void;
 
@@ -382,6 +395,13 @@ function FiltersBar({
   selectedSizes,
   selectedColors,
   selectedBrands,
+  selectedConditions,
+  selectedSellerIds,
+  onDeal,
+  minDiscount,
+  sellerOptions,
+  setOnDeal,
+  setMinDiscount,
   onToggleFilter,
 }: FiltersBarProps) {
   const router = useRouter();
@@ -398,6 +418,21 @@ function FiltersBar({
     if (!main) return "all";
     return sub ? `${main}::${sub}` : main;
   }, [searchParams]);
+
+  const departmentOptions = useMemo(
+    () =>
+      categories.flatMap((category) => [
+        {
+          label: `${category.title} (All)`,
+          value: category.title,
+        },
+        ...category.subcategories.map((sub) => ({
+          label: `${category.title} > ${sub.title}`,
+          value: `${category.title}::${sub.title}`,
+        })),
+      ]),
+    [categories]
+  );
 
   const handleDepartmentChange = (value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -426,21 +461,13 @@ function FiltersBar({
             id="shop-department"
             value={departmentValue}
             onChange={(e) => handleDepartmentChange(e.target.value)}
-            className="h-10 w-full sm:w-[200px] shrink-0 rounded-l-md sm:rounded-l-md sm:rounded-r-none border border-border bg-input px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className="h-10 w-full sm:w-[240px] shrink-0 rounded-l-md sm:rounded-l-md sm:rounded-r-none border border-border bg-input px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
           >
             <option value="all">All Departments</option>
-            {categories.map((category) => (
-              <optgroup key={category.slug} label={category.title}>
-                <option value={category.title}>{category.title}</option>
-                {category.subcategories.map((sub) => (
-                  <option
-                    key={`${category.slug}-${sub.slug}`}
-                    value={`${category.title}::${sub.title}`}
-                  >
-                    {sub.title}
-                  </option>
-                ))}
-              </optgroup>
+            {departmentOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
             ))}
           </select>
           <div className="relative flex-1 min-w-0">
@@ -550,6 +577,13 @@ function FiltersBar({
                 selectedSizes={selectedSizes}
                 selectedColors={selectedColors}
                 selectedBrands={selectedBrands}
+                selectedConditions={selectedConditions}
+                selectedSellerIds={selectedSellerIds}
+                onDeal={onDeal}
+                minDiscount={minDiscount}
+                sellerOptions={sellerOptions}
+                setOnDeal={setOnDeal}
+                setMinDiscount={setMinDiscount}
                 onToggleFilter={onToggleFilter}
                 hideCategories
               />
@@ -700,11 +734,18 @@ function ProductListingPage() {
     selectedSizes,
     selectedColors,
     selectedBrands,
+    selectedConditions,
+    selectedSellerIds,
+    onDeal,
+    minDiscount,
+    setOnDeal,
+    setMinDiscount,
     sortBy,
     sortOrder,
     handleToggleFilter,
     handleSortChange,
     getFilters,
+    syncFromQuery,
     resetFilters,
     clearSelectedCategories,
   } = useProductFilters();
@@ -714,6 +755,7 @@ function ProductListingPage() {
     currentPage,
     totalPages,
     totalProducts,
+    availableSellers,
     setCurrentPage,
     fetchProductsForClient,
     isLoading,
@@ -730,6 +772,10 @@ function ProductListingPage() {
   }, [urlSearchQs]);
 
   useEffect(() => {
+    syncFromQuery(new URLSearchParams(searchParams.toString()));
+  }, [searchParams, syncFromQuery]);
+
+  useEffect(() => {
     clearSelectedCategories();
   }, [mainCategoryQs, subcategoryQs, clearSelectedCategories]);
 
@@ -744,7 +790,55 @@ function ProductListingPage() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [collectionTab, debouncedSearch, mainCategoryQs, subcategoryQs, setCurrentPage]);
+  }, [
+    collectionTab,
+    debouncedSearch,
+    mainCategoryQs,
+    subcategoryQs,
+    selectedConditions,
+    selectedSellerIds,
+    onDeal,
+    minDiscount,
+    setCurrentPage,
+  ]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    const setArray = (key: string, values: string[]) => {
+      params.delete(key);
+      if (values.length > 0) {
+        params.set(key, values.join(","));
+      }
+    };
+
+    setArray("conditions", selectedConditions);
+    setArray("sellerIds", selectedSellerIds);
+
+    if (onDeal) {
+      params.set("onDeal", "true");
+    } else {
+      params.delete("onDeal");
+    }
+
+    if (minDiscount > 0) {
+      params.set("minDiscount", String(minDiscount));
+    } else {
+      params.delete("minDiscount");
+    }
+
+    const next = params.toString();
+    const current = searchParams.toString();
+    if (next !== current) {
+      router.replace(next ? `/products?${next}` : "/products");
+    }
+  }, [
+    minDiscount,
+    onDeal,
+    router,
+    searchParams,
+    selectedConditions,
+    selectedSellerIds,
+  ]);
 
   // Fetch products with filters + URL-driven department (`mainCategory`) + collection tabs
   const fetchAllProducts = useCallback(() => {
@@ -790,7 +884,11 @@ function ProductListingPage() {
       ...selectedSizes,
       ...selectedColors,
       ...selectedBrands,
+      ...selectedConditions,
+      ...selectedSellerIds,
     ].length + (priceRange[0] > 0 || priceRange[1] < 100000 ? 1 : 0);
+  const activeFilterCountWithDeals =
+    activeFilterCount + (onDeal ? 1 : 0) + (minDiscount > 0 ? 1 : 0);
 
   // Handle errors
   useEffect(() => {
@@ -834,7 +932,7 @@ function ProductListingPage() {
           onSortChange={handleSortChange}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
-          activeFilterCount={activeFilterCount}
+          activeFilterCount={activeFilterCountWithDeals}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
           priceRange={priceRange}
@@ -843,9 +941,39 @@ function ProductListingPage() {
           selectedSizes={selectedSizes}
           selectedColors={selectedColors}
           selectedBrands={selectedBrands}
+          selectedConditions={selectedConditions}
+          selectedSellerIds={selectedSellerIds}
+          onDeal={onDeal}
+          minDiscount={minDiscount}
+          sellerOptions={availableSellers}
+          setOnDeal={setOnDeal}
+          setMinDiscount={setMinDiscount}
           onToggleFilter={handleToggleFilter}
         />
 
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
+            <aside className="hidden lg:block">
+              <div className="sticky top-24 rounded-2xl border border-glass-border bg-card/70 p-4">
+                <h3 className="mb-3 font-semibold">Filter Products</h3>
+                <FiltersComponent
+                  priceRange={priceRange}
+                  setPriceRange={setPriceRange}
+                  selectedCategories={selectedCategories}
+                  selectedSizes={selectedSizes}
+                  selectedColors={selectedColors}
+                  selectedBrands={selectedBrands}
+                  selectedConditions={selectedConditions}
+                  selectedSellerIds={selectedSellerIds}
+                  onDeal={onDeal}
+                  minDiscount={minDiscount}
+                  sellerOptions={availableSellers}
+                  setOnDeal={setOnDeal}
+                  setMinDiscount={setMinDiscount}
+                  onToggleFilter={handleToggleFilter}
+                  hideCategories={Boolean(mainCategoryQs || subcategoryQs)}
+                />
+              </div>
+            </aside>
         <div>
             {/* Results Summary */}
             <ResultsSummary
@@ -927,6 +1055,7 @@ function ProductListingPage() {
                 </Button>
               </div>
             )}
+        </div>
         </div>
       </div>
 
