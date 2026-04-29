@@ -1,14 +1,14 @@
 "use client";
 
-import { 
-  ArrowLeft, 
-  Menu, 
-  ShoppingBag, 
-  ShoppingCart, 
-  User, 
-  Search, 
-  Heart, 
-  Bell, 
+import {
+  ArrowLeft,
+  Menu,
+  ShoppingBag,
+  ShoppingCart,
+  User,
+  Search,
+  Heart,
+  Bell,
   ChevronDown,
   Globe,
   Phone,
@@ -16,7 +16,7 @@ import {
   Shield,
   HelpCircle,
   Star,
-  TrendingUp
+  TrendingUp,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -80,10 +80,26 @@ const accountItems = [
 ];
 
 const infoItems = [
-  { title: "Contact Us", to: "/contact", icon: <Phone className="h-4 w-4 mr-2" /> },
-  { title: "Help Center", to: "/help", icon: <HelpCircle className="h-4 w-4 mr-2" /> },
-  { title: "Privacy Policy", to: "/privacy", icon: <Shield className="h-4 w-4 mr-2" /> },
-  { title: "Terms of Service", to: "/terms", icon: <Mail className="h-4 w-4 mr-2" /> },
+  {
+    title: "Contact Us",
+    to: "/contact",
+    icon: <Phone className="h-4 w-4 mr-2" />,
+  },
+  {
+    title: "Help Center",
+    to: "/help",
+    icon: <HelpCircle className="h-4 w-4 mr-2" />,
+  },
+  {
+    title: "Privacy Policy",
+    to: "/privacy",
+    icon: <Shield className="h-4 w-4 mr-2" />,
+  },
+  {
+    title: "Terms of Service",
+    to: "/terms",
+    icon: <Mail className="h-4 w-4 mr-2" />,
+  },
 ];
 
 function Header() {
@@ -91,7 +107,9 @@ function Header() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [mobileView, setMobileView] = useState<"menu" | "account" | "categories">("menu");
+  const [mobileView, setMobileView] = useState<
+    "menu" | "account" | "categories"
+  >("menu");
   const [showSheetDialog, setShowSheetDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("all");
@@ -101,17 +119,14 @@ function Header() {
   const categoryItems = useMemo(() => categories, [categories]);
   const departmentOptions = useMemo(
     () =>
-      categoryItems.flatMap((category) => [
-        {
-          label: `${category.title} (All)`,
-          value: category.title,
-        },
-        ...category.subcategories.map((sub) => ({
-          label: `${category.title} > ${sub.title}`,
+      categoryItems.map((category) => ({
+        categoryTitle: category.title,
+        subcategories: category.subcategories.map((sub) => ({
+          label: sub.title,
           value: `${category.title}::${sub.title}`,
         })),
-      ]),
-    [categoryItems]
+      })),
+    [categoryItems],
   );
 
   useEffect(() => {
@@ -131,7 +146,7 @@ function Header() {
     if (!main) {
       setSelectedDepartment("all");
     } else {
-      setSelectedDepartment(sub ? `${main}::${sub}` : main);
+      setSelectedDepartment(sub ? `${main}::${sub}` : "all");
     }
     const q = searchParams.get("search") ?? "";
     setSearchQuery(q);
@@ -192,7 +207,7 @@ function Header() {
               </Button>
               <h3 className="text-lg font-semibold text-foreground">Account</h3>
             </div>
-            
+
             {user ? (
               <div className="space-y-4">
                 <div className="flex items-center space-x-3 p-3 bg-card rounded-lg">
@@ -201,10 +216,12 @@ function Header() {
                   </div>
                   <div>
                     <p className="font-medium text-foreground">{user.name}</p>
-                    <p className="text-sm text-muted-foreground">{user.email}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {user.email}
+                    </p>
                   </div>
                 </div>
-                
+
                 <nav className="space-y-1">
                   {accountItems.map((item) => (
                     <Button
@@ -220,7 +237,7 @@ function Header() {
                     </Button>
                   ))}
                 </nav>
-                
+
                 <div className="pt-4 border-t border-border">
                   <ThemeToggle />
                   <Button
@@ -234,7 +251,9 @@ function Header() {
               </div>
             ) : (
               <div className="space-y-4">
-                <p className="text-muted-foreground">Sign in to access your account</p>
+                <p className="text-muted-foreground">
+                  Sign in to access your account
+                </p>
                 <Button
                   onClick={() => {
                     setShowSheetDialog(false);
@@ -271,9 +290,11 @@ function Header() {
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
-              <h3 className="text-lg font-semibold text-foreground">Categories</h3>
+              <h3 className="text-lg font-semibold text-foreground">
+                Categories
+              </h3>
             </div>
-            
+
             <div className="space-y-2">
               {categoryItems.map((category) => (
                 <div key={category.title} className="space-y-1">
@@ -282,7 +303,9 @@ function Header() {
                     className="w-full justify-between"
                     onClick={() => {
                       setShowSheetDialog(false);
-                      router.push(`/products?mainCategory=${encodeURIComponent(category.title)}`);
+                      router.push(
+                        `/products?mainCategory=${encodeURIComponent(category.title)}`,
+                      );
                     }}
                   >
                     <span className="font-medium">{category.title}</span>
@@ -296,7 +319,9 @@ function Header() {
                         className="w-full justify-start text-sm"
                         onClick={() => {
                           setShowSheetDialog(false);
-                          router.push(`/products?mainCategory=${encodeURIComponent(category.title)}&subcategory=${encodeURIComponent(sub.title)}`);
+                          router.push(
+                            `/products?mainCategory=${encodeURIComponent(category.title)}&subcategory=${encodeURIComponent(sub.title)}`,
+                          );
                         }}
                       >
                         {sub.title}
@@ -353,7 +378,7 @@ function Header() {
                   </span>
                 </Button>
               ))}
-              
+
               <Button
                 variant="ghost"
                 className="w-full justify-start"
@@ -368,7 +393,9 @@ function Header() {
 
             {/* Quick Links */}
             <div className="space-y-1">
-              <h4 className="text-sm font-semibold text-muted-foreground px-2">Information</h4>
+              <h4 className="text-sm font-semibold text-muted-foreground px-2">
+                Information
+              </h4>
               {infoItems.map((item) => (
                 <Button
                   key={item.title}
@@ -398,7 +425,7 @@ function Header() {
                 </Button>
                 <ThemeToggle />
               </div>
-              
+
               <Button
                 onClick={() => {
                   setShowSheetDialog(false);
@@ -409,7 +436,7 @@ function Header() {
                 <ShoppingBag className="h-4 w-4 mr-2" />
                 Cart ({items?.length || 0})
               </Button>
-              
+
               <Button
                 onClick={() => {
                   setShowSheetDialog(false);
@@ -456,8 +483,11 @@ function Header() {
                   <DropdownMenuItem>French</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              
-              <Link href="/contact" className="hidden md:inline text-sm text-muted-foreground hover:text-foreground">
+
+              <Link
+                href="/contact"
+                className="hidden md:inline text-sm text-muted-foreground hover:text-foreground"
+              >
                 Contact: support@futureshop.com
               </Link>
             </div>
@@ -486,17 +516,24 @@ function Header() {
 
           {/* Desktop Search */}
           <div className="hidden lg:flex flex-1 max-w-3xl mx-8">
-            <form onSubmit={handleSearch} className="relative w-full flex items-center">
+            <form
+              onSubmit={handleSearch}
+              className="relative w-full flex items-center"
+            >
               <select
                 value={selectedDepartment}
                 onChange={(e) => handleDepartmentSelect(e.target.value)}
                 className="h-10 min-w-[220px] rounded-l-full border border-border/50 border-r-0 bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
               >
                 <option value="all">All Departments</option>
-                {departmentOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
+                {departmentOptions.map((group) => (
+                  <optgroup key={group.categoryTitle} label={group.categoryTitle}>
+                    {group.subcategories.map((sub) => (
+                      <option key={sub.value} value={sub.value}>
+                        {sub.label}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
               </select>
 
@@ -559,86 +596,104 @@ function Header() {
             </Button>
 
             {/* Account Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="rounded-full">
-                  <div className="flex items-center space-x-2">
-                    <div className="h-8 w-8 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center">
-                      <User className="h-4 w-4 text-white" />
+            <div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="rounded-full">
+                    <div className="flex items-center space-x-2">
+                      <div className="h-8 w-8 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center">
+                        <User className="h-4 w-4 text-white" />
+                      </div>
+                      <div className="text-left hidden xl:block">
+                        <p className="text-sm font-medium">Welcome</p>
+                        <p className="text-xs text-muted-foreground">
+                          {user ? user.name : "Sign In"}
+                        </p>
+                      </div>
+                      <ChevronDown className="h-4 w-4" />
                     </div>
-                    <div className="text-left hidden xl:block">
-                      <p className="text-sm font-medium">Welcome</p>
-                      <p className="text-xs text-muted-foreground">
-                        {user ? user.name : "Sign In"}
-                      </p>
-                    </div>
-                    <ChevronDown className="h-4 w-4" />
-                  </div>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-64">
-                {user ? (
-                  <>
-                    <div className="p-2">
-                      <p className="font-medium text-foreground">{user.name}</p>
-                      <p className="text-sm text-muted-foreground">{user.email}</p>
-                    </div>
-                    <DropdownMenuSeparator />
-                    {accountItems.map((item) => (
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="w-72 rounded-xl border border-border bg-card text-card-foreground shadow-2xl backdrop-blur-none"
+                >
+                  {user ? (
+                    <>
+                      <div className="rounded-t-xl border-b border-border bg-muted/40 px-4 py-3">
+                        <p className="font-medium text-foreground">
+                          {user.name}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {user.email}
+                        </p>
+                      </div>
+                      <DropdownMenuSeparator />
+                      {accountItems.map((item) => (
+                        <DropdownMenuItem
+                          key={item.title}
+                          onClick={() => router.push(item.to)}
+                          className="mx-1 rounded-md px-3 py-2 focus:bg-accent/20"
+                        >
+                          {item.title}
+                        </DropdownMenuItem>
+                      ))}
+                      {user.role === "SELLER" && (
+                        <DropdownMenuItem
+                          onClick={() => router.push("/seller")}
+                          className="mx-1 rounded-md px-3 py-2 focus:bg-accent/20"
+                        >
+                          Seller dashboard
+                        </DropdownMenuItem>
+                      )}
+                      {user.role === "USER" && (
+                        <DropdownMenuItem
+                          onClick={() => router.push("/seller/register")}
+                          className="mx-1 rounded-md px-3 py-2 focus:bg-accent/20"
+                        >
+                          Become a seller
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuSeparator />
+                      <div className="px-3 py-2">
+                        <ThemeToggle />
+                      </div>
                       <DropdownMenuItem
-                        key={item.title}
-                        onClick={() => router.push(item.to)}
+                        onClick={handleLogout}
+                        className="mx-1 rounded-md px-3 py-2 text-destructive focus:bg-destructive/10 focus:text-destructive"
                       >
-                        {item.title}
+                        Logout
                       </DropdownMenuItem>
-                    ))}
-                    {user.role === "SELLER" && (
+                    </>
+                  ) : (
+                    <>
                       <DropdownMenuItem
-                        onClick={() => router.push("/seller")}
+                        onClick={() => router.push("/auth/login")}
+                        className="mx-1 rounded-md px-3 py-2 focus:bg-accent/20"
                       >
-                        Seller dashboard
+                        Sign In
                       </DropdownMenuItem>
-                    )}
-                    {user.role === "USER" && (
                       <DropdownMenuItem
-                        onClick={() => router.push("/seller/register")}
+                        onClick={() => router.push("/auth/register")}
+                        className="mx-1 rounded-md px-3 py-2 focus:bg-accent/20"
                       >
-                        Become a seller
+                        Create Account
                       </DropdownMenuItem>
-                    )}
-                    <DropdownMenuSeparator />
-                    <div className="p-2">
-                      <ThemeToggle />
-                    </div>
-                    <DropdownMenuItem
-                      onClick={handleLogout}
-                      className="text-destructive"
-                    >
-                      Logout
-                    </DropdownMenuItem>
-                  </>
-                ) : (
-                  <>
-                    <DropdownMenuItem onClick={() => router.push("/auth/login")}>
-                      Sign In
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => router.push("/auth/register")}>
-                      Create Account
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    {infoItems.map((item) => (
-                      <DropdownMenuItem
-                        key={item.title}
-                        onClick={() => router.push(item.to)}
-                      >
-                        {item.title}
-                      </DropdownMenuItem>
-                    ))}
-                  </>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
+                      <DropdownMenuSeparator />
+                      {infoItems.map((item) => (
+                        <DropdownMenuItem
+                          key={item.title}
+                          onClick={() => router.push(item.to)}
+                          className="mx-1 rounded-md px-3 py-2 focus:bg-accent/20"
+                        >
+                          {item.title}
+                        </DropdownMenuItem>
+                      ))}
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
             {/* Theme Toggle - Desktop */}
             <div className="hidden xl:block">
               <ThemeToggle />
@@ -698,11 +753,9 @@ function Header() {
                       {item.badge}
                     </span>
                   )}
-                  {item.megaMenu && (
-                    <ChevronDown className="ml-1 h-3 w-3" />
-                  )}
+                  {item.megaMenu && <ChevronDown className="ml-1 h-3 w-3" />}
                 </Link>
-                
+
                 {/* Mega Menu for Shop */}
                 {item.megaMenu && (
                   <div className="absolute top-full left-0 w-screen max-w-4xl bg-card border border-border shadow-2xl rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 p-6">
@@ -729,17 +782,22 @@ function Header() {
                     </div>
                   </div>
                 )}
-
               </div>
             ))}
           </nav>
-          
+
           <div className="flex items-center space-x-4 text-sm">
-            <Link href="/help" className="text-muted-foreground hover:text-foreground">
+            <Link
+              href="/help"
+              className="text-muted-foreground hover:text-foreground"
+            >
               <HelpCircle className="h-4 w-4 inline mr-1" />
               Help
             </Link>
-            <Link href="/track-order" className="text-muted-foreground hover:text-foreground">
+            <Link
+              href="/track-order"
+              className="text-muted-foreground hover:text-foreground"
+            >
               Track Order
             </Link>
             <span className="text-primary font-medium">
