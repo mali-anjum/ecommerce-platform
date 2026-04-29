@@ -2,16 +2,14 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { extractSetCookieHeaders } from "@/lib/api/extractSetCookieHeaders";
+import { getServerBackendUrl } from "@/lib/api/getServerBackendUrl";
 
 export async function POST(req: NextRequest) {
-    const BACKEND_URL =
-    process.env.NODE_ENV === "production"
-      ? process.env.BACKEND_URL
-      : process.env.DEVE_URL;
-  
+  const BACKEND_URL = getServerBackendUrl();
+
   // Early validation
   if (!BACKEND_URL) {
-    console.error("BACKEND_URL not configured");
+    console.error("Backend URL not configured (BACKEND_URL / DEV_URL)");
     return NextResponse.json(
       { success: false, error: "Service configuration error" },
       { status: 500 }
