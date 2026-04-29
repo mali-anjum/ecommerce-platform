@@ -18,15 +18,11 @@ export default function AuthProvider({
   const isPublicAuthRoute =
     pathname === "/auth/login" || pathname === "/auth/register";
 
-  useSilentAuth(!isPublicAuthRoute);
+  // Keep silent auth active on public auth routes too, so existing cookie sessions
+  // can be restored and redirected away from login/register screens.
+  useSilentAuth(true);
 
   useEffect(() => {
-    if (isPublicAuthRoute) {
-      setIsInitialized(true);
-      setInitError(null);
-      return;
-    }
-
     let mounted = true;
     let initTimeout: NodeJS.Timeout;
 
