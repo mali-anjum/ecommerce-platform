@@ -2,7 +2,7 @@ import { Response } from "express";
 import { AuthenticatedRequest } from "../types/express";
 import cloudinary from "../config/cloudinary";
 import { prisma } from "../lib/prisma";
-import { Prisma } from "@prisma/client";
+import { Prisma, ProductCondition } from "@prisma/client";
 import { asyncHandler } from "../utils/asyncHandler";
 import {
   ApiError,
@@ -14,12 +14,14 @@ import {
 import { parseMaybeArray } from "../utils/parsedArray";
 import { ApiResponse } from "../utils/ApiResponse";
 import { createLogger } from "../utils/logger";
-import { PRODUCT_CATEGORY_CATALOG } from "../constants/productCategories";
 import {
-  buildCatalogWhereFragment,
-  buildCatalogWhereFragmentFromTitles,
-  getCatalogTreeWithCounts,
-} from "../services/catalogService";
+  fetchClientProductListing,
+  fetchProductsForAdminPaginated,
+  findProductDetailById,
+  getProductCategoriesPayload,
+  parseAdminProductPagination,
+  parseProductConditionValue,
+} from "../services/product";
 
 // TODO: Consider cleaning up uploaded Cloudinary images if DB insert failed (use public_id to delete).
 // Use Promise.allSettled and handle partial failures gracefully.
@@ -47,6 +49,11 @@ const createProduct = asyncHandler(
         description,
         category,
         gender,
+        condition,
+        sellerId,
+        discountPercent,
+        dealStartsAt,
+        dealEndsAt,
         sizes,
         colors,
         price,
@@ -123,6 +130,62 @@ const createProduct = asyncHandler(
         throw new ValidationError("price and stock must be numeric");
       }
 
+      const parsedCondition = parseProductConditionValue(condition);
+      if (condition !== undefined && !parsedCondition) {
+        throw new ValidationError(
+          "condition must be one of NEW, REFURBISHED, USED"
+        );
+      }
+
+      let validatedSellerId: string | null = null;
+      if (req.user?.role === "SELLER") {
+        const sid = req.sellerProfile?.id;
+        if (!sid) {
+          throw new UnauthorizedError("Seller context required");
+        }
+        validatedSellerId = sid;
+      } else if (req.user?.role === "SUPER_ADMIN") {
+        if (typeof sellerId === "string" && sellerId.trim() !== "") {
+          const seller = await prisma.seller.findUnique({
+            where: { id: sellerId.trim() },
+            select: { id: true },
+          });
+          if (!seller) throw new ValidationError("Invalid sellerId");
+          validatedSellerId = seller.id;
+        }
+      }
+
+      const parsedDiscountPercent =
+        discountPercent === undefined || discountPercent === null || discountPercent === ""
+          ? null
+          : Number(discountPercent);
+      if (
+        parsedDiscountPercent !== null &&
+        (!Number.isFinite(parsedDiscountPercent) ||
+          parsedDiscountPercent < 0 ||
+          parsedDiscountPercent > 100)
+      ) {
+        throw new ValidationError("discountPercent must be between 0 and 100");
+      }
+
+      const parsedDealStartsAt = dealStartsAt
+        ? new Date(String(dealStartsAt))
+        : null;
+      const parsedDealEndsAt = dealEndsAt ? new Date(String(dealEndsAt)) : null;
+      if (parsedDealStartsAt && Number.isNaN(parsedDealStartsAt.getTime())) {
+        throw new ValidationError("Invalid dealStartsAt datetime");
+      }
+      if (parsedDealEndsAt && Number.isNaN(parsedDealEndsAt.getTime())) {
+        throw new ValidationError("Invalid dealEndsAt datetime");
+      }
+      if (
+        parsedDealStartsAt &&
+        parsedDealEndsAt &&
+        parsedDealStartsAt > parsedDealEndsAt
+      ) {
+        throw new ValidationError("dealStartsAt cannot be after dealEndsAt");
+      }
+
       let resolvedCategory = category as string;
       let subcategoryId: string | null = null;
 
@@ -158,9 +221,14 @@ const createProduct = asyncHandler(
         data: {
           name,
           brand,
+          condition: parsedCondition ?? ProductCondition.NEW,
           description,
           category: resolvedCategory,
           gender,
+          sellerId: validatedSellerId,
+          discountPercent: parsedDiscountPercent,
+          dealStartsAt: parsedDealStartsAt,
+          dealEndsAt: parsedDealEndsAt,
           sizes: processedSizes,
           colors: processedColors,
           price: parsedPrice,
@@ -195,70 +263,34 @@ const createProduct = asyncHandler(
 // TODO:- Add pagination
 const fetchAllProductsForAdmin = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
-    if (!req.user || req.user.role !== "SUPER_ADMIN") {
-      throw new UnauthorizedError("Admin privileges required");
+    if (!req.user) {
+      throw new UnauthorizedError("Authentication required");
+    }
+    const sellerScope =
+      req.user.role === "SELLER" ? req.sellerProfile?.id ?? null : null;
+    if (req.user.role === "SELLER" && !sellerScope) {
+      throw new UnauthorizedError("Seller profile required");
+    }
+    if (req.user.role !== "SUPER_ADMIN" && req.user.role !== "SELLER") {
+      throw new UnauthorizedError("Admin or seller privileges required");
     }
 
-    // ✅ Improved validation with better error handling
-    const page = Math.max(1, parseInt((req.query.page as string) || "1", 10));
-    const limit = Math.min(
-      Math.max(1, parseInt((req.query.limit as string) || "50", 10)),
-      200
+    const { page, limit } = parseAdminProductPagination(
+      req.query.page,
+      req.query.limit
     );
 
-    // ✅ Validate that page and limit are actually numbers
-    if (isNaN(page) || isNaN(limit)) {
-      throw new ValidationError("Invalid pagination parameters");
-    }
-
-    const skip = (page - 1) * limit;
-
     try {
-      // ✅ Use transaction for consistent data
-      const [products, total] = await prisma.$transaction([
-        prisma.product.findMany({
-          skip,
-          take: limit,
-          orderBy: { createdAt: "desc" },
-          select: {
-            id: true,
-            name: true,
-            price: true,
-            images: true,
-            stock: true,
-            category: true,
-            createdAt: true,
-            // ✅ Consider adding updatedAt for admin views
-            updatedAt: true,
-          },
-        }),
-        prisma.product.count(),
-      ]);
-
-      const totalPages = Math.ceil(total / limit);
-      const hasNext = page < totalPages;
-      const hasPrev = page > 1;
+      const { items, meta } = await fetchProductsForAdminPaginated(
+        sellerScope,
+        page,
+        limit
+      );
 
       return res.status(200).json(
-        new ApiResponse(
-          200,
-          {
-            items: products,
-            meta: {
-              page,
-              limit,
-              total,
-              totalPages,
-              hasNext,
-              hasPrev,
-              skip,
-            },
-          },
-          "Products fetched successfully"
-        )
+        new ApiResponse(200, { items, meta }, "Products fetched successfully")
       );
     } catch (error) {
-      // ✅ Specific error handling
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         throw new InternalServerError("Database error occurred");
       }
@@ -275,23 +307,7 @@ const getProductByID = asyncHandler(
       throw new ValidationError("Product id is required");
     }
 
-    const product = await prisma.product.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        name: true,
-        description: true,
-        price: true,
-        images: true,
-        brand: true,
-        category: true,
-        subcategoryId: true,
-        sizes: true,
-        colors: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
+    const product = await findProductDetailById(id);
 
     if (!product) {
       throw new NotFoundError(`Product with id "${id}" not found`);
@@ -306,6 +322,23 @@ const getProductByID = asyncHandler(
 const updateProduct = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
+    if (!id || typeof id !== "string" || id.trim() === "") {
+      throw new ValidationError("Product id is required");
+    }
+
+    const existingForAuth = await prisma.product.findUnique({
+      where: { id },
+      select: { id: true, sellerId: true },
+    });
+    if (!existingForAuth) {
+      throw new NotFoundError(`Product with id "${id}" not found`);
+    }
+    if (req.user?.role === "SELLER") {
+      if (existingForAuth.sellerId !== req.sellerProfile?.id) {
+        throw new UnauthorizedError("Cannot modify this product");
+      }
+    }
+
     const {
       name,
       brand,
@@ -317,6 +350,11 @@ const updateProduct = asyncHandler(
       price,
       stock,
       rating,
+      condition,
+      sellerId,
+      discountPercent,
+      dealStartsAt,
+      dealEndsAt,
     } = req.body;
     const processedSizes = parseMaybeArray(sizes);
     const processedColors = parseMaybeArray(colors);
@@ -325,6 +363,64 @@ const updateProduct = asyncHandler(
     }
     if (processedColors.length === 0) {
       throw new ValidationError("At least one color is required");
+    }
+
+    const parsedCondition = parseProductConditionValue(condition);
+    if (condition !== undefined && !parsedCondition) {
+      throw new ValidationError("condition must be one of NEW, REFURBISHED, USED");
+    }
+
+    let validatedSellerId: string | null | undefined = undefined;
+    if (req.user?.role === "SUPER_ADMIN") {
+      if (typeof sellerId === "string") {
+        const trimmedSellerId = sellerId.trim();
+        if (trimmedSellerId === "") {
+          validatedSellerId = null;
+        } else {
+          const seller = await prisma.seller.findUnique({
+            where: { id: trimmedSellerId },
+            select: { id: true },
+          });
+          if (!seller) throw new ValidationError("Invalid sellerId");
+          validatedSellerId = seller.id;
+        }
+      }
+    }
+
+    const hasDiscountPercentInput =
+      discountPercent !== undefined &&
+      discountPercent !== null &&
+      String(discountPercent).trim() !== "";
+    const parsedDiscountPercent = hasDiscountPercentInput
+      ? Number(discountPercent)
+      : undefined;
+    if (
+      parsedDiscountPercent !== undefined &&
+      (!Number.isFinite(parsedDiscountPercent) ||
+        parsedDiscountPercent < 0 ||
+        parsedDiscountPercent > 100)
+    ) {
+      throw new ValidationError("discountPercent must be between 0 and 100");
+    }
+
+    const parseOptionalDate = (value: unknown): Date | null | undefined => {
+      if (value === undefined) return undefined;
+      if (value === null || String(value).trim() === "") return null;
+      const parsed = new Date(String(value));
+      if (Number.isNaN(parsed.getTime())) {
+        throw new ValidationError("Invalid deal date value");
+      }
+      return parsed;
+    };
+
+    const parsedDealStartsAt = parseOptionalDate(dealStartsAt);
+    const parsedDealEndsAt = parseOptionalDate(dealEndsAt);
+    if (
+      parsedDealStartsAt instanceof Date &&
+      parsedDealEndsAt instanceof Date &&
+      parsedDealStartsAt > parsedDealEndsAt
+    ) {
+      throw new ValidationError("dealStartsAt cannot be after dealEndsAt");
     }
 
     let resolvedCategory = category as string | undefined;
@@ -366,6 +462,15 @@ const updateProduct = asyncHandler(
           ? { subcategoryId: subcategoryIdUpdate }
           : {}),
         gender,
+        ...(parsedCondition ? { condition: parsedCondition } : {}),
+        ...(validatedSellerId !== undefined ? { sellerId: validatedSellerId } : {}),
+        ...(parsedDiscountPercent !== undefined
+          ? { discountPercent: parsedDiscountPercent }
+          : {}),
+        ...(parsedDealStartsAt !== undefined
+          ? { dealStartsAt: parsedDealStartsAt }
+          : {}),
+        ...(parsedDealEndsAt !== undefined ? { dealEndsAt: parsedDealEndsAt } : {}),
         sizes: processedSizes,
         colors: processedColors,
         price: parseFloat(price),
@@ -388,6 +493,23 @@ const updateProduct = asyncHandler(
 const deleteProduct = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
+    if (!id || typeof id !== "string" || id.trim() === "") {
+      throw new ValidationError("Product id is required");
+    }
+
+    const existing = await prisma.product.findUnique({
+      where: { id },
+      select: { sellerId: true },
+    });
+    if (!existing) {
+      throw new NotFoundError(`Product with id "${id}" not found`);
+    }
+    if (req.user?.role === "SELLER") {
+      if (existing.sellerId !== req.sellerProfile?.id) {
+        throw new UnauthorizedError("Cannot delete this product");
+      }
+    }
+
     await prisma.product.delete({ where: { id } });
 
     return res
@@ -398,200 +520,11 @@ const deleteProduct = asyncHandler(
 
 const getProductsForClient = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
-
-    const categories = ((req.query.categories as string) || "")
-      .split(",")
-      .filter(Boolean);
-    const colors = ((req.query.colors as string) || "")
-      .split(",")
-      .filter(Boolean);
-    const sizes = ((req.query.sizes as string) || "")
-      .split(",")
-      .filter(Boolean);
-    const brands = ((req.query.brands as string) || "")
-      .split(",")
-      .filter(Boolean);
-    const search = ((req.query.search as string) || "").trim();
-    const mainCategory = ((req.query.mainCategory as string) || "").trim();
-    const subcategory = ((req.query.subcategory as string) || "").trim();
-    const departmentSlug = ((req.query.departmentSlug as string) || "").trim();
-    const subcategorySlug = ((req.query.subcategorySlug as string) || "").trim();
-    const subcategoryIdParam = ((req.query.subcategoryId as string) || "").trim();
-    const collection = ((req.query.collection as string) || "all").toLowerCase();
-
-    const minPrice = parseFloat(req.query.minPrice as string) || 0;
-    const maxPrice =
-      parseFloat(req.query.maxPrice as string) || Number.MAX_SAFE_INTEGER;
-
-    let sortBy = (req.query.sortBy as string) || "createdAt";
-    let sortOrder =
-      ((req.query.sortOrder as string) || "desc") as "asc" | "desc";
-
-    const skip = (page - 1) * limit;
-
-    const useCatalogSlugs =
-      departmentSlug.length > 0 ||
-      subcategorySlug.length > 0 ||
-      subcategoryIdParam.length > 0;
-
-    const slugCatalogWhere = useCatalogSlugs
-      ? await buildCatalogWhereFragment({
-          departmentSlug: departmentSlug || undefined,
-          subcategorySlug: subcategorySlug || undefined,
-          subcategoryId: subcategoryIdParam || undefined,
-        })
-      : null;
-
-    const catalogFilter: Prisma.ProductWhereInput | null = useCatalogSlugs
-      ? slugCatalogWhere ?? { id: { in: [] } }
-      : null;
-
-    const titleCatalogWhere =
-      !useCatalogSlugs && (mainCategory.length > 0 || subcategory.length > 0)
-        ? await buildCatalogWhereFragmentFromTitles({
-            mainCategory: mainCategory || undefined,
-            subcategory: subcategory || undefined,
-          })
-        : null;
-
-    const selectedMainCategory = useCatalogSlugs
-      ? undefined
-      : PRODUCT_CATEGORY_CATALOG.find(
-          (category) =>
-            category.title.toLowerCase() === mainCategory.toLowerCase()
-        );
-    const selectedMainCategoryTokens = selectedMainCategory
-      ? [
-          selectedMainCategory.title,
-          ...selectedMainCategory.subcategories.map((item) => item.title),
-        ]
-      : [];
-
-    const searchFilter: Prisma.ProductWhereInput =
-      search.length > 0
-        ? {
-            OR: [
-              { name: { contains: search, mode: "insensitive" } },
-              { description: { contains: search, mode: "insensitive" } },
-              { brand: { contains: search, mode: "insensitive" } },
-            ],
-          }
-        : {};
-
-    let collectionWhere: Prisma.ProductWhereInput = {};
-    if (collection === "featured") {
-      collectionWhere = { isFeatured: true };
-    }
-    if (collection === "trending" || collection === "bestsellers") {
-      sortBy = "soldCount";
-      sortOrder = "desc";
-    }
-    if (collection === "new") {
-      sortBy = "createdAt";
-      sortOrder = "desc";
-    }
-
-    const validSortFields = new Set([
-      "createdAt",
-      "price",
-      "soldCount",
-      "rating",
-      "name",
-    ]);
-    const safeSortBy = validSortFields.has(sortBy) ? sortBy : "createdAt";
-
-    const where: Prisma.ProductWhereInput = {
-      AND: [
-        collectionWhere,
-        searchFilter,
-        catalogFilter !== null
-          ? catalogFilter
-          : titleCatalogWhere !== null
-            ? titleCatalogWhere
-          : selectedMainCategoryTokens.length > 0
-            ? {
-                category: {
-                  in: selectedMainCategoryTokens,
-                  mode: "insensitive",
-                },
-              }
-            : {},
-        catalogFilter !== null || titleCatalogWhere !== null
-          ? {}
-          : subcategory
-            ? {
-                category: {
-                  equals: subcategory,
-                  mode: "insensitive",
-                },
-              }
-            : {},
-        categories.length > 0
-          ? {
-              category: {
-                in: categories,
-                mode: "insensitive",
-              },
-            }
-          : {},
-        brands.length > 0
-          ? {
-              brand: {
-                in: brands,
-                mode: "insensitive",
-              },
-            }
-          : {},
-        sizes.length > 0
-          ? {
-              sizes: {
-                hasSome: sizes,
-              },
-            }
-          : {},
-        colors.length > 0
-          ? {
-              colors: {
-                hasSome: colors,
-              },
-            }
-          : {},
-        {
-          price: { gte: minPrice, lte: maxPrice },
-        },
-      ],
-    };
-
-    const [products, total] = await Promise.all([
-      prisma.product.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: {
-          [safeSortBy]: sortOrder,
-        },
-      }),
-      prisma.product.count({ where }),
-    ]);
-
-    const deptRows = await prisma.department.count();
-    const availableCategories =
-      deptRows > 0
-        ? await getCatalogTreeWithCounts()
-        : PRODUCT_CATEGORY_CATALOG;
-
+    const payload = await fetchClientProductListing(req.query);
     return res.status(200).json(
       new ApiResponse(
         200,
-        {
-          products,
-          currentPage: page,
-          totalPages: Math.ceil(total / limit),
-          totalProducts: total,
-          availableCategories,
-        },
+        payload,
         "Products fetched for the clients successfully.."
       )
     );
@@ -600,78 +533,7 @@ const getProductsForClient = asyncHandler(
 
 const getProductCategories = asyncHandler(
   async (_req: AuthenticatedRequest, res: Response) => {
-    const deptRows = await prisma.department.count();
-    if (deptRows > 0) {
-      const categoriesWithCounts = await getCatalogTreeWithCounts();
-      return res.status(200).json(
-        new ApiResponse(
-          200,
-          categoriesWithCounts,
-          "Product categories fetched successfully"
-        )
-      );
-    }
-
-    const productCountByCategory = await prisma.product.groupBy({
-      by: ["category"],
-      _count: {
-        _all: true,
-      },
-    });
-
-    const categoryCountLookup = new Map<string, number>();
-    const subCategoryCountLookup = new Map<string, number>();
-
-    for (const row of productCountByCategory) {
-      const categoryKey = row.category.toLowerCase();
-      const categoryCatalog = PRODUCT_CATEGORY_CATALOG.find(
-        (category) => category.title.toLowerCase() === categoryKey
-      );
-      const count = row._count._all;
-
-      if (categoryCatalog) {
-        categoryCountLookup.set(
-          categoryKey,
-          (categoryCountLookup.get(categoryKey) ?? 0) + count
-        );
-      } else {
-        for (const category of PRODUCT_CATEGORY_CATALOG) {
-          const matchedSubCategory = category.subcategories.find(
-            (subCategory) => subCategory.title.toLowerCase() === categoryKey
-          );
-
-          if (matchedSubCategory) {
-            categoryCountLookup.set(
-              category.title.toLowerCase(),
-              (categoryCountLookup.get(category.title.toLowerCase()) ?? 0) + count
-            );
-            subCategoryCountLookup.set(
-              `${category.title.toLowerCase()}::${matchedSubCategory.title.toLowerCase()}`,
-              (subCategoryCountLookup.get(
-                `${category.title.toLowerCase()}::${matchedSubCategory.title.toLowerCase()}`
-              ) ?? 0) + count
-            );
-          }
-        }
-      }
-    }
-
-    const categoriesWithCounts = PRODUCT_CATEGORY_CATALOG.map((category) => {
-      const categoryTotal = categoryCountLookup.get(category.title.toLowerCase()) ?? 0;
-
-      return {
-        ...category,
-        productCount: categoryTotal,
-        subcategories: category.subcategories.map((subCategory) => ({
-          ...subCategory,
-          productCount:
-            subCategoryCountLookup.get(
-              `${category.title.toLowerCase()}::${subCategory.title.toLowerCase()}`
-            ) ?? 0,
-        })),
-      };
-    });
-
+    const categoriesWithCounts = await getProductCategoriesPayload();
     return res.status(200).json(
       new ApiResponse(
         200,
