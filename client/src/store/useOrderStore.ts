@@ -1,7 +1,5 @@
-import { API_ROUTES } from "@/utils/routes/api";
-import axios from "axios";
 import { create } from "zustand";
-import { OrderStore } from "@/types/order/orderTypes";
+import { OrderStore, SellerOrderLine } from "@/types/order/orderTypes";
 import { http } from "@/lib/http";
 
 export const useOrderStore = create<OrderStore>((set, get) => ({
@@ -67,7 +65,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
   updateOrderStatus: async (orderId, status) => {
     set({ isLoading: true, error: null });
     try {
-      await axios.put(
+      await http.put(
         `order/${orderId}/status`,
         { status },
         { withCredentials: true }
@@ -103,12 +101,13 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
   getAllOrdersForAdmin: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get(
-        `order/get-all-orders-for-admin`,
+      const response = await http.get(
+        `order/get-all-orders`,
         { withCredentials: true }
       );
-      set({ isLoading: false, adminOrders: response.data });
-      return response.data;
+      const orders = response.data?.data ?? [];
+      set({ isLoading: false, adminOrders: orders });
+      return orders;
     } catch (error) {
       set({ error: "Failed to fetch all orders for admin", isLoading: false });
       return null;
@@ -121,12 +120,13 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
   getAllOrders: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get(
-        `order/get-all-orders`,
+      const response = await http.get(
+        `order/get-all-orders-for-admin`,
         { withCredentials: true }
       );
-      set({ isLoading: false, userOrders: response.data });
-      return response.data;
+      const orders = response.data?.data ?? [];
+      set({ isLoading: false, userOrders: orders });
+      return orders;
     } catch (error) {
       set({ error: "Failed to fetch all orders", isLoading: false });
       return null;
@@ -136,14 +136,15 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
   getOrderForUser: async (orderId: string) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get(
+      const response = await http.get(
         `order/${orderId}`,
         { withCredentials: true }
       );
-      set({ isLoading: false, currentOrder: response.data });
-      return response.data;
+      const order = response.data?.data ?? null;
+      set({ isLoading: false, currentOrder: order });
+      return order;
     } catch (error) {
-      set({ error: "Failed to fetch all orders for admin", isLoading: false });
+      set({ error: "Failed to fetch your order", isLoading: false });
       return null;
     }
   },
@@ -151,14 +152,40 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
   getOrderForAdmin: async (orderId: string) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get(
+      const response = await http.get(
         `order/admin/${orderId}`,
         { withCredentials: true }
       );
-      set({ isLoading: false, currentOrder: response.data });
-      return response.data;
+      const order = response.data?.data ?? null;
+      set({ isLoading: false, currentOrder: order });
+      return order;
     } catch (error) {
       set({ error: "Failed to fetch order", isLoading: false });
+      return null;
+    }
+  },
+
+  getSellerSalesLines: async (params) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await http.get(`order/seller/my-sales`, {
+        withCredentials: true,
+        params: {
+          page: params?.page ?? 1,
+          limit: params?.limit ?? 20,
+        },
+      });
+      const lines = (response.data?.data?.items ?? []) as SellerOrderLine[];
+      set({ isLoading: false });
+      return Array.isArray(lines) ? lines : [];
+    } catch (error: any) {
+      set({
+        isLoading: false,
+        error:
+          error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          "Failed to load sales",
+      });
       return null;
     }
   },
