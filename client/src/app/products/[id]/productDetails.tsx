@@ -202,6 +202,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, useCallback, memo } from "react";
 import ProductDetailsSkeleton from "./productSkeleton";
 import { useCartStore } from "@/store/useCartStore";
+import { useAuthStore } from "@/store/useAuthStore";
 import { useToast } from "@/hooks/use-toast";
 import { Star, Truck, Shield, RefreshCw } from "lucide-react";
 
@@ -559,12 +560,14 @@ function ProductDetailsContent({ id }: { id: string }) {
   const [product, setProduct] = useState<any>(null);
   const { getProductById, isLoading } = useProductStore();
   const { addToCart } = useCartStore();
+  const { user } = useAuthStore();
   const { toast } = useToast();
   const router = useRouter();
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedColor, setSelectedColor] = useState<number | null>(null);
   const [selectedSize, setSelectedSize] = useState("");
   const [quantity, setQuantity] = useState(1);
+  const [isBuyingNow, setIsBuyingNow] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -643,6 +646,49 @@ function ProductDetailsContent({ id }: { id: string }) {
   const handleDecrement = useCallback(() => {
     setQuantity(prev => Math.max(1, prev - 1));
   }, []);
+
+  const handleBuyNow = useCallback(async () => {
+    if (!user) {
+      router.push("/auth/login");
+      return;
+    }
+
+    if (!product || !canAddToCart) {
+      toast({
+        title: "⚠️ Select Options",
+        description: "Please select required options before continuing",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsBuyingNow(true);
+    try {
+      await addToCart({
+        productId: product.id,
+        name: product.name,
+        price: product.price,
+        image: product.images[0],
+        color: selectedColorValue ?? "Default",
+        size: hasSizeOptions ? selectedSize : "",
+        quantity: quantity,
+      });
+      router.push("/checkout");
+    } finally {
+      setIsBuyingNow(false);
+    }
+  }, [
+    user,
+    router,
+    product,
+    canAddToCart,
+    toast,
+    addToCart,
+    selectedColorValue,
+    hasSizeOptions,
+    selectedSize,
+    quantity,
+  ]);
 
   if (!product || isLoading) return <ProductDetailsSkeleton />;
 
@@ -739,16 +785,19 @@ function ProductDetailsContent({ id }: { id: string }) {
                   <Button
                     variant="outline"
                     className="py-6 rounded-xl border-glass-border hover:border-primary hover:text-primary hover:scale-[1.02] transition-all duration-300"
-                    onClick={() => router.push("/checkout")}
+                    onClick={handleBuyNow}
+                    disabled={isBuyingNow || !canAddToCart}
                   >
-                    BUY NOW
+                    {isBuyingNow ? "PROCESSING..." : "BUY NOW"}
                   </Button>
                   <Button
+                    asChild
                     variant="outline"
                     className="py-6 rounded-xl border-glass-border hover:border-secondary hover:text-secondary hover:scale-[1.02] transition-all duration-300"
-                    onClick={() => window.location.href = `tel:${product.contactNumber || '1-800-123-4567'}`}
                   >
-                    CALL US
+                    <a href={`tel:${product.contactNumber || "1-800-123-4567"}`}>
+                      CALL US
+                    </a>
                   </Button>
                 </div>
               </div>
