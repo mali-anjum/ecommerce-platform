@@ -22,6 +22,7 @@ import {
   MapPin,
   Store,
   LogOut,
+  Check,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -81,7 +82,7 @@ const accountItems = [
   { title: "Orders", to: "/orders" },
   { title: "Wishlist", to: "/wishlist" },
   { title: "Saved Items", to: "/saved" },
-  { title: "Addresses", to: "/addresses" },
+  { title: "Addresses", to: "/account?tab=addresses" },
 ];
 
 const accountItemVisuals: Record<
@@ -133,6 +134,12 @@ const infoItems = [
   },
 ];
 
+const languageOptions = [
+  { label: "English", value: "en" },
+  { label: "Spanish", value: "es" },
+  { label: "French", value: "fr" },
+] as const;
+
 function Header() {
   const { logout, user } = useAuthStore();
   const router = useRouter();
@@ -144,6 +151,7 @@ function Header() {
   const [showSheetDialog, setShowSheetDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("all");
+  const [selectedLanguage, setSelectedLanguage] = useState<string>("English");
   const { fetchCart, items } = useCartStore();
   const { categories, fetchCategories } = useCategoryStore();
 
@@ -169,6 +177,24 @@ function Header() {
   useEffect(() => {
     void fetchCategories();
   }, [fetchCategories]);
+
+  useEffect(() => {
+    const savedLanguage = localStorage.getItem("preferred-language");
+    if (!savedLanguage) return;
+    const matched = languageOptions.find((lang) => lang.value === savedLanguage);
+    if (matched) {
+      setSelectedLanguage(matched.label);
+      document.documentElement.lang = matched.value;
+    }
+  }, []);
+
+  const handleLanguageSelect = (value: (typeof languageOptions)[number]["value"]) => {
+    const selected = languageOptions.find((lang) => lang.value === value);
+    if (!selected) return;
+    setSelectedLanguage(selected.label);
+    localStorage.setItem("preferred-language", selected.value);
+    document.documentElement.lang = selected.value;
+  };
 
   useEffect(() => {
     if (pathname !== "/products") return;
@@ -504,14 +530,23 @@ function Header() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="h-7">
                     <Globe className="h-3 w-3 mr-1" />
-                    English
+                    {selectedLanguage}
                     <ChevronDown className="h-3 w-3 ml-1" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  <DropdownMenuItem>English</DropdownMenuItem>
-                  <DropdownMenuItem>Spanish</DropdownMenuItem>
-                  <DropdownMenuItem>French</DropdownMenuItem>
+                  {languageOptions.map((language) => (
+                    <DropdownMenuItem
+                      key={language.value}
+                      onClick={() => handleLanguageSelect(language.value)}
+                      className="flex items-center justify-between gap-3"
+                    >
+                      {language.label}
+                      {selectedLanguage === language.label && (
+                        <Check className="h-4 w-4 text-primary" />
+                      )}
+                    </DropdownMenuItem>
+                  ))}
                 </DropdownMenuContent>
               </DropdownMenu>
 
