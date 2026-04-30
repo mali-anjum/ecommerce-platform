@@ -1,0 +1,8 @@
+<svg width="120" height="48" viewBox="0 0 120 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="120" height="48" rx="8" fill="#FFFFFF"/>
+  <rect x="12" y="11" width="36" height="24" rx="4" fill="#6D28D9"/>
+  <rect x="12" y="16" width="36" height="4" fill="#A78BFA"/>
+  <rect x="16" y="25" width="9" height="6" rx="1" fill="#DDD6FE"/>
+  <text x="56" y="21" font-family="Arial, Helvetica, sans-serif" font-size="9" font-weight="700" fill="#312E81">DIRECT</text>
+  <text x="56" y="31" font-family="Arial, Helvetica, sans-serif" font-size="9" font-weight="700" fill="#312E81">CARD</text>
+</svg>
