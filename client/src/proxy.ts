@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
-const publicRoutes = ["/auth/register", "/auth/login", "/track-order"];
+const publicRoutes = ["/auth/register", "/auth/login", "/track-order", "/help"];
+const authRoutes = ["/auth/register", "/auth/login"];
 const superAdminRoutes = ["/super-admin"];
 const userRoutes = ["/home"];
 
@@ -35,7 +36,7 @@ export async function proxy(request: NextRequest) {
       );
       const { role } = payload as { role: string };
 
-      if (publicRoutes.includes(pathname) && hasRefreshToken) {
+      if (authRoutes.includes(pathname) && hasRefreshToken) {
         const postAuthHome =
           role === "SUPER_ADMIN"
             ? "/super-admin"
