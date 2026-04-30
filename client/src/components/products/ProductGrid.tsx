@@ -47,7 +47,7 @@ export function ProductGrid({ products, isLoading, error }: ProductGridProps) {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
       {products.map((productItem) => (
         <div
-          onClick={() => router.push(`/listing/${productItem.id}`)}
+          onClick={() => router.push(`/products/${productItem.id}`)}
           key={productItem.id}
           className="group cursor-pointer"
         >
