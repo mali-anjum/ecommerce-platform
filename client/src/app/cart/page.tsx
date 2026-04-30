@@ -153,7 +153,7 @@ function UserCartPage() {
 
         {/* Main Content */}
         {cartItems.length === 0 ? (
-          <CartEmptyState onContinueShopping={() => router.push("/listing")} />
+          <CartEmptyState onContinueShopping={() => router.push("/products")} />
         ) : (
           <div className="flex flex-col lg:flex-row gap-8">
             <div className="flex-1 space-y-4">
@@ -183,7 +183,7 @@ function UserCartPage() {
                 ))}
                 <CartRedirect
                   onCheckout={() => router.push("/checkout")}
-                  onContinueShopping={() => router.push("/listing")}
+                  onContinueShopping={() => router.push("/products")}
                 />
               </div>
             </div>
