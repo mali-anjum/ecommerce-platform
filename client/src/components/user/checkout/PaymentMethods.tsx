@@ -15,11 +15,21 @@ export function PaymentMethods({
   isLoading = false,
   isReady = false,
 }: PaymentMethodsProps) {
-  const paymentOptions = [
+  type PaymentOption = {
+    id: "PAYPAL" | "STRIPE" | "CARD";
+    name: string;
+    icon: string;
+    description: string;
+    badge: string;
+    recommended: boolean;
+    disabled?: boolean;
+  };
+
+  const paymentOptions: PaymentOption[] = [
     {
       id: "PAYPAL" as const,
       name: "PayPal",
-      icon: "/images/paypal-logo.png",
+      icon: "/images/payments/paypal.svg",
       description: "Pay with PayPal account or card",
       badge: "Fast & Secure",
       recommended: true,
@@ -27,7 +37,7 @@ export function PaymentMethods({
     {
       id: "STRIPE" as const,
       name: "Credit/Debit Card",
-      icon: "/images/stripe-logo.png",
+      icon: "/images/payments/card-brands.svg",
       description: "Visa, Mastercard, American Express",
       badge: "3D Secure",
       recommended: false,
@@ -35,7 +45,7 @@ export function PaymentMethods({
     {
       id: "CARD" as const,
       name: "Direct Card",
-      icon: "💳",
+      icon: "/images/payments/direct-card.svg",
       description: "Process card directly",
       badge: "Beta",
       recommended: false,
@@ -97,33 +107,17 @@ export function PaymentMethods({
                   onClick={() => !option.disabled && onSelectPaymentMethod(option.id)}
                   disabled={option.disabled || isLoading || !isReady}
                   variant="outline"
-                  className="w-full justify-start p-4 h-auto border-2 hover:border-primary transition-all"
+                  className="h-auto w-full justify-start border-2 p-4 transition-all hover:border-primary"
                 >
                   <div className="flex items-center justify-between w-full">
                     <div className="flex items-center gap-3">
-                      // checking weather img or icon:- img start with "/"
-                      {option.icon.startsWith("/") ? (
-                        <div className="h-8 w-12 flex items-center justify-center bg-white rounded border">
-                          <img
-                            src={option.icon}
-                            alt={option.name}
-                            className="h-6 w-10 object-contain"
-                            onError={(e) => {
-                              // Fallback if image doesn't load
-                              const parent = e.currentTarget.parentElement;
-                              if (parent) {
-                                parent.innerHTML = `
-                                  <div class="h-8 w-12 rounded bg-muted flex items-center justify-center">
-                                    <CreditCard class="h-5 w-5 text-muted-foreground" />
-                                  </div>
-                                `;
-                              }
-                            }}
-                          />
-                        </div>
-                      ) : (
-                        <span className="text-2xl">{option.icon}</span>
-                      )}
+                      <div className="flex h-9 w-14 items-center justify-center rounded-md border bg-white/95">
+                        <img
+                          src={option.icon}
+                          alt={`${option.name} logo`}
+                          className="h-6 w-12 object-contain"
+                        />
+                      </div>
                       <div className="text-left">
                         <div className="font-medium text-foreground">
                           {option.name}
