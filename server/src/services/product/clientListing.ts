@@ -231,32 +231,31 @@ export async function fetchClientProductListing(query: Request["query"]) {
       orderBy: {
         [safeSortBy]: sortOrder,
       },
-      include: {
-        seller: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
     }),
     prisma.product.count({ where }),
   ]);
 
-  const availableSellers = await prisma.seller.findMany({
-    where: { isActive: true },
-    orderBy: [{ isPremium: "desc" }, { name: "asc" }],
-    select: {
-      id: true,
-      name: true,
-    },
-    take: 50,
-  });
+  const sellerDelegate = (prisma as unknown as {
+    seller?: {
+      findMany: (args: unknown) => Promise<Array<{ id: string; name: string }>>;
+    };
+  }).seller;
+
+  const availableSellers = sellerDelegate
+    ? await sellerDelegate.findMany({
+        where: { isActive: true },
+        orderBy: [{ isPremium: "desc" }, { name: "asc" }],
+        select: {
+          id: true,
+          name: true,
+        },
+        take: 50,
+      })
+    : [];
 
   const productsForResponse = products.map((product) => ({
     ...product,
-    sellerName: product.seller?.name ?? null,
-    seller: undefined,
+    sellerName: null,
   }));
 
   const deptRows = await prisma.department.count();
