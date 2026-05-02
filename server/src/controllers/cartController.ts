@@ -157,11 +157,11 @@ const getCart = asyncHandler(
     try {
       const userId = req.user?.userId;
 
-      // if (!userId || typeof userId !== "number") {
-      //   return res.status(401).json(new ValidationError("Unauthorized user"));
-      // }
+      if (!userId) {
+        return res.status(401).json(new ValidationError("Unauthorized user"));
+      }
 
-      const cart = await CartService.getOrCreateCart(userId!);
+      const cart = await CartService.getOrCreateCart(userId);
       const validationIssues = await CartService.validateCartItems(cart.items);
 
       const cartItems = cart.items
