@@ -196,35 +196,55 @@ model Address {
 }
 
 model Order {
-  id                String        @id @default(uuid())
-  userId            String
-  addressId         String
-  couponId          String?
-  total             Float         // Use Float
-  currency          String        @default("USD")
-  status            OrderStatus   @default(PENDING)
-  paymentMethod     PaymentMethod
-  paymentStatus     PaymentStatus @default(PENDING)
-  paymentId         String?       // Internal payment reference
-  providerOrderId   String?       // PayPal/Stripe order ID
-  providerCaptureId String?       // Actual capture/charge ID from provider
-  capturedAt        DateTime?     // When payment was captured
-  notes             String?       // For admin notes, cancellation reasons, etc.
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-  address           Address       @relation(fields: [addressId], references: [id], onDelete: Cascade)
-  coupon            Coupon?       @relation(fields: [couponId], references: [id], onDelete: Cascade)
-  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  items             OrderItem[]
+  id            String        @id @default(uuid())
+  userId        String
+  addressId     String
+  couponId      String?
+  total         Float         // Use Float
+  currency      String        @default("USD")
+  status        OrderStatus   @default(PENDING)
+  paymentMethod PaymentMethod
+  paymentStatus PaymentStatus @default(PENDING)
+  notes         String?       // For admin notes, cancellation reasons, etc.
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  address       Address       @relation(fields: [addressId], references: [id], onDelete: Cascade)
+  coupon        Coupon?       @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items         OrderItem[]
+  payments      Payment[]
 
   @@index([userId])
   @@index([addressId])
   @@index([couponId])
-  @@index([paymentId])
-  @@index([providerOrderId])
   @@index([status])
   @@index([paymentStatus])
   @@index([createdAt])
+}
+
+/// One row per payment attempt / provider session (PayPal order, Stripe Checkout session, etc.).
+model Payment {
+  id                  String               @id @default(uuid())
+  orderId             String
+  method              PaymentMethod
+  attemptStatus       PaymentAttemptStatus @default(PENDING)
+  /// Provider primary reference: PayPal Order ID, Stripe Checkout Session ID, etc.
+  providerReferenceId String?
+  providerCaptureId   String?
+  approvalUrl         String?
+  checkoutUrl         String?
+  clientSecret        String?
+  amount              Float?
+  currency            String               @default("USD")
+  capturedAt          DateTime?
+  metadata            Json?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  order               Order                @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([providerReferenceId])
+  @@index([attemptStatus])
 }
 
 model OrderItem {
@@ -272,6 +292,15 @@ enum PaymentMethod {
   CREDIT_CARD
   PAYPAL
   STRIPE
+}
+
+/// Lifecycle of a single payment attempt (distinct from order-level PaymentStatus summary).
+enum PaymentAttemptStatus {
+  PENDING
+  AUTHORIZED
+  COMPLETED
+  FAILED
+  CANCELLED
 }
 
 // UPDATED PaymentStatus enum
