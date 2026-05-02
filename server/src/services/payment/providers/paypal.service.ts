@@ -36,10 +36,14 @@ export class PayPalService extends BasePaymentService {
     this.validateConfiguration();
   }
 
+  /**
+   * Orders/capture only need client credentials. Webhook verification
+   * additionally requires PAYPAL_WEBHOOK_ID (checked in verifyWebhookSignature).
+   */
   private validateConfiguration(): void {
-    if (!this.clientId || !this.clientSecret || !process.env.PAYPAL_WEBHOOK_ID) {
+    if (!this.clientId || !this.clientSecret) {
       throw new Error(
-        "PayPal configuration missing required environment variables"
+        "PayPal configuration missing PAYPAL_CLIENT_ID or PAYPAL_CLIENT_SECRET"
       );
     }
   }
@@ -162,6 +166,16 @@ export class PayPalService extends BasePaymentService {
         };
       }
 
+      const returnUrl = process.env.PAYPAL_RETURN_URL?.trim();
+      const cancelUrl = process.env.PAYPAL_CANCEL_URL?.trim();
+      if (!returnUrl || !cancelUrl) {
+        return {
+          success: false,
+          error:
+            "PayPal redirect URLs are not configured. Set PAYPAL_RETURN_URL and PAYPAL_CANCEL_URL (e.g. http://localhost:3012/checkout for local development).",
+        };
+      }
+
       // Use PayPalItem type
       const paypalItems: PayPalItem[] = orderData.items.map((item) => ({
         name: item.productName.substring(0, 127),
@@ -199,8 +213,8 @@ export class PayPalService extends BasePaymentService {
           application_context: {
             brand_name: process.env.APP_NAME || "Ecommerce Store",
             user_action: "PAY_NOW",
-            return_url: process.env.PAYPAL_RETURN_URL,
-            cancel_url: process.env.PAYPAL_CANCEL_URL,
+            return_url: returnUrl,
+            cancel_url: cancelUrl,
           },
         }
       );
@@ -293,13 +307,21 @@ export class PayPalService extends BasePaymentService {
 
   async verifyWebhookSignature(
     rawBody: string,
-    transmissionId: string, // This should be transmissionId, not signature
+    transmissionSig: string,
     timestamp: string,
-    certUrl: string // Add this parameter
+    certUrl: string,
+    transmissionId?: string
   ): Promise<boolean> {
     try {
-      // Validate input parameters
-      if (!transmissionId || !timestamp || !certUrl) {
+      const webhookId = process.env.PAYPAL_WEBHOOK_ID?.trim();
+      if (!webhookId) {
+        console.error(
+          "PayPal webhook verification requires PAYPAL_WEBHOOK_ID to be set"
+        );
+        return false;
+      }
+
+      if (!transmissionSig || !timestamp || !certUrl || !transmissionId) {
         console.error(
           "Webhook verification failed: Missing required parameters"
         );
@@ -324,10 +346,10 @@ export class PayPalService extends BasePaymentService {
         {
           transmission_id: transmissionId,
           transmission_time: timestamp,
-          transmission_sig: transmissionId, // This should be the actual signature
+          transmission_sig: transmissionSig,
           cert_url: certUrl,
           auth_algo: "SHA256withRSA",
-          webhook_id: process.env.PAYPAL_WEBHOOK_ID,
+          webhook_id: webhookId,
           webhook_event: body,
         }
       );
