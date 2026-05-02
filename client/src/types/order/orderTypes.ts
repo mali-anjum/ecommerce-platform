@@ -1,3 +1,19 @@
+/** Provider payment attempt row (matches server `Payment` model). */
+export interface OrderPaymentAttempt {
+  id: string;
+  method: "CREDIT_CARD" | "PAYPAL" | "STRIPE";
+  attemptStatus: string;
+  providerReferenceId?: string | null;
+  providerCaptureId?: string | null;
+  approvalUrl?: string | null;
+  checkoutUrl?: string | null;
+  amount?: number | null;
+  currency?: string;
+  capturedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface OrderItem {
   id: string;
   productId: string;
@@ -29,7 +45,12 @@ export interface Order {
     | "CAPTURE_FAILED";
   paymentMethod: "CREDIT_CARD" | "PAYPAL" | "STRIPE";
   paymentStatus: "PENDING" | "APPROVED" | "COMPLETED" | "FAILED" | "REFUNDED" | "CANCELLED";
+  /** Latest payment attempts (new normalized API). */
+  payments?: OrderPaymentAttempt[];
+  /** Aliases derived from latest payment for backward compatibility. */
   paymentId?: string;
+  providerOrderId?: string;
+  providerCaptureId?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -54,7 +75,10 @@ export interface AdminOrder {
     | "CAPTURE_FAILED";
   paymentMethod: "CREDIT_CARD" | "PAYPAL" | "STRIPE";
   paymentStatus: "PENDING" | "APPROVED" | "COMPLETED" | "FAILED" | "REFUNDED" | "CANCELLED";
+  payments?: OrderPaymentAttempt[];
   paymentId?: string;
+  providerOrderId?: string;
+  providerCaptureId?: string | null;
   createdAt: string;
   updatedAt: string;
   user: {
