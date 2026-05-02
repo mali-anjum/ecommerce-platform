@@ -5,6 +5,27 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { authLogger } from "@/utils/Logger";
 import { getSafeISOString } from "@/utils/getSafeISOString";
 
+export const REFRESH_FAILURE_COOLDOWN_MS = 2 * 60 * 1000;
+
+export function isRefreshCooldownActive(
+  cooldownUntilMs: number,
+  nowMs = Date.now(),
+): boolean {
+  return cooldownUntilMs > nowMs;
+}
+
+export function shouldActivateRefreshFailureCooldown(params: {
+  retryCount: number;
+  hasRefreshToken: boolean;
+  hasAccessToken: boolean;
+}): boolean {
+  return (
+    params.retryCount >= 2 &&
+    params.hasRefreshToken &&
+    !params.hasAccessToken
+  );
+}
+
 export default function useSilentAuth(enabled = true) {
   const { refreshAccessToken, checkSession, getTokenExpiryInfo, heartbeat } =
     useAuthStore();
@@ -14,6 +35,8 @@ export default function useSilentAuth(enabled = true) {
   const isRefreshingRef = useRef<boolean>(false);
   const retryCountRef = useRef<number>(0);
   const storageDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const refreshCooldownUntilRef = useRef<number>(0);
+  const flowCounterRef = useRef<number>(0);
 
   const calculateRefreshTime = useCallback(async (): Promise<number | null> => {
     try {
@@ -66,10 +89,28 @@ export default function useSilentAuth(enabled = true) {
       return;
     }
 
+    const now = Date.now();
+    if (isRefreshCooldownActive(refreshCooldownUntilRef.current, now)) {
+      authLogger.warn("Skipping refresh: cooldown active after repeated 401s", {
+        cooldownUntil: getSafeISOString(refreshCooldownUntilRef.current) || "Invalid date",
+      });
+      return;
+    }
+
     isRefreshingRef.current = true;
 
     try {
-      authLogger.info("Initiating token refresh...");
+      const sessionSnapshot = await checkSession();
+      authLogger.info("Initiating token refresh...", {
+        hasRefreshToken: sessionSnapshot.hasRefreshToken,
+        hasAccessToken: sessionSnapshot.hasAccessToken,
+      });
+      if (sessionSnapshot.hasRefreshToken && sessionSnapshot.hasAccessToken) {
+        authLogger.info(
+          "Skipping refresh call: both accessToken and refreshToken are present",
+        );
+        return;
+      }
       const startTime = performance.now();
 
       const success = await refreshAccessToken();
@@ -82,6 +123,7 @@ export default function useSilentAuth(enabled = true) {
         });
 
         retryCountRef.current = 0;
+        refreshCooldownUntilRef.current = 0;
         setTimeout(() => {
           authLogger.debug("Rescheduling next refresh after successful refresh");
           scheduleTokenRefresh();
@@ -93,6 +135,28 @@ export default function useSilentAuth(enabled = true) {
         });
 
         retryCountRef.current++;
+        const postFailureSession = await checkSession();
+
+        if (
+          shouldActivateRefreshFailureCooldown({
+            retryCount: retryCountRef.current,
+            hasRefreshToken: postFailureSession.hasRefreshToken,
+            hasAccessToken: postFailureSession.hasAccessToken,
+          })
+        ) {
+          // Avoid hammering refresh endpoint when cookie exists but token is rejected (usually stale/revoked token).
+          const cooldownMs = REFRESH_FAILURE_COOLDOWN_MS;
+          refreshCooldownUntilRef.current = Date.now() + cooldownMs;
+          authLogger.warn(
+            "Refresh token exists but refresh keeps failing; activating cooldown",
+            {
+              retryCount: retryCountRef.current,
+              cooldownSeconds: Math.round(cooldownMs / 1000),
+            },
+          );
+          return;
+        }
+
         const backoffTime = Math.min(
           1000 * Math.pow(2, retryCountRef.current),
           30000,
@@ -170,24 +234,28 @@ export default function useSilentAuth(enabled = true) {
   }, [calculateRefreshTime, performTokenRefresh]);
 
   const checkAndRefreshIfNeeded = useCallback(async () => {
+    const flowId = `silent-auth-${++flowCounterRef.current}`;
     try {
       if (process.env.NODE_ENV === "development") {
-        authLogger.debug("Checking if token refresh is needed...");
+        authLogger.debug("Checking if token refresh is needed...", { flowId });
       }
 
       // ✅ FIRST: Check session to see what cookies we have
       const sessionInfo = await checkSession();
 
       authLogger.debug("Session check result:", {
+        flowId,
         hasRefreshToken: sessionInfo.hasRefreshToken,
         hasAccessToken: sessionInfo.hasAccessToken,
         success: sessionInfo.success,
+        cooldownActive: isRefreshCooldownActive(refreshCooldownUntilRef.current),
       });
 
       // ✅ CRITICAL FIX: If we have refreshToken but NO accessToken, refresh IMMEDIATELY
       if (sessionInfo.hasRefreshToken && !sessionInfo.hasAccessToken) {
         authLogger.warn(
           "Has refresh token but NO access token - refreshing immediately",
+          { flowId },
         );
         await performTokenRefresh();
         return;
@@ -198,10 +266,21 @@ export default function useSilentAuth(enabled = true) {
 
       if (expiryInfo?.shouldRefresh) {
         authLogger.warn("Token requires immediate refresh based on expiry", {
+          flowId,
           timeUntilExpiry: expiryInfo.timeUntilExpiry,
           isExpired: expiryInfo.isValid,
         });
         await performTokenRefresh();
+        return;
+      }
+
+      if (sessionInfo.hasRefreshToken && sessionInfo.hasAccessToken) {
+        authLogger.info(
+          "Both access token and refresh token are present; no immediate refresh needed",
+          {
+            flowId,
+          },
+        );
         return;
       }
 
@@ -241,14 +320,17 @@ export default function useSilentAuth(enabled = true) {
 
     authLogger.debug("useSilentAuth hook initialized");
 
+    // Run immediately on app startup/reload so missing access tokens are restored quickly.
+    void checkAndRefreshIfNeeded();
+
     initialCheckTimeoutRef.current = setTimeout(() => {
-      checkAndRefreshIfNeeded();
-    }, 2000);
+      void checkAndRefreshIfNeeded();
+    }, 1000);
 
     intervalRef.current = setInterval(
       () => {
         authLogger.debug("Performing scheduled token health check");
-        checkAndRefreshIfNeeded();
+        void checkAndRefreshIfNeeded();
       },
       3 * 60 * 1000,
     );
@@ -256,7 +338,7 @@ export default function useSilentAuth(enabled = true) {
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
         authLogger.debug("Tab became visible, checking token status");
-        setTimeout(() => checkAndRefreshIfNeeded(), 1000);
+        setTimeout(() => void checkAndRefreshIfNeeded(), 1000);
       }
     };
 
