@@ -114,7 +114,9 @@ export class StripeService extends BasePaymentService {
   async verifyWebhookSignature(
     rawBody: string,
     signature: string,
-    timestamp: string
+    _timestamp: string,
+    _certUrl?: string,
+    _transmissionId?: string
   ): Promise<boolean> {
     try {
       // Stripe automatically verifies in constructEvent
