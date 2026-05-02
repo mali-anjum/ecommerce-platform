@@ -7,16 +7,17 @@ import { ApiError, UnauthorizedError } from "../utils/ApiError";
 import { PaymentFactory } from "../services/payment/payment.factory";
 import { PaymentOrderData } from "../services/interfaces/payment.interface";
 import type { MinimalProduct } from "../services/interfaces/product";
-import { PayPalService } from "../services/payment/providers/paypal.service";
 import {
   applyPurchaseFulfillment,
   fetchSellerOrderLinesPage,
   findOrderForPublicTracking,
   findOrdersForAdmin,
   findOrdersForUser,
+  mapOrdersWithLegacyPaymentAliases,
   prepareGetOrderByIdQuery,
   resolveSellerIdsForProductIds,
   updateOrderStatusById,
+  withLegacyPaymentAliases,
 } from "../services/order";
 import type { OrderStatus } from "@prisma/client";
 
@@ -120,28 +121,29 @@ const createPaymentOrder = asyncHandler(
         );
       }
 
-      // 4. Update order with provider info
-      const updateData: any = {
-        providerOrderId: paymentResult.orderId,
-        paymentId: paymentResult.paymentId,
-        status: "PENDING_PAYMENT",
-        paymentStatus: "PENDING",
-      };
+      const providerRef =
+        paymentResult.paymentId ?? paymentResult.orderId ?? null;
 
-      // Add provider-specific fields
-      if (paymentResult.approvalUrl) {
-        updateData.approvalUrl = paymentResult.approvalUrl;
-      }
-      if (paymentResult.url) {
-        updateData.checkoutUrl = paymentResult.url;
-      }
-      if (paymentResult.clientSecret) {
-        updateData.clientSecret = paymentResult.clientSecret;
-      }
+      await prisma.payment.create({
+        data: {
+          orderId: draftOrder.id,
+          method: paymentMethod.toUpperCase() as "PAYPAL" | "STRIPE" | "CREDIT_CARD",
+          attemptStatus: "PENDING",
+          providerReferenceId: providerRef,
+          approvalUrl: paymentResult.approvalUrl,
+          checkoutUrl: paymentResult.url,
+          clientSecret: paymentResult.clientSecret,
+          amount: total,
+          currency: "USD",
+        },
+      });
 
       await prisma.order.update({
         where: { id: draftOrder.id },
-        data: updateData,
+        data: {
+          status: "PENDING_PAYMENT",
+          paymentStatus: "PENDING",
+        },
       });
 
       // 5. Prepare response
@@ -201,12 +203,24 @@ const capturePayment = asyncHandler(
           status: "PENDING_PAYMENT",
           paymentStatus: "PENDING",
         },
-        include: { items: true },
+        include: {
+          items: true,
+          payments: { orderBy: { createdAt: "desc" } },
+        },
       });
 
       if (!existingOrder) {
         return next(
           new ApiError(404, "Order not found or not in correct state"),
+        );
+      }
+
+      const paymentRow = existingOrder.payments.find(
+        (p) => p.providerReferenceId === paymentId
+      );
+      if (!paymentRow) {
+        return next(
+          new ApiError(404, "Payment session not found for this order"),
         );
       }
 
@@ -225,6 +239,10 @@ const capturePayment = asyncHandler(
       }
 
       if (!captureResult.success) {
+        await prisma.payment.update({
+          where: { id: paymentRow.id },
+          data: { attemptStatus: "FAILED" },
+        });
         await prisma.order.update({
           where: { id: internalOrderId },
           data: {
@@ -237,20 +255,27 @@ const capturePayment = asyncHandler(
         );
       }
 
-      // 3. Update EXISTING order
+      await prisma.payment.update({
+        where: { id: paymentRow.id },
+        data: {
+          attemptStatus: "COMPLETED",
+          providerCaptureId:
+            captureResult.captureId ?? captureResult.data?.id ?? null,
+          capturedAt: new Date(),
+        },
+      });
+
       const updatedOrder = await prisma.order.update({
         where: { id: internalOrderId },
         data: {
           status: "PROCESSING",
           paymentStatus: "COMPLETED",
-          paymentId: captureResult.paymentId,
-          providerCaptureId: captureResult.captureId || captureResult.data?.id,
-          capturedAt: new Date(),
         },
         include: {
           items: true,
           address: true,
           coupon: true,
+          payments: { orderBy: { createdAt: "desc" }, take: 5 },
         },
       });
 
@@ -269,7 +294,7 @@ const capturePayment = asyncHandler(
         new ApiResponse(
           200,
           {
-            order: updatedOrder,
+            order: withLegacyPaymentAliases(updatedOrder),
             captureData: captureResult.data,
           },
           "Payment captured and order completed successfully",
@@ -361,7 +386,7 @@ const getAllOrdersAdminOnly = asyncHandler(
       .json(
         new ApiResponse(
           200,
-          orders,
+          mapOrdersWithLegacyPaymentAliases(orders),
           "All orders fetched for the admin sucessfully.",
         ),
       );
@@ -379,7 +404,13 @@ const getAllOrdersForUser = asyncHandler(
 
     return res
       .status(200)
-      .json(new ApiResponse(200, orders, "User orders fetched successfully."));
+      .json(
+        new ApiResponse(
+          200,
+          mapOrdersWithLegacyPaymentAliases(orders),
+          "User orders fetched successfully.",
+        ),
+      );
   }
 );
 
@@ -412,7 +443,15 @@ const getOrderById = asyncHandler(async (req: AuthenticatedRequest, res: Respons
     return next(new ApiError(404, "Order not found"));
   }
 
-  return res.status(200).json(new ApiResponse(200, order, "Order fetched successfully"));
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        withLegacyPaymentAliases(order),
+        "Order fetched successfully",
+      ),
+    );
 });
 
 const trackOrderPublic = asyncHandler(
@@ -435,7 +474,7 @@ const trackOrderPublic = asyncHandler(
     return res.status(200).json(
       new ApiResponse(
         200,
-        trackedOrder,
+        withLegacyPaymentAliases(trackedOrder),
         "Order tracking details fetched successfully"
       )
     );
