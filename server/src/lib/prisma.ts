@@ -7,10 +7,18 @@ const globalForPrisma = globalThis as unknown as {
   pool: Pool | undefined;
 };
 
-// Create connection pool
-const pool = globalForPrisma.pool ?? new Pool({
-  connectionString: process.env.DATABASE_URL as string,
-});
+const maxPool = Number(process.env.DATABASE_POOL_MAX ?? 10);
+const connectionTimeoutMs = Number(process.env.DATABASE_CONNECTION_TIMEOUT_MS ?? 20000);
+
+// Create connection pool (tunable for remote DBs / avoid exhaustion under parallel requests)
+const pool =
+  globalForPrisma.pool ??
+  new Pool({
+    connectionString: process.env.DATABASE_URL as string,
+    max: Number.isFinite(maxPool) && maxPool > 0 ? maxPool : 10,
+    connectionTimeoutMillis: Number.isFinite(connectionTimeoutMs) ? connectionTimeoutMs : 20000,
+    idleTimeoutMillis: 30000,
+  });
 
 // Create adapter
 const adapter = new PrismaPg(pool);
