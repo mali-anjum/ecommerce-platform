@@ -75,6 +75,8 @@ export interface PaymentMethod {
     signature: string,
     timestamp: string,
     certUrl: string,
+    /** PayPal: `paypal-transmission-id` header */
+    transmissionId?: string,
   ): Promise<boolean>;
   handleWebhook?(payload: any, signature: string): Promise<any>;
 }
