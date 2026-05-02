@@ -136,9 +136,13 @@ export const useCheckoutPayment = ({
       }
     } catch (error: any) {
       console.error("Payment initiation error:", error);
+      const description =
+        error?.response?.data?.message ??
+        error?.message ??
+        "Failed to process payment";
       toast({
         title: "Payment Failed",
-        description: error.message || "Failed to process payment",
+        description,
         variant: "destructive",
       });
     }
