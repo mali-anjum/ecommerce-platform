@@ -1,8 +1,10 @@
 // app/api/auth/check-session/route.ts - PRODUCTION READY
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { proxyLogger } from "@/utils/Logger";
 
 export async function GET(req: NextRequest) {
+  const traceId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   try {
     const cookies = req.cookies;
     
@@ -13,13 +15,14 @@ export async function GET(req: NextRequest) {
     const allCookies = cookies.getAll();
     const cookieNames = allCookies.map(cookie => cookie.name);
     
-    // In production, you might want to remove or reduce these logs
-    if (process.env.NODE_ENV === 'development') {
-      console.log("🔍 SERVER-SIDE COOKIE CHECK:");
-      console.log("- Cookie names:", cookieNames);
-      console.log("- Has refreshToken:", hasRefreshToken);
-      console.log("- Has accessToken:", hasAccessToken);
-    }
+    proxyLogger.info("check-session", {
+      traceId,
+      path: req.nextUrl.pathname,
+      hasRefreshToken,
+      hasAccessToken,
+      cookieNames,
+      userAgent: req.headers.get("user-agent") || "unknown",
+    });
     
     return NextResponse.json({
       success: true,
@@ -29,7 +32,10 @@ export async function GET(req: NextRequest) {
     });
     
   } catch (error) {
-    console.error("Session check error:", error);
+    proxyLogger.error("Session check error", {
+      traceId,
+      error: error instanceof Error ? error.message : "unknown_error",
+    });
     return NextResponse.json(
       { 
         success: false, 
