@@ -1,4 +1,4 @@
-import {  prisma } from "../../server"
+import { prisma } from "../../lib/prisma";
 
 export class CartService {
   static async getOrCreateCart(userId: string) {
