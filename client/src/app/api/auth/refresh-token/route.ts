@@ -14,7 +14,15 @@ const ERROR_MESSAGES = {
 const TIMEOUT_MS = 8000;
 
 export async function POST(req: NextRequest) {
+  const traceId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const BACKEND_URL = getServerBackendUrl();
+  proxyLogger.info("refresh-token:request-start", {
+    traceId,
+    path: req.nextUrl.pathname,
+    hasCookieHeader: Boolean(req.headers.get("cookie")),
+    hasRefreshTokenCookie: req.cookies.has("refreshToken"),
+    hasAccessTokenCookie: req.cookies.has("accessToken"),
+  });
 
   if (!BACKEND_URL) {
     proxyLogger.error(
@@ -61,6 +69,10 @@ export async function POST(req: NextRequest) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
     try {
+      proxyLogger.info("refresh-token:proxying-to-backend", {
+        traceId,
+        backendUrl: `${BACKEND_URL}/api/auth/refresh-token`,
+      });
       const backendRes = await fetch(`${BACKEND_URL}/api/auth/refresh-token`, {
         method: "POST",
         headers,
@@ -84,24 +96,39 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      if (!backendRes.ok) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: "Token refresh failed",
-            code: `REFRESH_FAILED_${backendRes.status}`,
-          },
-          { status: backendRes.status }
-        );
-      }
-
-      const response = NextResponse.json(backendPayload ?? {}, {
+      const response = NextResponse.json(
+        backendRes.ok
+          ? backendPayload ?? {}
+          : {
+              success: false,
+              error: "Token refresh failed",
+              code: `REFRESH_FAILED_${backendRes.status}`,
+            },
+        {
         status: backendRes.status,
-      });
+        },
+      );
 
       const setCookieHeaders = extractSetCookieHeaders(backendRes);
       for (const cookie of setCookieHeaders) {
         response.headers.append("Set-Cookie", cookie);
+      }
+
+      if (!backendRes.ok) {
+        proxyLogger.warn("refresh-token:backend-rejected", {
+          traceId,
+          status: backendRes.status,
+          backendPayload,
+          setCookieCount: setCookieHeaders.length,
+        });
+      }
+
+      if (backendRes.ok) {
+        proxyLogger.info("refresh-token:backend-success", {
+          traceId,
+          status: backendRes.status,
+          setCookieCount: setCookieHeaders.length,
+        });
       }
 
       return response;
