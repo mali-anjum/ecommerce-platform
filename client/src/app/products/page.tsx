@@ -209,20 +209,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useProductStore } from "@/store/useProductStore";
 import { useProductFilters } from "@/hooks/useProductFilter";
 import { ProductFilters as FiltersComponent } from "@/components/products/ProductFilters";
@@ -230,17 +216,12 @@ import { ProductGrid } from "@/components/products/ProductGrid";
 import { Pagination } from "@/components/products/ProductPagination";
 import { handleApiError } from "@/utils/errHandler";
 import { 
-  SlidersHorizontal, 
   Zap, 
   Sparkles, 
-  Filter, 
   Grid3x3,
-  ListFilter,
   TrendingUp,
   Star,
   Flame,
-  Search,
-  X,
   RefreshCw,
   Loader2,
   AlertCircle,
@@ -248,11 +229,9 @@ import {
   Eye,
   Target,
 } from "lucide-react";
-import { useEffect, useCallback, useMemo, useState } from "react";
+import { useEffect, useCallback, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { useCategoryStore } from "@/store/useCategoryStore";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Tooltip,
@@ -337,258 +316,6 @@ function HeroBanner() {
               <div className="text-sm text-muted-foreground">Curated</div>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// 2. Filters Bar Component
-interface FiltersBarProps {
-  sortBy: string;
-  sortOrder: string;
-  onSortChange: (value: string) => void;
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
-  activeFilterCount: number;
-  viewMode: "grid" | "list";
-  onViewModeChange: (mode: "grid" | "list") => void;
-  priceRange: number[];
-  setPriceRange: (range: number[]) => void;
-  selectedCategories: string[];
-  selectedSizes: string[];
-  selectedColors: string[];
-  selectedBrands: string[];
-  selectedConditions: string[];
-  selectedSellerIds: string[];
-  onDeal: boolean;
-  minDiscount: number;
-  sellerOptions: Array<{ id: string; name: string }>;
-  setOnDeal: (value: boolean) => void;
-  setMinDiscount: (value: number) => void;
-  onToggleFilter: ProductFiltersToggle;
-}
-
-type ProductFiltersToggle = (
-  filterType:
-    | "categories"
-    | "sizes"
-    | "brands"
-    | "colors"
-    | "conditions"
-    | "sellerIds",
-  value: string
-) => void;
-
-function FiltersBar({
-  sortBy,
-  sortOrder,
-  onSortChange,
-  searchQuery,
-  onSearchChange,
-  activeFilterCount,
-  viewMode,
-  onViewModeChange,
-  priceRange,
-  setPriceRange,
-  selectedCategories,
-  selectedSizes,
-  selectedColors,
-  selectedBrands,
-  selectedConditions,
-  selectedSellerIds,
-  onDeal,
-  minDiscount,
-  sellerOptions,
-  setOnDeal,
-  setMinDiscount,
-  onToggleFilter,
-}: FiltersBarProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const { categories, fetchCategories } = useCategoryStore();
-
-  useEffect(() => {
-    void fetchCategories();
-  }, [fetchCategories]);
-
-  const departmentValue = useMemo(() => {
-    const main = searchParams.get("mainCategory")?.trim() ?? "";
-    const sub = searchParams.get("subcategory")?.trim() ?? "";
-    if (!main) return "all";
-    return sub ? `${main}::${sub}` : main;
-  }, [searchParams]);
-
-  const departmentOptions = useMemo(
-    () =>
-      categories.flatMap((category) => [
-        {
-          label: `${category.title} (All)`,
-          value: category.title,
-        },
-        ...category.subcategories.map((sub) => ({
-          label: `${category.title} > ${sub.title}`,
-          value: `${category.title}::${sub.title}`,
-        })),
-      ]),
-    [categories]
-  );
-
-  const handleDepartmentChange = (value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete("mainCategory");
-    params.delete("subcategory");
-    if (value !== "all") {
-      const idx = value.indexOf("::");
-      const main = idx === -1 ? value : value.slice(0, idx);
-      const sub = idx === -1 ? "" : value.slice(idx + 2);
-      if (main) params.set("mainCategory", main);
-      if (sub) params.set("subcategory", sub);
-    }
-    const qs = params.toString();
-    router.replace(qs ? `/products?${qs}` : "/products");
-  };
-
-  return (
-    <div className="glass-effect rounded-2xl p-4 border border-glass-border mb-8">
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        {/* Department (Amazon-style) + search */}
-        <div className="flex flex-1 flex-col gap-2 min-w-0 max-w-full lg:max-w-3xl sm:flex-row sm:items-stretch">
-          <label className="sr-only" htmlFor="shop-department">
-            Department
-          </label>
-          <select
-            id="shop-department"
-            value={departmentValue}
-            onChange={(e) => handleDepartmentChange(e.target.value)}
-            className="h-10 w-full sm:w-[240px] shrink-0 rounded-l-md sm:rounded-l-md sm:rounded-r-none border border-border bg-input px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-          >
-            <option value="all">All Departments</option>
-            {departmentOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          <div className="relative flex-1 min-w-0">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search futuristic products..."
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="h-10 pl-10 pr-9 bg-input border-border focus:ring-primary/50 rounded-md sm:rounded-l-none sm:rounded-r-md w-full"
-            />
-            {searchQuery && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => onSearchChange("")}
-                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
-              >
-                <X className="h-3 w-3" />
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {/* Controls */}
-        <div className="flex items-center gap-3">
-          {/* View Toggle */}
-          <div className="flex items-center bg-card rounded-lg p-1">
-            <Button
-              variant={viewMode === "grid" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => onViewModeChange("grid")}
-              className={viewMode === "grid" ? "bg-primary text-primary-foreground" : ""}
-            >
-              <Grid3x3 className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === "list" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => onViewModeChange("list")}
-              className={viewMode === "list" ? "bg-primary text-primary-foreground" : ""}
-            >
-              <ListFilter className="h-4 w-4" />
-            </Button>
-          </div>
-
-          {/* Sort Select */}
-          <Select
-            value={`${sortBy}-${sortOrder}`}
-            onValueChange={onSortChange}
-          >
-            <SelectTrigger className="w-[180px] bg-input border-border">
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent className="bg-card border-border">
-              <SelectItem value="createdAt-desc">
-                <div className="flex items-center gap-2">
-                  <Flame className="h-4 w-4 text-primary" />
-                  Featured
-                </div>
-              </SelectItem>
-              <SelectItem value="price-asc">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-secondary" />
-                  Price: Low to High
-                </div>
-              </SelectItem>
-              <SelectItem value="price-desc">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-accent" />
-                  Price: High to Low
-                </div>
-              </SelectItem>
-              <SelectItem value="createdAt-asc">
-                <div className="flex items-center gap-2">
-                  <Zap className="h-4 w-4 text-primary" />
-                  Newest First
-                </div>
-              </SelectItem>
-            </SelectContent>
-          </Select>
-
-          {/* Filters Button */}
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="border-border hover:border-primary">
-                <SlidersHorizontal className="h-4 w-4 mr-2" />
-                Filters
-                {activeFilterCount > 0 && (
-                  <Badge className="ml-2 bg-primary text-primary-foreground">
-                    {activeFilterCount}
-                  </Badge>
-                )}
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="w-[90vw] max-h-[600px] overflow-auto max-w-[400px] glass-effect border-glass-border">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <Filter className="h-5 w-5 text-primary" />
-                  Advanced Filters
-                </DialogTitle>
-              </DialogHeader>
-              <FiltersComponent
-                priceRange={priceRange}
-                setPriceRange={setPriceRange}
-                selectedCategories={selectedCategories}
-                selectedSizes={selectedSizes}
-                selectedColors={selectedColors}
-                selectedBrands={selectedBrands}
-                selectedConditions={selectedConditions}
-                selectedSellerIds={selectedSellerIds}
-                onDeal={onDeal}
-                minDiscount={minDiscount}
-                sellerOptions={sellerOptions}
-                setOnDeal={setOnDeal}
-                setMinDiscount={setMinDiscount}
-                onToggleFilter={onToggleFilter}
-                hideCategories
-              />
-            </DialogContent>
-          </Dialog>
         </div>
       </div>
     </div>
@@ -740,10 +467,7 @@ function ProductListingPage() {
     minDiscount,
     setOnDeal,
     setMinDiscount,
-    sortBy,
-    sortOrder,
     handleToggleFilter,
-    handleSortChange,
     getFilters,
     syncFromQuery,
     resetFilters,
@@ -763,7 +487,6 @@ function ProductListingPage() {
   } = useProductStore();
 
   const [searchQuery, setSearchQuery] = useState(urlSearchQs);
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [collectionTab, setCollectionTab] = useState("all");
 
@@ -877,19 +600,6 @@ function ProductListingPage() {
     fetchAllProducts();
   };
 
-  // Calculate active filter count
-  const activeFilterCount =
-    [
-      ...selectedCategories,
-      ...selectedSizes,
-      ...selectedColors,
-      ...selectedBrands,
-      ...selectedConditions,
-      ...selectedSellerIds,
-    ].length + (priceRange[0] > 0 || priceRange[1] < 100000 ? 1 : 0);
-  const activeFilterCountWithDeals =
-    activeFilterCount + (onDeal ? 1 : 0) + (minDiscount > 0 ? 1 : 0);
-
   // Handle errors
   useEffect(() => {
     if (error) {
@@ -923,32 +633,6 @@ function ProductListingPage() {
           value={collectionTab}
           onChange={setCollectionTab}
           totalProducts={totalProducts}
-        />
-
-        {/* Filters Bar */}
-        <FiltersBar
-          sortBy={sortBy}
-          sortOrder={sortOrder}
-          onSortChange={handleSortChange}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          activeFilterCount={activeFilterCountWithDeals}
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-          priceRange={priceRange}
-          setPriceRange={setPriceRange}
-          selectedCategories={selectedCategories}
-          selectedSizes={selectedSizes}
-          selectedColors={selectedColors}
-          selectedBrands={selectedBrands}
-          selectedConditions={selectedConditions}
-          selectedSellerIds={selectedSellerIds}
-          onDeal={onDeal}
-          minDiscount={minDiscount}
-          sellerOptions={availableSellers}
-          setOnDeal={setOnDeal}
-          setMinDiscount={setMinDiscount}
-          onToggleFilter={handleToggleFilter}
         />
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
