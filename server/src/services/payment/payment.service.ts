@@ -26,9 +26,16 @@ export class PaymentService {
     rawBody: string,
     signature: string,
     timestamp: string,
-    cetUrl: string
+    cetUrl: string,
+    transmissionId?: string
   ): Promise<boolean> {
-    return this.provider.verifyWebhookSignature(rawBody, signature, timestamp, cetUrl);
+    return this.provider.verifyWebhookSignature(
+      rawBody,
+      signature,
+      timestamp,
+      cetUrl,
+      transmissionId
+    );
   }
 
   async handleWebhook(event: WebhookEvent): Promise<any> {
