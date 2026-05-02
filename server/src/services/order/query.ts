@@ -26,6 +26,10 @@ const baseOrderByIdInclude: Prisma.OrderInclude = {
   items: true,
   address: true,
   coupon: true,
+  payments: {
+    orderBy: { createdAt: "desc" },
+    take: 5,
+  },
 };
 
 /**
@@ -112,11 +116,19 @@ export function totalPages(total: number, limit: number): number {
 const userOrdersInclude = {
   items: true as const,
   address: true as const,
+  payments: {
+    orderBy: { createdAt: "desc" as const },
+    take: 5 as const,
+  },
 };
 
 const adminOrdersInclude: Prisma.OrderInclude = {
   items: true,
   address: true,
+  payments: {
+    orderBy: { createdAt: "desc" },
+    take: 5,
+  },
   user: {
     select: {
       id: true,
@@ -129,6 +141,10 @@ const adminOrdersInclude: Prisma.OrderInclude = {
 const publicTrackOrderInclude: Prisma.OrderInclude = {
   items: true,
   address: true,
+  payments: {
+    orderBy: { createdAt: "desc" },
+    take: 3,
+  },
 };
 
 const sellerLineOrderSelect = {
