@@ -1,5 +1,4 @@
 // services/payment/base.payment.service.ts
-import { StringNullableChain } from "lodash";
 import { PaymentMethod, PaymentOrderData, PaymentResult } from "../interfaces/payment.interface";
 
 export abstract class BasePaymentService implements PaymentMethod {
@@ -22,7 +21,8 @@ export abstract class BasePaymentService implements PaymentMethod {
     rawBody: string,
     signature: string,
     timestamp: string,
-    certUrl: string
+    certUrl: string,
+    _transmissionId?: string
   ): Promise<boolean> {
     // Default implementation
     console.log(`Webhook verification not implemented for ${this.providerName}`);
