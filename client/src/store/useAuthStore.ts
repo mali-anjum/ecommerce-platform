@@ -179,26 +179,40 @@ export const useAuthStore = create<AuthStore>()(
               console.log("🔄 AuthStore: Refresh token found");
             }
 
-            // Check if token needs refresh
-            const expiryInfo = get().getTokenExpiryInfo();
-
-            if (expiryInfo?.shouldRefresh) {
+            // Force immediate refresh when refresh token exists but access token is missing.
+            if (!sessionData.hasAccessToken) {
               const refreshed = await get().refreshAccessToken();
-              if (refreshed && !get().user) {
+              if (refreshed) {
+                await get().fetchMe();
+              } else {
+                set({ user: null });
+                get().clearTokenExpiry();
+              }
+            } else {
+              // Check if token needs refresh
+              const expiryInfo = get().getTokenExpiryInfo();
+
+              if (expiryInfo?.shouldRefresh) {
+                const refreshed = await get().refreshAccessToken();
+                if (refreshed && !get().user) {
+                  await get().fetchMe();
+                }
+              } else {
+                // If we have valid access token, fetch user data
                 await get().fetchMe();
               }
-            } else if (sessionData.hasAccessToken) {
-              // If we have valid access token, fetch user data
-              await get().fetchMe();
             }
           } else {
             if (process.env.NODE_ENV === "development") {
               console.log("🔐 AuthStore: No valid session found");
             }
+            // If no refresh token exists, clear persisted auth state.
+            set({ user: null });
             get().clearTokenExpiry();
           }
         } catch (error) {
           console.error("AuthStore: Initialization error:", error);
+          set({ user: null });
           get().clearTokenExpiry();
         }
       },
@@ -375,22 +389,25 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       refreshAccessToken: async () => {
+        const traceId = `refresh-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
         const state = get();
 
         if (state.isRefreshing && state.refreshPromise) {
           authLogger.debug(
-            "Refresh already in progress, returning existing promise"
+            "Refresh already in progress, returning existing promise",
+            { traceId }
           );
           return state.refreshPromise;
         }
 
         set({ isRefreshing: true });
-        authLogger.info("Starting token refresh process");
+        authLogger.info("Starting token refresh process", { traceId });
 
         const refreshPromise = runWithRefreshLock(async () => {
           const startTime = performance.now();
           try {
             authLogger.http("POST", "/api/auth/refresh-token", undefined, {
+              traceId,
               note: "cannot detect httpOnly cookies from client; check server logs or /check-session",
             });
 
@@ -407,6 +424,7 @@ export const useAuthStore = create<AuthStore>()(
               };
 
               authLogger.auth("Token refresh successful", {
+                traceId,
                 duration: `${duration.toFixed(2)}ms`,
                 accessTokenExpiresIn: `${norm.accessTokenExpiresInMs}ms`,
                 suggestedRefreshTime: new Date(
@@ -434,7 +452,7 @@ export const useAuthStore = create<AuthStore>()(
             } else {
               authLogger.warn(
                 "Token refresh API returned success=false",
-                res.data
+                { traceId, data: res.data }
               );
               set({
                 error: res.data.error || "Refresh failed",
@@ -452,10 +470,12 @@ export const useAuthStore = create<AuthStore>()(
               const statusCode = error.response?.status;
 
               authLogger.error("Token refresh HTTP error", error, {
+                traceId,
                 statusCode,
                 errorMessage,
                 duration: `${duration.toFixed(2)}ms`,
                 url: error.config?.url,
+                responseData: error.response?.data,
               });
 
               set({ error: errorMessage });
@@ -505,19 +525,28 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       checkSession: async (): Promise<Session> => {
+        const traceId = `session-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
         const now = Date.now();
         if (
           lastSessionCheckResult &&
           now - lastSessionCheckAt < SESSION_CHECK_COOLDOWN_MS
         ) {
+          authLogger.debug("checkSession: returning cached result", {
+            traceId,
+            ageMs: now - lastSessionCheckAt,
+            hasRefreshToken: lastSessionCheckResult.hasRefreshToken,
+            hasAccessToken: lastSessionCheckResult.hasAccessToken,
+          });
           return lastSessionCheckResult;
         }
         if (checkSessionInFlight) {
+          authLogger.debug("checkSession: joining in-flight request", { traceId });
           return checkSessionInFlight;
         }
 
         checkSessionInFlight = (async () => {
         try {
+          authLogger.debug("checkSession: requesting /check-session", { traceId });
           const res = await axiosInstance.get("/check-session");
 
           if (process.env.NODE_ENV === "development") {
@@ -533,6 +562,12 @@ export const useAuthStore = create<AuthStore>()(
           };
           lastSessionCheckAt = Date.now();
           lastSessionCheckResult = normalizedSession;
+          authLogger.info("checkSession: completed", {
+            traceId,
+            hasRefreshToken: normalizedSession.hasRefreshToken,
+            hasAccessToken: normalizedSession.hasAccessToken,
+            success: normalizedSession.success,
+          });
           return normalizedSession;
         } catch (error) {
           console.error("AuthStore: Session check failed:", error);
@@ -545,6 +580,10 @@ export const useAuthStore = create<AuthStore>()(
           };
           lastSessionCheckAt = Date.now();
           lastSessionCheckResult = failedSession;
+          authLogger.warn("checkSession: failed", {
+            traceId,
+            error: error instanceof Error ? error.message : "unknown_error",
+          });
           return failedSession;
         } finally {
           checkSessionInFlight = null;
