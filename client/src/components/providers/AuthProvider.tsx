@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import useSilentAuth from "@/hooks/useSilentAuth";
 import { usePathname } from "next/navigation";
+import { authLogger } from "@/utils/Logger";
 
 export default function AuthProvider({
   children,
@@ -27,19 +28,26 @@ export default function AuthProvider({
     let initTimeout: NodeJS.Timeout;
 
     const initializeAuth = async () => {
+      const traceId = `provider-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       try {
-        if (process.env.NODE_ENV === 'development') {
-          console.log("🔄 AuthProvider: Initializing...");
-        }
+        authLogger.info("AuthProvider initialize:start", {
+          traceId,
+          pathname,
+          isPublicAuthRoute,
+        });
         
         await initialize();
+        authLogger.info("AuthProvider initialize:success", { traceId });
         
         if (mounted) {
           setIsInitialized(true);
           setInitError(null);
         }
       } catch (error: any) {
-        console.error("AuthProvider: Initialization error:", error);
+        authLogger.error("AuthProvider initialize:error", {
+          traceId,
+          message: error?.message || "unknown_error",
+        });
         if (mounted) {
           setIsInitialized(true); // Still show app
           setInitError(error.message || "Auth initialization failed");
