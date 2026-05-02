@@ -9,8 +9,6 @@ import {
 } from "../controllers/cartController";
 import { validate } from "../middleware/validation";
 import { addToCartSchema } from "../validations/cartSchema";
-import { prisma } from "../server";
-import { asyncHandler } from "../utils/asyncHandler";
 
 const router = express.Router();
 
