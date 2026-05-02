@@ -5,3 +5,4 @@
 export * from "./query";
 export * from "./fulfillment";
 export * from "./write";
+export * from "./paymentDto";
