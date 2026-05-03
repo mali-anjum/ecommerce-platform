@@ -160,6 +160,15 @@ export const useCheckoutPayment = ({
     const pendingOrder = localStorage.getItem("pendingOrder");
     if (!pendingOrder) return;
 
+    const lockKey = `checkout_capture_${paymentId}`;
+    if (typeof window !== "undefined") {
+      const lockState = sessionStorage.getItem(lockKey);
+      if (lockState === "processing" || lockState === "done") {
+        return;
+      }
+      sessionStorage.setItem(lockKey, "processing");
+    }
+
     try {
       const { internalOrderId, paymentMethod, timestamp } =
         JSON.parse(pendingOrder);
@@ -178,6 +187,9 @@ export const useCheckoutPayment = ({
       const response = await captureOrder(captureRequest);
 
       if (response?.success) {
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem(lockKey, "done");
+        }
         // Clear cart and local storage
         await clearCart();
         localStorage.removeItem("pendingOrder");
@@ -202,6 +214,10 @@ export const useCheckoutPayment = ({
       }
     } catch (error: any) {
       console.error("Payment capture error:", error);
+
+      if (typeof window !== "undefined" && paymentId) {
+        sessionStorage.removeItem(`checkout_capture_${paymentId}`);
+      }
 
       // Restore cart from backup if available
       const cartBackup = localStorage.getItem("cartBackup");
