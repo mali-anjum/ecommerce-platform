@@ -172,9 +172,12 @@ export class PayPalService extends BasePaymentService {
         return {
           success: false,
           error:
-            "PayPal redirect URLs are not configured. Set PAYPAL_RETURN_URL and PAYPAL_CANCEL_URL (e.g. http://localhost:3012/checkout for local development).",
+            "PayPal redirect URLs are not configured. Set PAYPAL_RETURN_URL and PAYPAL_CANCEL_URL to your real site (e.g. http://localhost:3012/paypal/return and http://localhost:3012/paypal/cancel for local dev).",
         };
       }
+
+      const checkoutLocale =
+        process.env.PAYPAL_LOCALE?.trim() || "en-US";
 
       // Use PayPalItem type
       const paypalItems: PayPalItem[] = orderData.items.map((item) => ({
@@ -190,6 +193,8 @@ export class PayPalService extends BasePaymentService {
       }));
 
       // Use PayPalOrderResponse type
+      const brandName = process.env.APP_NAME || "Ecommerce Store";
+
       const response = await this.makePayPalRequest<PayPalOrderResponse>(
         "POST",
         `${this.baseApi}/v2/checkout/orders`,
@@ -210,11 +215,26 @@ export class PayPalService extends BasePaymentService {
               items: paypalItems,
             },
           ],
+          // Redirect URLs + legacy context (locale here is deprecated by PayPal).
           application_context: {
-            brand_name: process.env.APP_NAME || "Ecommerce Store",
+            brand_name: brandName,
             user_action: "PAY_NOW",
             return_url: returnUrl,
             cancel_url: cancelUrl,
+          },
+          // Preferred place for checkout language + payer experience (see PayPal Orders API).
+          payment_source: {
+            paypal: {
+              experience_context: {
+                brand_name: brandName,
+                locale: checkoutLocale,
+                landing_page: "LOGIN",
+                shipping_preference: "GET_FROM_FILE",
+                user_action: "PAY_NOW",
+                return_url: returnUrl,
+                cancel_url: cancelUrl,
+              },
+            },
           },
         }
       );
@@ -240,6 +260,19 @@ export class PayPalService extends BasePaymentService {
     }
   }
 
+  /** Extract PayPal REST `details[].issue` codes from an Axios error body. */
+  private parsePayPalIssueCodes(error: unknown): string[] {
+    const ax = error as AxiosError<{
+      details?: Array<{ issue?: string }>;
+      message?: string;
+    }>;
+    const details = ax.response?.data?.details;
+    if (!Array.isArray(details)) return [];
+    return details
+      .map((d) => d.issue)
+      .filter((x): x is string => typeof x === "string" && x.length > 0);
+  }
+
   async capturePayment(paymentId: string): Promise<PaymentResult> {
     try {
       if (!paymentId || typeof paymentId !== "string") {
@@ -249,28 +282,60 @@ export class PayPalService extends BasePaymentService {
         };
       }
 
-      // Use PayPalCaptureResponse type
-      const response = await this.makePayPalRequest<PayPalCaptureResponse>(
-        "POST",
-        `${this.baseApi}/v2/checkout/orders/${paymentId}/capture`,
-        {}
-      );
+      try {
+        const response = await this.makePayPalRequest<PayPalCaptureResponse>(
+          "POST",
+          `${this.baseApi}/v2/checkout/orders/${paymentId}/capture`,
+          {}
+        );
 
-      const isSuccessful = response.data.status === "COMPLETED";
-      
-      // Type-safe capture ID extraction
-      const captureId = response.data.purchase_units?.[0]?.payments?.captures?.[0]?.id;
+        const isSuccessful = response.data.status === "COMPLETED";
 
-      return {
-        success: isSuccessful,
-        paymentId: captureId || response.data.id,
-        orderId: paymentId,
-        captureId,
-        data: response.data,
-        ...(isSuccessful
-          ? {}
-          : { error: `Capture status: ${response.data.status}` }),
-      };
+        const captureId =
+          response.data.purchase_units?.[0]?.payments?.captures?.[0]?.id;
+
+        return {
+          success: isSuccessful,
+          paymentId: captureId || response.data.id,
+          orderId: paymentId,
+          captureId,
+          data: response.data,
+          ...(isSuccessful
+            ? {}
+            : { error: `Capture status: ${response.data.status}` }),
+        };
+      } catch (error) {
+        const issues = this.parsePayPalIssueCodes(error);
+        const alreadyCaptured =
+          issues.includes("ORDER_ALREADY_CAPTURED") ||
+          issues.includes("CANNOT_CAPTURE_COMPLETED_ORDER");
+
+        if (alreadyCaptured) {
+          const detailsResult = await this.getOrderDetails(paymentId);
+          const orderData = detailsResult.data as PayPalCaptureResponse & {
+            status?: string;
+          };
+          if (
+            detailsResult.success &&
+            orderData?.status === "COMPLETED"
+          ) {
+            const captureId =
+              orderData.purchase_units?.[0]?.payments?.captures?.[0]?.id;
+            return {
+              success: true,
+              paymentId: captureId || orderData.id,
+              orderId: paymentId,
+              captureId,
+              data: orderData,
+            };
+          }
+        }
+
+        return {
+          success: false,
+          error: getErrorMessage(error),
+        };
+      }
     } catch (error) {
       return {
         success: false,
