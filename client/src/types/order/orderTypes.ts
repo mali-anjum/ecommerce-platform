@@ -113,6 +113,54 @@ export interface SellerOrderLine {
   product: { id: string; name: string } | null;
 }
 
+export interface CheckoutOrderItemInput {
+  productId: string;
+  productName: string;
+  productCategory: string;
+  quantity: number;
+  size?: string;
+  color?: string;
+  price: number;
+}
+
+export interface CreateOrderInput {
+  items: CheckoutOrderItemInput[];
+  total: number;
+  paymentMethod: "PAYPAL" | "STRIPE" | "CARD";
+  addressId: string;
+  couponId?: string;
+}
+
+export interface CaptureOrderInput {
+  paymentId: string;
+  paymentMethod: string;
+  internalOrderId: string;
+  cardData?: Record<string, unknown>;
+}
+
+export interface ApiResult<T> {
+  success?: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+}
+
+export interface CreateOrderResultData {
+  internalOrderId: string;
+  paymentId: string;
+  providerOrderId: string;
+  status: string;
+  paymentMethod: string;
+  approvalUrl?: string;
+  url?: string;
+  clientSecret?: string;
+}
+
+export interface CaptureOrderResultData {
+  order?: Order;
+  captureData?: unknown;
+}
+
 export interface OrderStore {
   currentOrder: Order | null;
   isLoading: boolean;
@@ -121,26 +169,15 @@ export interface OrderStore {
   adminOrders: AdminOrder[];
   error: string | null;
   // NEW: Unified methods
-  createOrder: (orderData: {
-    items: any[];
-    total: number;
-    paymentMethod: string;
-    addressId: string;
-    couponId?: string;
-  }) => Promise<any>;
-  
-  captureOrder: (captureData: {
-    paymentId: string;
-    paymentMethod: string;
-    internalOrderId: string;
-    cardData?: any;
-  }) => Promise<any>;
+  createOrder: (orderData: CreateOrderInput) => Promise<ApiResult<CreateOrderResultData>>;
+  captureOrder: (captureData: CaptureOrderInput) => Promise<ApiResult<CaptureOrderResultData>>;
   getOrderForUser: (orderId: string) => Promise<Order | null>;
   updateOrderStatus: (
     orderId: string,
     status: Order["status"]
   ) => Promise<boolean>;
   getAllOrders: () => Promise<Order[] | null>;
+  getAllOrdersForAdmin: () => Promise<AdminOrder[] | null>;
   getOrderForAdmin: (orderId: string) => Promise<Order | null>;
   getSellerSalesLines: (params?: {
     page?: number;
