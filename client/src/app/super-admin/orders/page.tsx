@@ -134,15 +134,64 @@ function OrderStatusBadge({ status }: OrderStatusBadgeProps) {
 // 2. Payment Status Badge Component
 interface PaymentStatusBadgeProps {
   status: string;
+  orderStatus?: OrderStatus;
 }
 
-function PaymentStatusBadge({ status }: PaymentStatusBadgeProps) {
-  const isPaid = status === "COMPLETED" || status === "PAID";
-  
+function PaymentStatusBadge({ status, orderStatus }: PaymentStatusBadgeProps) {
+  const normalizedStatus = String(status || "").toUpperCase();
+  const effectiveStatus =
+    normalizedStatus === "PENDING" &&
+    (orderStatus === "PAYMENT_FAILED" || orderStatus === "CAPTURE_FAILED")
+      ? "FAILED"
+      : normalizedStatus;
+
+  const paymentStateMap: Record<
+    string,
+    { label: string; color: string }
+  > = {
+    COMPLETED: {
+      label: "Paid",
+      color: "bg-success/20 text-success border-success/20",
+    },
+    PAID: {
+      label: "Paid",
+      color: "bg-success/20 text-success border-success/20",
+    },
+    APPROVED: {
+      label: "Approved",
+      color: "bg-primary/20 text-primary border-primary/20",
+    },
+    PENDING: {
+      label: "Pending",
+      color: "bg-warning/20 text-warning border-warning/20",
+    },
+    AUTHORIZED: {
+      label: "Authorized",
+      color: "bg-primary/20 text-primary border-primary/20",
+    },
+    FAILED: {
+      label: "Failed",
+      color: "bg-destructive/20 text-destructive border-destructive/20",
+    },
+    CANCELLED: {
+      label: "Cancelled",
+      color: "bg-destructive/20 text-destructive border-destructive/20",
+    },
+    REFUNDED: {
+      label: "Refunded",
+      color: "bg-muted text-muted-foreground border-border",
+    },
+  };
+
+  const mappedState = paymentStateMap[effectiveStatus] ?? {
+    label: effectiveStatus || "Unknown",
+    color: "bg-muted text-muted-foreground border-border",
+  };
+
   return (
-    <Badge className={`${isPaid ? 'bg-success/20 text-success border-success/20' : 'bg-destructive/20 text-destructive border-destructive/20'} flex items-center gap-1`}>
+    <Badge className={`${mappedState.color} flex items-center gap-1`}>
       <CreditCard className="h-3 w-3" />
-      {isPaid ? 'Paid' : 'Pending'}
+      {mappedState.label}
     </Badge>
   );
 }
@@ -242,7 +291,7 @@ function OrderCard({ order, onStatusUpdate, onViewDetails }: OrderCardProps) {
 
         {/* Payment Status */}
         <div className="mb-4">
-          <PaymentStatusBadge status={order.paymentStatus} />
+          <PaymentStatusBadge status={order.paymentStatus} orderStatus={order.status} />
         </div>
 
         {/* Status Update */}
@@ -671,7 +720,7 @@ function SuperAdminManageOrdersPage() {
                                 </div>
                               </TableCell>
                               <TableCell>
-                                <PaymentStatusBadge status={order.paymentStatus} />
+                                <PaymentStatusBadge status={order.paymentStatus} orderStatus={order.status} />
                               </TableCell>
                               <TableCell>
                                 <div className="space-y-1">
