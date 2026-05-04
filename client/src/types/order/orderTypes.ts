@@ -161,12 +161,68 @@ export interface CaptureOrderResultData {
   captureData?: unknown;
 }
 
+export interface AdminTransaction {
+  id: string;
+  method: "PAYPAL" | "STRIPE" | "CREDIT_CARD";
+  attemptStatus: "PENDING" | "AUTHORIZED" | "COMPLETED" | "FAILED" | "CANCELLED";
+  providerReferenceId?: string | null;
+  providerCaptureId?: string | null;
+  amount?: number | null;
+  currency: string;
+  createdAt: string;
+  capturedAt?: string | null;
+  order: {
+    id: string;
+    status: string;
+    paymentStatus: string;
+    total: number;
+    currency: string;
+    user: {
+      id: string;
+      name: string | null;
+      email: string;
+    };
+  };
+}
+
+export interface AdminTransactionsSummary {
+  totalTransactions: number;
+  completedCount: number;
+  failedCount: number;
+  pendingCount: number;
+  totalAmount: number;
+}
+
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface AdminTransactionsQuery {
+  page?: number;
+  limit?: number;
+  search?: string;
+  method?: "PAYPAL" | "STRIPE" | "CREDIT_CARD";
+  status?: "PENDING" | "AUTHORIZED" | "COMPLETED" | "FAILED" | "CANCELLED";
+}
+
+export interface AdminTransactionsResponse {
+  items: AdminTransaction[];
+  summary: AdminTransactionsSummary;
+  meta: PaginationMeta;
+}
+
 export interface OrderStore {
   currentOrder: Order | null;
   isLoading: boolean;
   isPaymentProcessing: boolean;
   userOrders: Order[];
   adminOrders: AdminOrder[];
+  adminTransactions: AdminTransaction[];
+  adminTransactionsSummary: AdminTransactionsSummary;
+  adminTransactionsMeta: PaginationMeta;
   error: string | null;
   // NEW: Unified methods
   createOrder: (orderData: CreateOrderInput) => Promise<ApiResult<CreateOrderResultData>>;
@@ -178,6 +234,9 @@ export interface OrderStore {
   ) => Promise<boolean>;
   getAllOrders: () => Promise<Order[] | null>;
   getAllOrdersForAdmin: () => Promise<AdminOrder[] | null>;
+  getAdminTransactions: (
+    params?: AdminTransactionsQuery
+  ) => Promise<AdminTransactionsResponse | null>;
   getOrderForAdmin: (orderId: string) => Promise<Order | null>;
   getSellerSalesLines: (params?: {
     page?: number;

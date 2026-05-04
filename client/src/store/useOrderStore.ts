@@ -4,6 +4,7 @@ import {
   SellerOrderLine,
   Order,
   AdminOrder,
+  AdminTransactionsResponse,
   ApiResult,
   CaptureOrderResultData,
   CreateOrderResultData,
@@ -35,6 +36,20 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
   isPaymentProcessing: false,
   userOrders: [],
   adminOrders: [],
+  adminTransactions: [],
+  adminTransactionsSummary: {
+    totalTransactions: 0,
+    completedCount: 0,
+    failedCount: 0,
+    pendingCount: 0,
+    totalAmount: 0,
+  },
+  adminTransactionsMeta: {
+    page: 1,
+    limit: 20,
+    total: 0,
+    totalPages: 1,
+  },
 
   createOrder: async (orderData) => {
     set({ isLoading: true, error: null, isPaymentProcessing: true });
@@ -137,6 +152,56 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       return orders;
     } catch (error) {
       set({ error: "Failed to fetch all orders for admin", isLoading: false });
+      return null;
+    }
+  },
+
+  getAdminTransactions: async (params) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await http.get<ApiResult<AdminTransactionsResponse>>(
+        `order/transactions`,
+        { withCredentials: true, params }
+      );
+      const payload = response.data?.data;
+      if (!payload) {
+        const fallback: AdminTransactionsResponse = {
+          items: [],
+          summary: {
+            totalTransactions: 0,
+            completedCount: 0,
+            failedCount: 0,
+            pendingCount: 0,
+            totalAmount: 0,
+          },
+          meta: {
+            page: 1,
+            limit: Number(params?.limit ?? 20),
+            total: 0,
+            totalPages: 1,
+          },
+        };
+        set({
+          isLoading: false,
+          adminTransactions: fallback.items,
+          adminTransactionsSummary: fallback.summary,
+          adminTransactionsMeta: fallback.meta,
+        });
+        return fallback;
+      }
+
+      set({
+        isLoading: false,
+        adminTransactions: payload.items,
+        adminTransactionsSummary: payload.summary,
+        adminTransactionsMeta: payload.meta,
+      });
+      return payload;
+    } catch (error: unknown) {
+      set({
+        isLoading: false,
+        error: getAxiosErrorMessage(error, "Failed to fetch transactions"),
+      });
       return null;
     }
   },
