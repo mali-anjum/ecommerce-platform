@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 import { proxyLogger } from "@/utils/Logger";
 
-const publicRoutes = ["/auth/register", "/auth/login", "/track-order", "/help"];
+const publicRoutes = ["/auth/register", "/auth/login", "/help"];
 const authRoutes = ["/auth/register", "/auth/login"];
 const superAdminRoutes = ["/super-admin"];
 const userRoutes = ["/home"];
