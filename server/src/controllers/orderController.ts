@@ -201,11 +201,11 @@ const capturePayment = asyncHandler(
         where: {
           id: internalOrderId,
           userId,
-          status: "PENDING_PAYMENT",
-          paymentStatus: "PENDING",
         },
         include: {
           items: true,
+          address: true,
+          coupon: true,
           payments: { orderBy: { createdAt: "desc" } },
         },
       });
@@ -216,8 +216,32 @@ const capturePayment = asyncHandler(
         );
       }
 
+      // Idempotent success path: capture might have completed already on a previous request.
+      if (
+        existingOrder.paymentStatus === "COMPLETED" ||
+        ["PROCESSING", "SHIPPED", "DELIVERED"].includes(existingOrder.status)
+      ) {
+        return res.status(200).json(
+          new ApiResponse(
+            200,
+            {
+              order: withLegacyPaymentAliases(existingOrder),
+              captureData: null,
+            },
+            "Payment already captured for this order",
+          ),
+        );
+      }
+
+      const capturableStatuses = new Set(["PENDING_PAYMENT", "PAYMENT_APPROVED", "CAPTURE_FAILED"]);
+      if (!capturableStatuses.has(existingOrder.status)) {
+        return next(
+          new ApiError(409, `Order is not capturable in status '${existingOrder.status}'`),
+        );
+      }
+
       const paymentRow = existingOrder.payments.find(
-        (p) => p.providerReferenceId === paymentId
+        (p) => p.providerReferenceId === paymentId || p.providerCaptureId === paymentId
       );
       if (!paymentRow) {
         return next(
