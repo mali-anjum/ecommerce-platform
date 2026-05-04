@@ -384,7 +384,7 @@ function OrdersQuickActions({ onRefresh }: { onRefresh: () => void }) {
 // ==================== MAIN COMPONENT ====================
 
 function SuperAdminManageOrdersPage() {
-  const { getAllOrders, adminOrders, updateOrderStatus } = useOrderStore();
+  const { getAllOrdersForAdmin, adminOrders, updateOrderStatus } = useOrderStore();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -398,7 +398,7 @@ function SuperAdminManageOrdersPage() {
   const loadOrders = async () => {
     setIsLoading(true);
     try {
-      await getAllOrders();
+      await getAllOrdersForAdmin();
     } finally {
       setIsLoading(false);
     }
