@@ -10,6 +10,7 @@ import {
   updateOrderStatusAdminOnly,
   getOrderById,
   getSellerOrderLines,
+  getAdminTransactions,
 } from "../controllers/orderController";
 import { attachSellerProfile } from "../middleware/sellerMiddleware";
 import { ApiResponse } from "../utils/ApiResponse";
@@ -52,6 +53,7 @@ router.get("/get-all-orders", getAllOrdersForUser);
 router.put("/:orderId/status", isSuperAdmin, updateOrderStatusAdminOnly);
 
 router.get("/seller/my-sales", attachSellerProfile, getSellerOrderLines);
+router.get("/transactions", isSuperAdmin, getAdminTransactions);
 
 router.get("/:orderId", getOrderById); // For users
 router.get("/admin/:orderId", isSuperAdmin, getOrderById); // Same controller works for both

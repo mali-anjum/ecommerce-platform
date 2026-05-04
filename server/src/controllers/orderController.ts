@@ -10,6 +10,7 @@ import type { MinimalProduct } from "../services/interfaces/product";
 import {
   applyPurchaseFulfillment,
   fetchSellerOrderLinesPage,
+  fetchAdminTransactionsPage,
   findOrderForPublicTracking,
   findOrdersForAdmin,
   findOrdersForUser,
@@ -511,6 +512,34 @@ const getSellerOrderLines = asyncHandler(
   }
 );
 
+/** Super-admin transactions feed (payment attempts) with summary + filters. */
+const getAdminTransactions = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.user?.userId;
+    if (!userId) {
+      return next(new UnauthorizedError("Unauthenticated user"));
+    }
+
+    const { items, summary, meta } = await fetchAdminTransactionsPage({
+      pageRaw: req.query.page,
+      limitRaw: req.query.limit,
+      searchRaw: req.query.search,
+      methodRaw: req.query.method,
+      statusRaw: req.query.status,
+      fromRaw: req.query.from,
+      toRaw: req.query.to,
+    });
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        { items, summary, meta },
+        "Admin transactions fetched successfully"
+      )
+    );
+  }
+);
+
 export {
   createPaymentOrder,
   capturePayment,
@@ -521,5 +550,6 @@ export {
   // getOrdersByUserId,
   getOrderById,
   getSellerOrderLines,
+  getAdminTransactions,
   trackOrderPublic,
 };

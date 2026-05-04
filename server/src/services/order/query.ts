@@ -226,3 +226,154 @@ export async function fetchSellerOrderLinesPage(
     },
   };
 }
+
+type AdminTransactionsFilters = {
+  pageRaw: unknown;
+  limitRaw: unknown;
+  searchRaw: unknown;
+  methodRaw: unknown;
+  statusRaw: unknown;
+  fromRaw: unknown;
+  toRaw: unknown;
+};
+
+const paymentStatusWhitelist = new Set([
+  "PENDING",
+  "AUTHORIZED",
+  "COMPLETED",
+  "FAILED",
+  "CANCELLED",
+]);
+
+const paymentMethodWhitelist = new Set(["PAYPAL", "STRIPE", "CREDIT_CARD"]);
+
+/**
+ * Super-admin payment transaction list + summary for dashboard reporting.
+ */
+export async function fetchAdminTransactionsPage(filters: AdminTransactionsFilters) {
+  const { page, limit, skip } = parseListPagination(filters.pageRaw, filters.limitRaw, {
+    limit: 20,
+  });
+
+  const search = String(filters.searchRaw ?? "").trim();
+  const method = String(filters.methodRaw ?? "")
+    .trim()
+    .toUpperCase();
+  const status = String(filters.statusRaw ?? "")
+    .trim()
+    .toUpperCase();
+
+  const fromDate =
+    typeof filters.fromRaw === "string" && filters.fromRaw.trim().length > 0
+      ? new Date(filters.fromRaw)
+      : null;
+  const toDate =
+    typeof filters.toRaw === "string" && filters.toRaw.trim().length > 0
+      ? new Date(filters.toRaw)
+      : null;
+
+  const createdAtFilter: Prisma.DateTimeFilter = {};
+  if (fromDate && !Number.isNaN(fromDate.getTime())) {
+    createdAtFilter.gte = fromDate;
+  }
+  if (toDate && !Number.isNaN(toDate.getTime())) {
+    const inclusiveTo = new Date(toDate);
+    inclusiveTo.setHours(23, 59, 59, 999);
+    createdAtFilter.lte = inclusiveTo;
+  }
+
+  const where: Prisma.PaymentWhereInput = {};
+
+  if (paymentMethodWhitelist.has(method)) {
+    where.method = method as "PAYPAL" | "STRIPE" | "CREDIT_CARD";
+  }
+  if (paymentStatusWhitelist.has(status)) {
+    where.attemptStatus = status as
+      | "PENDING"
+      | "AUTHORIZED"
+      | "COMPLETED"
+      | "FAILED"
+      | "CANCELLED";
+  }
+  if (Object.keys(createdAtFilter).length > 0) {
+    where.createdAt = createdAtFilter;
+  }
+  if (search.length > 0) {
+    where.OR = [
+      { id: { contains: search, mode: "insensitive" } },
+      { providerReferenceId: { contains: search, mode: "insensitive" } },
+      {
+        order: {
+          id: { contains: search, mode: "insensitive" },
+        },
+      },
+      {
+        order: {
+          user: {
+            email: { contains: search, mode: "insensitive" },
+          },
+        },
+      },
+      {
+        order: {
+          user: {
+            name: { contains: search, mode: "insensitive" },
+          },
+        },
+      },
+    ];
+  }
+
+  const [items, total, aggregates, completedCount, failedCount] = await Promise.all([
+    prisma.payment.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { createdAt: "desc" },
+      include: {
+        order: {
+          select: {
+            id: true,
+            status: true,
+            paymentStatus: true,
+            total: true,
+            currency: true,
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+      },
+    }),
+    prisma.payment.count({ where }),
+    prisma.payment.aggregate({
+      where,
+      _sum: { amount: true },
+    }),
+    prisma.payment.count({ where: { ...where, attemptStatus: "COMPLETED" } }),
+    prisma.payment.count({ where: { ...where, attemptStatus: "FAILED" } }),
+  ]);
+
+  const summary = {
+    totalTransactions: total,
+    completedCount,
+    failedCount,
+    pendingCount: Math.max(0, total - completedCount - failedCount),
+    totalAmount: aggregates._sum.amount ?? 0,
+  };
+
+  return {
+    items,
+    summary,
+    meta: {
+      page,
+      limit,
+      total,
+      totalPages: totalPages(total, limit),
+    },
+  };
+}
