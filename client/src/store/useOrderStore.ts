@@ -1,6 +1,32 @@
 import { create } from "zustand";
-import { OrderStore, SellerOrderLine } from "@/types/order/orderTypes";
+import {
+  OrderStore,
+  SellerOrderLine,
+  Order,
+  AdminOrder,
+  ApiResult,
+  CaptureOrderResultData,
+  CreateOrderResultData,
+} from "@/types/order/orderTypes";
 import { http } from "@/lib/http";
+import { AxiosError } from "axios";
+
+type ApiErrorPayload = {
+  message?: string;
+  error?: string;
+};
+
+const getAxiosErrorMessage = (
+  error: unknown,
+  fallback: string
+): string => {
+  const axiosError = error as AxiosError<ApiErrorPayload>;
+  return (
+    axiosError.response?.data?.message ??
+    axiosError.response?.data?.error ??
+    fallback
+  );
+};
 
 export const useOrderStore = create<OrderStore>((set, get) => ({
   currentOrder: null,
@@ -13,7 +39,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
   createOrder: async (orderData) => {
     set({ isLoading: true, error: null, isPaymentProcessing: true });
     try {
-      const { data } = await http.post(
+      const { data } = await http.post<ApiResult<CreateOrderResultData>>(
         `order/create-order`, 
         orderData,
         { withCredentials: true }
@@ -22,15 +48,15 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       set({
         isLoading: false,
         isPaymentProcessing: false,
-        currentOrder: data.data,
+        currentOrder: null,
       });
 
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
         isLoading: false,
         isPaymentProcessing: false,
-        error: error.response?.data?.message || "Failed to create order",
+        error: getAxiosErrorMessage(error, "Failed to create order"),
       });
       throw error;
     }
@@ -39,7 +65,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
   captureOrder: async (captureData) => {
     set({ isLoading: true, error: null, isPaymentProcessing: true });
     try {
-      const { data } = await http.post(
+      const { data } = await http.post<ApiResult<CaptureOrderResultData>>(
         `order/capture-order`, // CHANGED: Unified endpoint
         captureData,
         { withCredentials: true }
@@ -48,15 +74,15 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       set({
         isLoading: false,
         isPaymentProcessing: false,
-        currentOrder: data.data.order,
+        currentOrder: data.data?.order ?? null,
       });
 
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
         isLoading: false,
         isPaymentProcessing: false,
-        error: error.response?.data?.message || "Failed to capture payment",
+        error: getAxiosErrorMessage(error, "Failed to capture payment"),
       });
       throw error;
     }
@@ -89,10 +115,11 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
         ),
       }));
       return true;
-    } catch (err: any) {
-      const message =
-        err.response.data.message ??
-        "Failed to update the order status of product";
+    } catch (err: unknown) {
+      const message = getAxiosErrorMessage(
+        err,
+        "Failed to update the order status of product"
+      );
       set({ error: message, isLoading: false });
       return false;
     }
@@ -101,8 +128,8 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
   getAllOrdersForAdmin: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await http.get(
-        `order/get-all-orders`,
+      const response = await http.get<ApiResult<AdminOrder[]>>(
+        `order/get-all-orders-for-admin`,
         { withCredentials: true }
       );
       const orders = response.data?.data ?? [];
@@ -120,8 +147,8 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
   getAllOrders: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await http.get(
-        `order/get-all-orders-for-admin`,
+      const response = await http.get<ApiResult<Order[]>>(
+        `order/get-all-orders`,
         { withCredentials: true }
       );
       const orders = response.data?.data ?? [];
@@ -136,23 +163,26 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
   getOrderForUser: async (orderId: string) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await http.get(
+      const response = await http.get<ApiResult<Order>>(
         `order/${orderId}`,
         { withCredentials: true }
       );
       const order = response.data?.data ?? null;
-      set({ isLoading: false, currentOrder: order });
+      set({ currentOrder: order, error: null });
       return order;
-    } catch (error) {
-      set({ error: "Failed to fetch your order", isLoading: false });
+    } catch (error: unknown) {
+      const message = getAxiosErrorMessage(error, "Failed to fetch your order");
+      set({ error: message, currentOrder: null });
       return null;
+    } finally {
+      set({ isLoading: false });
     }
   },
 
   getOrderForAdmin: async (orderId: string) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await http.get(
+      const response = await http.get<ApiResult<Order>>(
         `order/admin/${orderId}`,
         { withCredentials: true }
       );
@@ -178,13 +208,10 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       const lines = (response.data?.data?.items ?? []) as SellerOrderLine[];
       set({ isLoading: false });
       return Array.isArray(lines) ? lines : [];
-    } catch (error: any) {
+    } catch (error: unknown) {
       set({
         isLoading: false,
-        error:
-          error?.response?.data?.message ||
-          error?.response?.data?.error ||
-          "Failed to load sales",
+        error: getAxiosErrorMessage(error, "Failed to load sales"),
       });
       return null;
     }
