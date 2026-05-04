@@ -273,6 +273,28 @@ export class PayPalService extends BasePaymentService {
       .filter((x): x is string => typeof x === "string" && x.length > 0);
   }
 
+  /** Build useful API-facing message from PayPal error response payload. */
+  private describePayPalError(error: unknown): string {
+    const ax = error as AxiosError<{
+      name?: string;
+      message?: string;
+      debug_id?: string;
+      details?: Array<{ issue?: string; description?: string }>;
+    }>;
+    const payload = ax.response?.data;
+    if (!payload) return getErrorMessage(error);
+
+    const issues = (payload.details ?? [])
+      .map((d) => d.issue)
+      .filter((v): v is string => typeof v === "string" && v.length > 0);
+    const issuePart = issues.length > 0 ? ` [${issues.join(", ")}]` : "";
+    const debugPart =
+      typeof payload.debug_id === "string" && payload.debug_id.length > 0
+        ? ` (debug_id: ${payload.debug_id})`
+        : "";
+    return `${payload.name ?? "PayPalError"}: ${payload.message ?? "Request failed"}${issuePart}${debugPart}`;
+  }
+
   async capturePayment(paymentId: string): Promise<PaymentResult> {
     try {
       if (!paymentId || typeof paymentId !== "string") {
@@ -333,13 +355,13 @@ export class PayPalService extends BasePaymentService {
 
         return {
           success: false,
-          error: getErrorMessage(error),
+          error: this.describePayPalError(error),
         };
       }
     } catch (error) {
       return {
         success: false,
-        error: getErrorMessage(error),
+        error: this.describePayPalError(error),
       };
     }
   }
