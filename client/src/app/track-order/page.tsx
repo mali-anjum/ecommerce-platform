@@ -37,6 +37,7 @@ const formatDate = (value: string | undefined) => {
 export default function TrackOrderPage() {
   const { currentOrder, isLoading, error, getOrderForUser } = useOrderStore();
   const [orderId, setOrderId] = useState("");
+  const [localError, setLocalError] = useState<string | null>(null);
 
   const activeStep = useMemo(() => {
     if (!currentOrder?.status) return -1;
@@ -45,7 +46,13 @@ export default function TrackOrderPage() {
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    await getOrderForUser(orderId.trim());
+    const normalizedOrderId = orderId.trim();
+    if (!normalizedOrderId) {
+      setLocalError("Please enter a valid order ID.");
+      return;
+    }
+    setLocalError(null);
+    await getOrderForUser(normalizedOrderId);
   };
 
   return (
@@ -73,7 +80,9 @@ export default function TrackOrderPage() {
               {isLoading ? "Tracking..." : "Track order"}
             </Button>
           </form>
-          {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
+          {(localError || error) && (
+            <p className="mt-3 text-sm text-destructive">{localError || error}</p>
+          )}
         </CardContent>
       </Card>
 
