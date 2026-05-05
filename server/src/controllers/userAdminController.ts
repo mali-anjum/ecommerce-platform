@@ -5,6 +5,7 @@ import { ApiResponse } from "../utils/ApiResponse";
 import { ApiError, UnauthorizedError } from "../utils/ApiError";
 import { AuthenticatedRequest } from "../types/express";
 import { Role } from "@prisma/client";
+import { ADMIN_USER_ROLE_ALLOWLIST } from "../constants/roles";
 
 function parsePaging(pageRaw: unknown, limitRaw: unknown) {
   const page = Math.max(1, parseInt(String(pageRaw ?? "1"), 10) || 1);
@@ -14,8 +15,6 @@ function parsePaging(pageRaw: unknown, limitRaw: unknown) {
   );
   return { page, limit, skip: (page - 1) * limit };
 }
-
-const roleAllowlist = new Set<Role>(["USER", "SELLER", "SUPER_ADMIN"]);
 
 /**
  * Super-admin: list users with filters + pagination.
@@ -43,7 +42,7 @@ const getAdminUsers = asyncHandler(
         { email: { contains: q, mode: "insensitive" } },
       ];
     }
-    if (role && roleAllowlist.has(role)) {
+    if (role && ADMIN_USER_ROLE_ALLOWLIST.has(role)) {
       where.role = role;
     }
     if (active === "true") {
@@ -147,7 +146,7 @@ const setUserRole = asyncHandler(
     const role = String(req.body?.role ?? "")
       .trim()
       .toUpperCase() as Role;
-    if (!roleAllowlist.has(role)) {
+    if (!ADMIN_USER_ROLE_ALLOWLIST.has(role)) {
       return next(new ApiError(400, "Invalid role value"));
     }
     if (userId === requesterId && role !== "SUPER_ADMIN") {
