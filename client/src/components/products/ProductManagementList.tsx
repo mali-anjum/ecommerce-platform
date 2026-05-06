@@ -49,7 +49,7 @@ export default function ProductManagementList({
   const fetchedRef = useRef(false);
   const [isClient, setIsClient] = useState(false);
   const [query, setQuery] = useState("");
-
+// For Browser Only Rendering to avoid hydration error. This won't run on the server.
   useEffect(() => setIsClient(true), []);
 
   useEffect(() => {
