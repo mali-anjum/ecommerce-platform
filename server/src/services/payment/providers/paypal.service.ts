@@ -253,9 +253,11 @@ export class PayPalService extends BasePaymentService {
         approvalUrl,
       };
     } catch (error) {
+      // PayPal returns helpful details (debug_id, details[].issue). Surface those so
+      // the API client can fix misconfiguration/payload issues quickly.
       return {
         success: false,
-        error: getErrorMessage(error),
+        error: this.describePayPalError(error),
       };
     }
   }
