@@ -11,6 +11,8 @@ import {
   getOrderById,
   getSellerOrderLines,
   getAdminTransactions,
+  upsertOrderTrackingAdminOnly,
+  addOrderTrackingEventAdminOnly,
 } from "../controllers/orderController";
 import { attachSellerProfile } from "../middleware/sellerMiddleware";
 import { ApiResponse } from "../utils/ApiResponse";
@@ -51,6 +53,8 @@ router.get('/methods', (req, res) => {
 router.get("/get-all-orders-for-admin", isSuperAdmin, getAllOrdersAdminOnly);
 router.get("/get-all-orders", getAllOrdersForUser);
 router.put("/:orderId/status", isSuperAdmin, updateOrderStatusAdminOnly);
+router.put("/:orderId/tracking", isSuperAdmin, upsertOrderTrackingAdminOnly);
+router.post("/:orderId/tracking/events", isSuperAdmin, addOrderTrackingEventAdminOnly);
 
 router.get("/seller/my-sales", attachSellerProfile, getSellerOrderLines);
 router.get("/transactions", isSuperAdmin, getAdminTransactions);
