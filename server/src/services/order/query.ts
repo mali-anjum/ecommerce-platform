@@ -30,6 +30,15 @@ const baseOrderByIdInclude: Prisma.OrderInclude = {
     orderBy: { createdAt: "desc" },
     take: 5,
   },
+  trackingEvents: {  // Optionally remove this if you don't need tracking event after migration
+    orderBy: { occurredAt: "asc" },
+  },
+  shipments: {
+    orderBy: { createdAt: "asc" },
+    include: {
+      trackingEvents: { orderBy: { occurredAt: "asc" } },
+    },
+  },
 };
 
 /**
@@ -120,6 +129,15 @@ const userOrdersInclude = {
     orderBy: { createdAt: "desc" as const },
     take: 5 as const,
   },
+  trackingEvents: {
+    orderBy: { occurredAt: "asc" as const },
+  },
+  shipments: {
+    orderBy: { createdAt: "asc" as const },
+    include: {
+      trackingEvents: { orderBy: { occurredAt: "asc" as const } },
+    },
+  },
 };
 
 const adminOrdersInclude: Prisma.OrderInclude = {
@@ -144,6 +162,15 @@ const publicTrackOrderInclude: Prisma.OrderInclude = {
   payments: {
     orderBy: { createdAt: "desc" },
     take: 3,
+  },
+  trackingEvents: {
+    orderBy: { occurredAt: "asc" },
+  },
+  shipments: {
+    orderBy: { createdAt: "asc" },
+    include: {
+      trackingEvents: { orderBy: { occurredAt: "asc" } },
+    },
   },
 };
 
