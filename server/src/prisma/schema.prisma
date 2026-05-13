@@ -65,6 +65,7 @@ model Seller {
   updatedAt DateTime  @updatedAt
   products  Product[]
   orderItems OrderItem[]
+  shipments OrderShipment[]
 
   @@index([isPremium, isActive])
 }
@@ -213,6 +214,8 @@ model Order {
   user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   items         OrderItem[]
   payments      Payment[]
+  trackingEvents OrderTrackingEvent[]
+  shipments     OrderShipment[]
 
   @@index([userId])
   @@index([addressId])
@@ -220,6 +223,44 @@ model Order {
   @@index([status])
   @@index([paymentStatus])
   @@index([createdAt])
+}
+
+model OrderShipment {
+  id                 String   @id @default(uuid())
+  orderId            String
+  key                String   @default("DEFAULT") // stable identifier per order (DEFAULT or seller-specific)
+  sellerId           String?
+  carrier            String?
+  trackingNumber     String?
+  estimatedDeliveryAt DateTime?
+  shippedAt          DateTime?
+  deliveredAt        DateTime?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  order              Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  seller             Seller?  @relation(fields: [sellerId], references: [id], onDelete: SetNull)
+  trackingEvents     OrderTrackingEvent[]
+
+  @@index([orderId])
+  @@index([sellerId])
+  @@unique([orderId, key])
+}
+
+model OrderTrackingEvent {
+  id          String   @id @default(uuid())
+  orderId     String
+  shipmentId  String?
+  status      OrderStatus?
+  message     String
+  location    String?
+  occurredAt  DateTime
+  createdAt   DateTime @default(now())
+  order       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  shipment    OrderShipment? @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, occurredAt])
+  @@index([shipmentId, occurredAt])
+  @@index([occurredAt])
 }
 
 /// One row per payment attempt / provider session (PayPal order, Stripe Checkout session, etc.).
