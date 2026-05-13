@@ -25,6 +25,32 @@ export interface OrderItem {
   price: number;
 }
 
+export interface OrderTrackingEvent {
+  id: string;
+  orderId: string;
+  shipmentId?: string | null;
+  status?: Order["status"] | null;
+  message: string;
+  location?: string | null;
+  occurredAt: string;
+  createdAt: string;
+}
+
+export interface OrderShipment {
+  id: string;
+  orderId: string;
+  key: string;
+  sellerId?: string | null;
+  carrier?: string | null;
+  trackingNumber?: string | null;
+  estimatedDeliveryAt?: string | null;
+  shippedAt?: string | null;
+  deliveredAt?: string | null;
+  trackingEvents?: OrderTrackingEvent[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Order {
   id: string;
   userId: string;
@@ -32,6 +58,7 @@ export interface Order {
   items: OrderItem[];
   couponId?: string;
   total: number;
+  currency?: string;
   status:
     | "PENDING"
     | "DRAFT"
@@ -45,6 +72,8 @@ export interface Order {
     | "CAPTURE_FAILED";
   paymentMethod: "CREDIT_CARD" | "PAYPAL" | "STRIPE";
   paymentStatus: "PENDING" | "APPROVED" | "COMPLETED" | "FAILED" | "REFUNDED" | "CANCELLED";
+  trackingEvents?: OrderTrackingEvent[];
+  shipments?: OrderShipment[];
   /** Latest payment attempts (new normalized API). */
   payments?: OrderPaymentAttempt[];
   /** Aliases derived from latest payment for backward compatibility. */
