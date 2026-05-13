@@ -389,6 +389,177 @@ const updateOrderStatusAdminOnly = asyncHandler(
       .json(new ApiResponse(200, statusUpdated, "stauts updated successfully"));
   },
 );
+// TODO: optimize and reusable for date and add validation for the input
+const upsertOrderTrackingAdminOnly = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.user?.userId;
+    if (!userId) {
+      return next(new UnauthorizedError("Unauthenticated user"));
+    }
+
+    const { orderId } = req.params;
+    if (!orderId || typeof orderId !== "string" || orderId.trim() === "") {
+      return next(new ApiError(400, "orderId is required"));
+    }
+
+    const carrier =
+      typeof req.body?.carrier === "string" ? req.body.carrier.trim() : undefined;
+    const trackingNumber =
+      typeof req.body?.trackingNumber === "string"
+        ? req.body.trackingNumber.trim()
+        : undefined;
+
+    const etaRaw = req.body?.estimatedDeliveryAt;
+    const shippedAtRaw = req.body?.shippedAt;
+    const deliveredAtRaw = req.body?.deliveredAt;
+
+    const parseOptionalDate = (value: unknown) => {
+      if (value === undefined) return undefined;
+      if (value === null || String(value).trim() === "") return null;
+      const parsed = new Date(String(value));
+      if (Number.isNaN(parsed.getTime())) {
+        throw new ApiError(400, "Invalid datetime value");
+      }
+      return parsed;
+    };
+
+    let estimatedDeliveryAt: Date | null | undefined = undefined;
+    let shippedAt: Date | null | undefined = undefined;
+    let deliveredAt: Date | null | undefined = undefined;
+
+    try {
+      estimatedDeliveryAt = parseOptionalDate(etaRaw);
+      shippedAt = parseOptionalDate(shippedAtRaw);
+      deliveredAt = parseOptionalDate(deliveredAtRaw);
+    } catch (err) {
+      return next(err as Error);
+    }
+
+    // Ensure the order exists first.
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      select: { id: true },
+    });
+    if (!order) {
+      return next(new ApiError(404, "Order not found"));
+    }
+
+    // Minimal recommended: store shipment fields on a default shipment row.
+    await prisma.orderShipment.upsert({
+      where: { orderId_key: { orderId, key: "DEFAULT" } },
+      create: {
+        orderId,
+        key: "DEFAULT",
+        carrier: carrier?.length ? carrier : null,
+        trackingNumber: trackingNumber?.length ? trackingNumber : null,
+        estimatedDeliveryAt:
+          estimatedDeliveryAt === undefined ? undefined : estimatedDeliveryAt,
+        shippedAt: shippedAt === undefined ? undefined : shippedAt,
+        deliveredAt: deliveredAt === undefined ? undefined : deliveredAt,
+      },
+      update: {
+        ...(carrier !== undefined ? { carrier: carrier || null } : {}),
+        ...(trackingNumber !== undefined
+          ? { trackingNumber: trackingNumber || null }
+          : {}),
+        ...(estimatedDeliveryAt !== undefined
+          ? { estimatedDeliveryAt }
+          : {}),
+        ...(shippedAt !== undefined ? { shippedAt } : {}),
+        ...(deliveredAt !== undefined ? { deliveredAt } : {}),
+      },
+    });
+
+    const updated = await prisma.order.findFirst({
+      where: { id: orderId },
+      include: {
+        items: true,
+        address: true,
+        coupon: true,
+        payments: { orderBy: { createdAt: "desc" }, take: 5 },
+        trackingEvents: { orderBy: { occurredAt: "asc" } },
+        shipments: {
+          orderBy: { createdAt: "asc" },
+          include: { trackingEvents: { orderBy: { occurredAt: "asc" } } },
+        },
+        user: {
+          select: { id: true, name: true, email: true },
+        },
+      },
+    });
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, updated, "Order shipment tracking updated"));
+  }
+);
+
+const addOrderTrackingEventAdminOnly = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.user?.userId;
+    if (!userId) {
+      return next(new UnauthorizedError("Unauthenticated user"));
+    }
+
+    const { orderId } = req.params;
+    if (!orderId || typeof orderId !== "string" || orderId.trim() === "") {
+      return next(new ApiError(400, "orderId is required"));
+    }
+
+    const message = String(req.body?.message ?? "").trim();
+    const location =
+      typeof req.body?.location === "string" ? req.body.location.trim() : null;
+
+    const statusRaw = req.body?.status;
+    const status =
+      typeof statusRaw === "string" && statusRaw.trim().length > 0
+        ? (statusRaw.trim().toUpperCase() as OrderStatus)
+        : null;
+
+    const occurredAtRaw = req.body?.occurredAt;
+    const occurredAt = occurredAtRaw
+      ? new Date(String(occurredAtRaw))
+      : new Date();
+    if (Number.isNaN(occurredAt.getTime())) {
+      return next(new ApiError(400, "occurredAt is invalid"));
+    }
+
+    if (!message) {
+      return next(new ApiError(400, "message is required"));
+    }
+
+    const orderExists = await prisma.order.findUnique({
+      where: { id: orderId },
+      select: { id: true },
+    });
+    if (!orderExists) {
+      return next(new ApiError(404, "Order not found"));
+    }
+
+    // Attach event to the default shipment; create it if missing.
+    const shipment = await prisma.orderShipment.upsert({
+      where: { orderId_key: { orderId, key: "DEFAULT" } },
+      create: { orderId, key: "DEFAULT" },
+      update: {},
+      select: { id: true },
+    });
+
+    const event = await prisma.orderTrackingEvent.create({
+      data: {
+        orderId,
+        shipmentId: shipment.id,
+        message,
+        location,
+        occurredAt,
+        ...(status ? { status } : {}),
+      },
+    });
+
+    return res
+      .status(201)
+      .json(new ApiResponse(201, event, "Tracking event added"));
+  }
+);
 
 const getAllOrdersAdminOnly = asyncHandler(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -576,4 +747,6 @@ export {
   getSellerOrderLines,
   getAdminTransactions,
   trackOrderPublic,
+  upsertOrderTrackingAdminOnly,
+  addOrderTrackingEventAdminOnly,
 };
