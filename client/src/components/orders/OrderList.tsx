@@ -29,7 +29,7 @@ export default function OrderList({
       {orders.map((order) => {
         const active = selectedOrderId === order.id;
         return (
-          <button
+          <Button
             key={order.id}
             type="button"
             onClick={() => onSelect(order.id)}
@@ -70,7 +70,7 @@ export default function OrderList({
                 Track now
               </Button>
             </div>
-          </button>
+          </Button>
         );
       })}
     </div>
