@@ -331,33 +331,6 @@ const capturePayment = asyncHandler(
   },
 );
 
-// const getOrder = asyncHandler(
-//   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-//     const userId = req.user?.userId;
-//     const { orderId } = req.params;
-
-//     if (!userId) {
-//       return res.status(401).json(new ApiError(401, "Unauthenticated user"));
-//     }
-//     //  TODO: check the input by zod
-
-//     const order = await prisma.order.findFirst({
-//       where: {
-//         id: orderId,
-//         userId,
-//       },
-//       select: {
-//         items: true,
-//         address: true,
-//         coupon: true,
-//       },
-//     });
-
-//     return res
-//       .status(200)
-//       .json(new ApiResponse(200, order, "orders fetched successfully"));
-//   },
-// );
 // TODO: should do it for single or multiple order? validate the input req.params+body
 const updateOrderStatusAdminOnly = asyncHandler(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -738,11 +711,9 @@ const getAdminTransactions = asyncHandler(
 export {
   createPaymentOrder,
   capturePayment,
-  // getOrder,
   updateOrderStatusAdminOnly,
   getAllOrdersAdminOnly,
   getAllOrdersForUser,
-  // getOrdersByUserId,
   getOrderById,
   getSellerOrderLines,
   getAdminTransactions,
