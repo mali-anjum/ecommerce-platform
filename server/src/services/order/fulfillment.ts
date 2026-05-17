@@ -12,7 +12,8 @@ export type FulfillmentLine = {
  */
 export async function applyPurchaseFulfillment(
   userId: string,
-  lines: FulfillmentLine[]
+  lines: FulfillmentLine[],
+  purchasedCartItemIds?: string[]
 ): Promise<void> {
   for (const item of lines) {
     if (!item.productId) {
@@ -36,6 +37,16 @@ export async function applyPurchaseFulfillment(
   }
 
   try {
+    if (purchasedCartItemIds && purchasedCartItemIds.length > 0) {
+      await prisma.cartItem.deleteMany({
+        where: {
+          id: { in: purchasedCartItemIds },
+          cart: { userId },
+        },
+      });
+      return;
+    }
+
     await prisma.cartItem.deleteMany({
       where: { cart: { userId } },
     });
