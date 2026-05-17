@@ -45,6 +45,22 @@ describe("applyPurchaseFulfillment", () => {
     expect(cartDeleteMock).toHaveBeenCalledWith({ where: { userId: "user-1" } });
   });
 
+  it("removes only purchased cart item ids when provided", async () => {
+    await applyPurchaseFulfillment(
+      "user-1",
+      [{ productId: "p1", quantity: 1 }],
+      ["cart-item-1", "cart-item-2"]
+    );
+
+    expect(cartItemDeleteManyMock).toHaveBeenCalledWith({
+      where: {
+        id: { in: ["cart-item-1", "cart-item-2"] },
+        cart: { userId: "user-1" },
+      },
+    });
+    expect(cartDeleteMock).not.toHaveBeenCalled();
+  });
+
   it("increments coupon when line has couponId", async () => {
     await applyPurchaseFulfillment("user-1", [
       { productId: "p1", quantity: 1, couponId: "c1" },
