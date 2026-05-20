@@ -1,6 +1,10 @@
+import type { CartPricingTotals } from "@/utils/cartTotals";
+
 export interface CartSummaryProps {
-  subtotal: number;
-  itemCount: number;
+  pricing: CartPricingTotals;
+  selectedCount: number;
+  totalCartCount: number;
+  checkoutDisabled?: boolean;
   onCheckout: () => void;
   onContinueShopping: () => void;
 }
