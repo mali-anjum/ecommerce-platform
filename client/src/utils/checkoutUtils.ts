@@ -1,22 +1,28 @@
 import { CartItemWithProduct } from '@/types/cart/cartItemStore';
 import type { Coupon } from '@/types/checkout';
+import { calculateCartPricingTotals } from '@/utils/cartTotals';
 
 export const calculateTotals = (
   cartItems: CartItemWithProduct[],
   appliedCoupon: Coupon | null
 ) => {
-  const subtotal = cartItems.reduce(
-    (sum, item) => sum + (item.product?.price || 0) * item.quantity,
-    0
+  const pricing = calculateCartPricingTotals(
+    cartItems.map((item) => ({
+      price: item.product?.price || 0,
+      quantity: item.quantity,
+    })),
+    appliedCoupon?.discountPercent ?? 0
   );
 
-  const discountAmount = appliedCoupon
-    ? (subtotal * appliedCoupon.discountPercent) / 100
-    : 0;
-
-  const total = Math.max(0, subtotal - discountAmount);
-
-  return { subtotal, discountAmount, total };
+  return {
+    subtotal: pricing.subtotal,
+    discountAmount: pricing.volumeDiscount + pricing.couponDiscount,
+    volumeDiscount: pricing.volumeDiscount,
+    couponDiscount: pricing.couponDiscount,
+    shipping: pricing.shipping,
+    tax: pricing.tax,
+    total: pricing.total,
+  };
 };
 
 export const isCheckoutReady = (
