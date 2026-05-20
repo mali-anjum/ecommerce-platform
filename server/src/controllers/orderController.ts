@@ -6,7 +6,10 @@ import { ApiResponse } from "../utils/ApiResponse";
 import { ApiError, UnauthorizedError } from "../utils/ApiError";
 import { PaymentFactory } from "../services/payment/payment.factory";
 import { PaymentOrderData } from "../services/interfaces/payment.interface";
-import type { MinimalProduct } from "../services/interfaces/product";
+import {
+  calculateCheckoutTotals,
+} from "../services/cart/checkoutTotals";
+import { validateCheckoutSelection } from "../services/cart/validateCheckoutSelection";
 import {
   applyPurchaseFulfillment,
   fetchSellerOrderLinesPage,
@@ -24,7 +27,7 @@ import type { OrderStatus } from "@prisma/client";
 
 const createPaymentOrder = asyncHandler(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    const { items, total, paymentMethod, addressId, couponId } = req.body;
+    const { cartItemIds, paymentMethod, addressId, couponId } = req.body;
     const userId = req.user?.userId;
 
     if (!userId) {
@@ -48,12 +51,32 @@ const createPaymentOrder = asyncHandler(
         );
       }
 
+      const validatedItems = await validateCheckoutSelection(userId, cartItemIds);
+
+      let couponDiscountPercent = 0;
+      if (couponId) {
+        const coupon = await prisma.coupon.findUnique({
+          where: { id: couponId },
+        });
+        if (!coupon) {
+          return next(new ApiError(400, "Coupon is invalid or expired"));
+        }
+        couponDiscountPercent = coupon.discountPercent;
+      }
+
+      const lineSubtotal = validatedItems.reduce(
+        (sum, item) => sum + item.price * item.quantity,
+        0
+      );
+      const checkoutTotals = calculateCheckoutTotals(
+        lineSubtotal,
+        couponDiscountPercent
+      );
+      const total = checkoutTotals.total;
+      const selectedCartItemIds = validatedItems.map((item) => item.cartItemId);
+
       const productIds = Array.from(
-        new Set(
-          (items as MinimalProduct[])
-            .map((item) => item.productId)
-            .filter((pid): pid is string => typeof pid === "string" && pid.length > 0),
-        ),
+        new Set(validatedItems.map((item) => item.productId))
       );
       const sellerIdByProductId =
         productIds.length > 0
@@ -71,11 +94,9 @@ const createPaymentOrder = asyncHandler(
           paymentMethod: paymentMethod.toUpperCase() as any,
           paymentStatus: "PENDING",
           items: {
-            create: items.map((item: MinimalProduct) => ({
+            create: validatedItems.map((item) => ({
               productId: item.productId,
-              sellerId: item.productId
-                ? sellerIdByProductId.get(item.productId) ?? null
-                : null,
+              sellerId: sellerIdByProductId.get(item.productId) ?? null,
               productName: item.productName,
               productCategory: item.productCategory,
               quantity: item.quantity,
@@ -96,7 +117,15 @@ const createPaymentOrder = asyncHandler(
       const paymentService = PaymentFactory.createPaymentService(paymentMethod);
 
       const paymentOrderData: PaymentOrderData = {
-        items,
+        items: validatedItems.map((item) => ({
+          productId: item.productId,
+          productName: item.productName,
+          productCategory: item.productCategory,
+          quantity: item.quantity,
+          size: item.size ?? undefined,
+          color: item.color ?? undefined,
+          price: item.price,
+        })),
         total,
         userId,
         currency: "USD",
@@ -136,6 +165,7 @@ const createPaymentOrder = asyncHandler(
           clientSecret: paymentResult.clientSecret,
           amount: total,
           currency: "USD",
+          metadata: { cartItemIds: selectedCartItemIds },
         },
       });
 
@@ -304,8 +334,20 @@ const capturePayment = asyncHandler(
         },
       });
 
-      // 4. Update stock and clear cart
-      await applyPurchaseFulfillment(userId, existingOrder.items);
+      const paymentMetadata = paymentRow.metadata as
+        | { cartItemIds?: string[] }
+        | null
+        | undefined;
+      const purchasedCartItemIds = Array.isArray(paymentMetadata?.cartItemIds)
+        ? paymentMetadata.cartItemIds
+        : undefined;
+
+      // 4. Update stock and remove only purchased cart lines
+      await applyPurchaseFulfillment(
+        userId,
+        existingOrder.items,
+        purchasedCartItemIds
+      );
 
       // 5. Apply coupon usage if exists
       if (existingOrder.couponId) {
