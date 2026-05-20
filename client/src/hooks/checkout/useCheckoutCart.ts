@@ -1,8 +1,10 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { CartItem, CartItemWithProduct } from '@/types/cart/cartItemStore';
+import { useCartSelectionStore } from '@/store/useCartSelectionStore';
 
 export const useCheckoutCart = (items: CartItem[]) => {
   const [cartItemsWithDetails, setCartItemsWithDetails] = useState<CartItemWithProduct[]>([]);
+  const selectedIds = useCartSelectionStore((state) => state.selectedIds);
 
   const convertToCartItemWithProduct = useCallback((item: CartItem): CartItemWithProduct => ({
     id: item.id,
@@ -20,10 +22,7 @@ export const useCheckoutCart = (items: CartItem[]) => {
   }), []);
 
   useEffect(() => {
-    console.log("🔄 Processing cart items:", items);
-
     if (!Array.isArray(items)) {
-      console.error("Items is not an array:", items);
       setCartItemsWithDetails([]);
       return;
     }
@@ -37,5 +36,16 @@ export const useCheckoutCart = (items: CartItem[]) => {
     setCartItemsWithDetails(convertedItems);
   }, [items, convertToCartItemWithProduct]);
 
-  return { cartItemsWithDetails };
+  const selectedCartItemsWithDetails = useMemo(() => {
+    if (selectedIds.length === 0) {
+      return [];
+    }
+    const selected = new Set(selectedIds);
+    return cartItemsWithDetails.filter((item) => selected.has(item.id));
+  }, [cartItemsWithDetails, selectedIds]);
+
+  return {
+    cartItemsWithDetails: selectedCartItemsWithDetails,
+    allCartItemsWithDetails: cartItemsWithDetails,
+  };
 };

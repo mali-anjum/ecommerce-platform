@@ -32,7 +32,7 @@ export function CheckoutContent() {
 
   // Store hooks
   const { addresses, fetchAddresses } = useAddressStore();
-  const { items, fetchCart, clearCart } = useCartStore();
+  const { items, fetchCart } = useCartStore();
   const { couponList, fetchCoupons } = useCouponStore();
   const { createOrder, captureOrder, isPaymentProcessing } = useOrderStore();
   const { user } = useAuthStore();
@@ -72,7 +72,7 @@ export function CheckoutContent() {
     items,
     createOrder,
     captureOrder,
-    clearCart,
+    fetchCart,
     router,
   });
 

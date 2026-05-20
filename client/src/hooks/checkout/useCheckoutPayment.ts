@@ -3,6 +3,9 @@ import { useToast } from '@/hooks/use-toast';
 import { CartItemWithProduct } from '@/types/cart/cartItemStore';
 import type { Coupon } from '@/types/checkout/Coupon';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+import { calculateTotals } from '@/utils/checkoutUtils';
+import { useCartSelectionStore } from '@/store/useCartSelectionStore';
+import { useCartStore } from '@/store/useCartStore';
 
 interface UseCheckoutPaymentProps {
   user: any;
@@ -12,7 +15,7 @@ interface UseCheckoutPaymentProps {
   items: any[];
   createOrder: (orderRequest: any) => Promise<any>;
   captureOrder: (captureRequest: any) => Promise<any>;
-  clearCart: () => Promise<void>;
+  fetchCart: () => Promise<void>;
   router: AppRouterInstance;
 }
 
@@ -24,19 +27,12 @@ export const useCheckoutPayment = ({
   items,
   createOrder,
   captureOrder,
-  clearCart,
+  fetchCart,
   router
 }: UseCheckoutPaymentProps) => {
   const { toast } = useToast();
-
-  const calculateTotal = useCallback((items: CartItemWithProduct[], coupon: Coupon | null) => {
-    const subtotal = items.reduce(
-      (sum, item) => sum + (item.product?.price || 0) * item.quantity,
-      0
-    );
-    const discount = coupon ? (subtotal * coupon.discountPercent) / 100 : 0;
-    return Math.max(0, subtotal - discount);
-  }, []);
+  const selectedIds = useCartSelectionStore((state) => state.selectedIds);
+  const pruneInvalidIds = useCartSelectionStore((state) => state.pruneInvalidIds);
 
   const handlePaymentMethodSelect = useCallback(async (
     paymentMethod: "PAYPAL" | "STRIPE" | "CARD"
@@ -62,11 +58,10 @@ export const useCheckoutPayment = ({
       return;
     }
 
-    // Validate cart is not empty
-    if (cartItemsWithDetails.length === 0) {
+    if (selectedIds.length === 0 || cartItemsWithDetails.length === 0) {
       toast({
-        title: "Cart Empty",
-        description: "Your cart is empty",
+        title: "No items selected",
+        description: "Select at least one cart item before checkout.",
         variant: "destructive",
       });
       router.push("/cart");
@@ -84,19 +79,10 @@ export const useCheckoutPayment = ({
     }
 
     try {
-      const total = calculateTotal(cartItemsWithDetails, appliedCoupon);
-      
-      // Prepare payment order request
+      const { total } = calculateTotals(cartItemsWithDetails, appliedCoupon);
+
       const orderRequest = {
-        items: cartItemsWithDetails.map((item) => ({
-          productId: item.productId,
-          productName: item.product.name,
-          productCategory: item.product.category,
-          quantity: item.quantity,
-          size: item.size,
-          color: item.color,
-          price: item.product.price,
-        })),
+        cartItemIds: selectedIds,
         total,
         paymentMethod,
         addressId: selectedAddress,
@@ -119,6 +105,7 @@ export const useCheckoutPayment = ({
           internalOrderId: paymentData.internalOrderId,
           paymentId: paymentData.paymentId,
           paymentMethod,
+          cartItemIds: selectedIds,
           timestamp: Date.now(),
         })
       );
@@ -146,7 +133,17 @@ export const useCheckoutPayment = ({
         variant: "destructive",
       });
     }
-  }, [user, cartItemsWithDetails, selectedAddress, appliedCoupon, items, createOrder, calculateTotal, router, toast]);
+  }, [
+    user,
+    cartItemsWithDetails,
+    selectedAddress,
+    appliedCoupon,
+    items,
+    selectedIds,
+    createOrder,
+    router,
+    toast,
+  ]);
 
   const handlePaymentReturn = useCallback(async () => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -190,8 +187,9 @@ export const useCheckoutPayment = ({
         if (typeof window !== "undefined") {
           sessionStorage.setItem(lockKey, "done");
         }
-        // Clear cart and local storage
-        await clearCart();
+        await fetchCart();
+        const validIds = useCartStore.getState().items.map((item) => item.id);
+        pruneInvalidIds(validIds);
         localStorage.removeItem("pendingOrder");
         localStorage.removeItem("cartBackup");
 
@@ -236,7 +234,13 @@ export const useCheckoutPayment = ({
       localStorage.removeItem("pendingOrder");
       localStorage.removeItem("cartBackup");
     }
-  }, [captureOrder, clearCart, router, toast]);
+  }, [
+    captureOrder,
+    fetchCart,
+    router,
+    toast,
+    pruneInvalidIds,
+  ]);
 
   useEffect(() => {
     // Check if we have payment parameters in URL

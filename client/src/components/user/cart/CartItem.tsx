@@ -1,21 +1,43 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Heart, Minus, Plus, Trash2 } from "lucide-react";
 import type { CartItemProps } from "@/types/cart/CartItemProps";
 
-export function CartItem({ item, onUpdateQuantity, onRemove, isUpdating }: CartItemProps) {
+export function CartItem({
+  item,
+  selected,
+  onToggleSelect,
+  onUpdateQuantity,
+  onRemove,
+  isUpdating,
+}: CartItemProps) {
   return (
-    <Card className="glass-effect border border-glass-border hover:border-primary/30 transition-all duration-300">
+    <Card
+      className={`glass-effect border transition-all duration-300 ${
+        selected
+          ? "border-primary/40 hover:border-primary/50"
+          : "border-glass-border hover:border-primary/30 opacity-90"
+      }`}
+    >
       <CardContent className="p-4">
         <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex items-start pt-1">
+            <Checkbox
+              checked={selected}
+              onCheckedChange={() => onToggleSelect(item.id)}
+              aria-label={`Select ${item.name} for checkout`}
+            />
+          </div>
+
           {/* Product Image */}
           <div className="relative">
             <div className="w-24 h-24 rounded-lg overflow-hidden bg-gradient-to-br from-primary/10 to-secondary/10">
               <img
-                src={item.image}
+                src={item.image ?? "/placeholder-product.png"}
                 alt={item.name}
                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
               />

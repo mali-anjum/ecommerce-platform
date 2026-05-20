@@ -12,31 +12,28 @@ import {
   Truck
 } from "lucide-react";
 import type { CartSummaryProps } from "@/types/cart/CartSummaryProps";
-
-const TAX_RATE = 0.0889;
-const DISCOUNT_THRESHOLD = 100;
-const FREE_SHIPPING_THRESHOLD = 100;
-const SHIPPING_FEE = 9.99;
+import { CART_FREE_SHIPPING_THRESHOLD } from "@/utils/cartTotals";
 
 export function CartSummary({
-  subtotal,
-  itemCount,
+  pricing,
+  selectedCount,
+  totalCartCount,
+  checkoutDisabled = false,
   onCheckout,
-  onContinueShopping
+  onContinueShopping,
 }: CartSummaryProps) {
+  const {
+    subtotal,
+    volumeDiscount,
+    couponDiscount,
+    discountedSubtotal,
+    shipping,
+    tax,
+    total,
+    itemCount,
+  } = pricing;
 
-  const discount =
-    subtotal >= DISCOUNT_THRESHOLD ? subtotal * 0.1 : 0;
-
-  const discountedSubtotal = subtotal - discount;
-
-  const shipping =
-    subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
-
-  const tax = discountedSubtotal * TAX_RATE;
-
-  // 4️⃣ Final total
-  const total = discountedSubtotal + shipping + tax;
+  const discount = volumeDiscount + couponDiscount;
 
   return (
     <Card className="glass-effect border border-glass-border sticky top-8">
@@ -49,7 +46,7 @@ export function CartSummary({
           <div>
             <h3 className="text-xl font-bold">Order Summary</h3>
             <p className="text-sm text-muted-foreground">
-              {itemCount} items in cart
+              {itemCount} selected · {totalCartCount} in cart
             </p>
           </div>
         </div>
@@ -105,19 +102,19 @@ export function CartSummary({
         </div>
 
         {/* Free shipping progress */}
-        {subtotal < FREE_SHIPPING_THRESHOLD && (
+        {subtotal < CART_FREE_SHIPPING_THRESHOLD && (
           <div className="mt-6 p-3 rounded-lg border border-primary/20">
             <div className="flex justify-between text-sm">
               <span>Free shipping on orders over $100</span>
               <span className="text-primary">
-                ${(FREE_SHIPPING_THRESHOLD - subtotal).toFixed(2)} away
+                ${(CART_FREE_SHIPPING_THRESHOLD - subtotal).toFixed(2)} away
               </span>
             </div>
             <div className="h-2 bg-card rounded-full mt-2 overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-primary to-secondary"
                 style={{
-                  width: `${(subtotal / FREE_SHIPPING_THRESHOLD) * 100}%`
+                  width: `${(subtotal / CART_FREE_SHIPPING_THRESHOLD) * 100}%`
                 }}
               />
             </div>
@@ -126,7 +123,11 @@ export function CartSummary({
 
         {/* Actions */}
         <div className="space-y-3 mt-6">
-          <Button onClick={onCheckout} className="w-full py-6 text-lg">
+          <Button
+            onClick={onCheckout}
+            disabled={checkoutDisabled || selectedCount === 0}
+            className="w-full py-6 text-lg"
+          >
             <CreditCard className="h-5 w-5 mr-2" />
             Proceed to Checkout
             <ArrowRight className="h-5 w-5 ml-2" />
