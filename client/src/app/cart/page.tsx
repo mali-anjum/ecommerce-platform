@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { CartCheckbox } from "@/components/user/cart/CartCheckbox";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useCartStore } from "@/store/useCartStore";
 import {
@@ -13,6 +13,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { CartItem } from "@/components/user/cart/CartItem";
 import { CartSummary } from "@/components/user/cart/CartSummary";
 import { CartLoadingSkeleton } from "@/components/user/cart/CartLoadingSkeleton";
@@ -63,7 +64,7 @@ function UserCartPage() {
     selectedItems,
     selectedCount,
     hasSelection,
-    allSelected,
+    selectAllChecked,
     toggleItem,
     toggleSelectAll,
     isSelected,
@@ -185,43 +186,41 @@ function UserCartPage() {
         ) : (
           <div className="flex flex-col lg:flex-row gap-8">
             <div className="flex-1 space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <h2 className="text-xl font-bold text-foreground">
-                  Your Items ({itemCount})
-                </h2>
-                <div className="flex items-center gap-4">
-                  <label className="flex items-center gap-2 text-sm cursor-pointer">
-                    <Checkbox
-                      checked={allSelected}
+              <Card className="glass-effect border border-glass-border overflow-hidden">
+                <div className="flex items-center justify-between gap-3 border-b border-border/60 bg-card/40 px-4 py-3">
+                  <label className="flex cursor-pointer items-center gap-3 text-sm font-medium text-foreground">
+                    <CartCheckbox
+                      checked={selectAllChecked}
                       onCheckedChange={toggleSelectAll}
                       aria-label="Select all cart items"
                     />
-                    Select all
+                    <span>Select all ({cartItems.length})</span>
                   </label>
                   <Button
                     onClick={() => router.push("/products")}
                     variant="ghost"
+                    size="sm"
                     className="text-primary hover:text-primary-light"
                   >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add More Items
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add more
                   </Button>
                 </div>
-              </div>
 
-              <div className="space-y-4">
-                {cartItems.map((item) => (
-                  <CartItem
-                    key={item.id}
-                    item={item}
-                    selected={isSelected(item.id)}
-                    onToggleSelect={toggleItem}
-                    onUpdateQuantity={handleUpdateQuantity}
-                    onRemove={handleRemoveItem}
-                    isUpdating={isUpdating}
-                  />
-                ))}
-              </div>
+                <div className="divide-y divide-border/60">
+                  {cartItems.map((item) => (
+                    <CartItem
+                      key={item.id}
+                      item={item}
+                      selected={isSelected(item.id)}
+                      onToggleSelect={toggleItem}
+                      onUpdateQuantity={handleUpdateQuantity}
+                      onRemove={handleRemoveItem}
+                      isUpdating={isUpdating}
+                    />
+                  ))}
+                </div>
+              </Card>
             </div>
 
             <div className="lg:w-96 w-full">

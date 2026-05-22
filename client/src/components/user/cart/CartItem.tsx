@@ -1,7 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
+import { CartCheckbox } from "@/components/user/cart/CartCheckbox";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Heart, Minus, Plus, Trash2 } from "lucide-react";
@@ -16,17 +15,14 @@ export function CartItem({
   isUpdating,
 }: CartItemProps) {
   return (
-    <Card
-      className={`glass-effect border transition-all duration-300 ${
-        selected
-          ? "border-primary/40 hover:border-primary/50"
-          : "border-glass-border hover:border-primary/30 opacity-90"
+    <div
+      className={`transition-colors ${
+        selected ? "bg-primary/5" : "bg-transparent opacity-95"
       }`}
     >
-      <CardContent className="p-4">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex items-start pt-1">
-            <Checkbox
+        <div className="flex items-start gap-3 p-4">
+          <div className="flex h-20 w-9 shrink-0 items-center justify-center pt-1">
+            <CartCheckbox
               checked={selected}
               onCheckedChange={() => onToggleSelect(item.id)}
               aria-label={`Select ${item.name} for checkout`}
@@ -34,8 +30,8 @@ export function CartItem({
           </div>
 
           {/* Product Image */}
-          <div className="relative">
-            <div className="w-24 h-24 rounded-lg overflow-hidden bg-gradient-to-br from-primary/10 to-secondary/10">
+          <div className="relative shrink-0">
+            <div className="h-20 w-20 rounded-md overflow-hidden bg-gradient-to-br from-primary/10 to-secondary/10 border border-border/60">
               <img
                 src={item.image ?? "/placeholder-product.png"}
                 alt={item.name}
@@ -181,7 +177,6 @@ export function CartItem({
             </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+    </div>
   );
 }
