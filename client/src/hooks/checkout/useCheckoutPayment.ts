@@ -6,6 +6,7 @@ import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.share
 import { calculateTotals } from '@/utils/checkoutUtils';
 import { useCartSelectionStore } from '@/store/useCartSelectionStore';
 import { useCartStore } from '@/store/useCartStore';
+import type { CheckoutPaymentMethodId } from '@/hooks/checkout/usePaymentMethods';
 
 interface UseCheckoutPaymentProps {
   user: any;
@@ -13,6 +14,7 @@ interface UseCheckoutPaymentProps {
   selectedAddress: string;
   appliedCoupon: Coupon | null;
   items: any[];
+  availablePaymentMethods: CheckoutPaymentMethodId[];
   createOrder: (orderRequest: any) => Promise<any>;
   captureOrder: (captureRequest: any) => Promise<any>;
   fetchCart: () => Promise<void>;
@@ -25,6 +27,7 @@ export const useCheckoutPayment = ({
   selectedAddress,
   appliedCoupon,
   items,
+  availablePaymentMethods,
   createOrder,
   captureOrder,
   fetchCart,
@@ -35,20 +38,18 @@ export const useCheckoutPayment = ({
   const pruneInvalidIds = useCartSelectionStore((state) => state.pruneInvalidIds);
 
   const handlePaymentMethodSelect = useCallback(async (
-    paymentMethod: "PAYPAL" | "STRIPE" | "CARD"
+    paymentMethod: CheckoutPaymentMethodId
   ) => {
-    // Validate user is authenticated
     if (!user) {
       toast({
         title: "Authentication Required",
         description: "Please sign in to complete your purchase",
         variant: "destructive",
       });
-      router.push("/login?redirect=/checkout");
+      router.push("/auth/login?redirect=/checkout");
       return;
     }
 
-    // Validate address is selected
     if (!selectedAddress) {
       toast({
         title: "Address Required",
@@ -68,12 +69,11 @@ export const useCheckoutPayment = ({
       return;
     }
 
-    // Handle specific payment methods
-    if (paymentMethod === "CARD") {
+    if (!availablePaymentMethods.includes(paymentMethod)) {
       toast({
-        title: "Coming Soon",
-        description: "Direct card payments will be available soon",
-        variant: "default",
+        title: "Payment unavailable",
+        description: "This payment method is not configured on the server.",
+        variant: "destructive",
       });
       return;
     }
@@ -89,16 +89,24 @@ export const useCheckoutPayment = ({
         couponId: appliedCoupon?.id,
       };
 
-      // Call createOrder endpoint
       const response = await createOrder(orderRequest);
 
       if (!response?.success) {
-        throw new Error(response?.error || "Failed to create payment order");
+        throw new Error(
+          response?.message ??
+            response?.error ??
+            "Failed to create payment order"
+        );
       }
 
       const paymentData = response.data;
+      const redirectUrl =
+        paymentData.approvalUrl ?? paymentData.url ?? null;
 
-      // Store order info for when user returns
+      if (!redirectUrl) {
+        throw new Error("No payment redirect URL provided by the server");
+      }
+
       localStorage.setItem(
         "pendingOrder",
         JSON.stringify({
@@ -110,21 +118,14 @@ export const useCheckoutPayment = ({
         })
       );
 
-      // Store cart backup in case of failure
       localStorage.setItem("cartBackup", JSON.stringify(items));
 
-      // Redirect based on payment method
-      if (paymentMethod === "PAYPAL" && paymentData.approvalUrl) {
-        window.location.href = paymentData.approvalUrl;
-      } else if (paymentMethod === "STRIPE" && paymentData.url) {
-        window.location.href = paymentData.url;
-      } else {
-        throw new Error("No payment URL provided");
-      }
+      window.location.href = redirectUrl;
     } catch (error: any) {
       console.error("Payment initiation error:", error);
       const description =
         error?.response?.data?.message ??
+        error?.response?.data?.error ??
         error?.message ??
         "Failed to process payment";
       toast({
@@ -140,6 +141,7 @@ export const useCheckoutPayment = ({
     appliedCoupon,
     items,
     selectedIds,
+    availablePaymentMethods,
     createOrder,
     router,
     toast,
@@ -170,7 +172,6 @@ export const useCheckoutPayment = ({
       const { internalOrderId, paymentMethod, timestamp } =
         JSON.parse(pendingOrder);
 
-      // Check if order is too old (30 minutes)
       if (Date.now() - timestamp > 30 * 60 * 1000) {
         throw new Error("Payment session expired. Please try again.");
       }
@@ -193,22 +194,21 @@ export const useCheckoutPayment = ({
         localStorage.removeItem("pendingOrder");
         localStorage.removeItem("cartBackup");
 
-        // Clean URL
         window.history.replaceState({}, document.title, "/checkout/success");
 
-        // Show success
         toast({
-          title: "🎉 Order Confirmed!",
+          title: "Order confirmed",
           description: "Your order has been placed successfully",
           className: "bg-success/10 border-success/20 text-success",
         });
 
-        // Redirect to success page
         setTimeout(() => {
           router.push(`/checkout/success?orderId=${response.data.order?.id}`);
         }, 1500);
       } else {
-        throw new Error(response?.error || "Payment capture failed");
+        throw new Error(
+          response?.message ?? response?.error ?? "Payment capture failed"
+        );
       }
     } catch (error: any) {
       console.error("Payment capture error:", error);
@@ -217,20 +217,12 @@ export const useCheckoutPayment = ({
         sessionStorage.removeItem(`checkout_capture_${paymentId}`);
       }
 
-      // Restore cart from backup if available
-      const cartBackup = localStorage.getItem("cartBackup");
-      if (cartBackup) {
-        // You would implement cart restoration here
-        console.log("Cart backup available for restoration");
-      }
-
       toast({
         title: "Payment Failed",
         description: error.message || "Failed to complete payment",
         variant: "destructive",
       });
 
-      // Clean up
       localStorage.removeItem("pendingOrder");
       localStorage.removeItem("cartBackup");
     }
@@ -243,8 +235,17 @@ export const useCheckoutPayment = ({
   ]);
 
   useEffect(() => {
-    // Check if we have payment parameters in URL
     const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("stripe_cancelled") === "1") {
+      toast({
+        title: "Payment cancelled",
+        description: "Your card payment was cancelled. You can try again.",
+        variant: "default",
+      });
+      window.history.replaceState({}, document.title, "/checkout");
+      return;
+    }
+
     if (
       urlParams.get("paymentId") ||
       urlParams.get("token") ||
@@ -252,7 +253,7 @@ export const useCheckoutPayment = ({
     ) {
       handlePaymentReturn();
     }
-  }, [handlePaymentReturn]);
+  }, [handlePaymentReturn, toast]);
 
   return {
     handlePaymentMethodSelect,

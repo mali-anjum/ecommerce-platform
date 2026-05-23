@@ -13,7 +13,8 @@ import { useCheckoutData } from '@/hooks/checkout/useCheckoutData';
 import { useCheckoutCart } from '@/hooks/checkout/useCheckoutCart';
 import { useCheckoutCoupon } from '@/hooks/checkout/useCheckoutCoupon';
 import { useCheckoutPayment } from '@/hooks/checkout/useCheckoutPayment';
-import { useCheckoutAddress } from '@/hooks/checkout/useCheckoutAddress'; // Add this
+import { useCheckoutAddress } from '@/hooks/checkout/useCheckoutAddress';
+import { usePaymentMethods } from '@/hooks/checkout/usePaymentMethods';
 
 // Components
 import { CheckoutHeader } from './CheckoutHeader';
@@ -49,7 +50,12 @@ export function CheckoutContent() {
   } = useCheckoutCoupon(couponList);
   
   // Use the new address hook instead of useState
-  const { selectedAddress, setSelectedAddress, getSelectedAddressDetails } = useCheckoutAddress(addresses);
+  const { selectedAddress, setSelectedAddress } = useCheckoutAddress(addresses);
+  const {
+    availableMethods: availablePaymentMethods,
+    isLoading: paymentMethodsLoading,
+    error: paymentMethodsError,
+  } = usePaymentMethods();
 
   // Calculate totals - MOVE THIS BEFORE useCheckoutPayment
   const { subtotal, discountAmount, total } = useMemo(
@@ -70,6 +76,7 @@ export function CheckoutContent() {
     selectedAddress,
     appliedCoupon,
     items,
+    availablePaymentMethods,
     createOrder,
     captureOrder,
     fetchCart,
@@ -118,6 +125,9 @@ export function CheckoutContent() {
               onSelectAddress={setSelectedAddress}
               router={router}
               checkoutReady={checkoutReady}
+              availablePaymentMethods={availablePaymentMethods}
+              paymentMethodsLoading={paymentMethodsLoading}
+              paymentMethodsError={paymentMethodsError}
               onSelectPaymentMethod={handlePaymentMethodSelect}
               isPaymentProcessing={isPaymentProcessing}
             />

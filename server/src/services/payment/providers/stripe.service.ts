@@ -1,158 +1,258 @@
-// services/payment/providers/stripe.service.ts
-import { PaymentOrderData, PaymentResult } from "../../interfaces/payment.interface";
-import  { BasePaymentService } from '../base.payment.service';
-import Stripe from 'stripe';
+import {
+  PaymentOrderData,
+  PaymentResult,
+} from "../../interfaces/payment.interface";
+import { BasePaymentService } from "../base.payment.service";
+import Stripe from "stripe";
 import { getErrorMessage } from "../../../utils/catchError";
+
+function resolveStripeRedirectUrls(): { successUrl: string; cancelUrl: string } {
+  const base =
+    process.env.STRIPE_CHECKOUT_BASE_URL?.trim() ||
+    process.env.FRONTEND_URL?.trim() ||
+    "http://localhost:3012";
+
+  const normalizedBase = base.replace(/\/$/, "");
+
+  const successUrl =
+    process.env.STRIPE_SUCCESS_URL?.trim() ||
+    `${normalizedBase}/stripe/return?session_id={CHECKOUT_SESSION_ID}`;
+
+  const cancelUrl =
+    process.env.STRIPE_CANCEL_URL?.trim() ||
+    `${normalizedBase}/stripe/cancel`;
+
+  return { successUrl, cancelUrl };
+}
 
 export class StripeService extends BasePaymentService {
   protected providerName = "STRIPE";
-  private stripe: Stripe;
+  private stripe: Stripe | null = null;
 
-  constructor() {
-    super();
-    this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-      apiVersion: '2023-10-16' as any,
+  private getStripe(): Stripe {
+    if (this.stripe) {
+      return this.stripe;
+    }
+
+    const secretKey = process.env.STRIPE_SECRET_KEY?.trim();
+    if (!secretKey) {
+      throw new Error(
+        "STRIPE_SECRET_KEY is not configured. Add it to server env to enable card checkout."
+      );
+    }
+
+    this.stripe = new Stripe(secretKey, {
+      apiVersion: "2023-10-16" as Stripe.LatestApiVersion,
     });
+    return this.stripe;
   }
 
   async createOrder(orderData: PaymentOrderData): Promise<PaymentResult> {
     try {
-      const lineItems = orderData.items.map(item => ({
-        price_data: {
-          currency: orderData.currency?.toLowerCase() || 'usd',
-          product_data: {
-            name: item.productName,
-            metadata: {
-              productId: item.productId
-            }
-          },
-          unit_amount: Math.round(item.price * 100), // Convert to cents
-        },
-        quantity: item.quantity,
-      }));
+      if (!this.validatePaymentData(orderData)) {
+        return {
+          success: false,
+          error: "Invalid payment data",
+        };
+      }
 
-      const session = await this.stripe.checkout.sessions.create({
-        payment_method_types: ['card'],
+      const itemsSubtotal = this.calculateItemTotal(orderData.items);
+      const tolerance = 0.01;
+
+      if (orderData.total + tolerance < itemsSubtotal) {
+        return {
+          success: false,
+          error: "Order total is less than the sum of line items",
+        };
+      }
+
+      const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] =
+        orderData.items.map((item) => ({
+          price_data: {
+            currency: (orderData.currency || "USD").toLowerCase(),
+            product_data: {
+              name: item.productName.substring(0, 127),
+              metadata: {
+                productId: item.productId,
+              },
+            },
+            unit_amount: Math.max(0, Math.round(item.price * 100)),
+          },
+          quantity: Math.max(1, item.quantity),
+        }));
+
+      const remainder = orderData.total - itemsSubtotal;
+      if (remainder > tolerance) {
+        lineItems.push({
+          price_data: {
+            currency: (orderData.currency || "USD").toLowerCase(),
+            product_data: {
+              name: "Shipping, tax & fees",
+            },
+            unit_amount: Math.round(remainder * 100),
+          },
+          quantity: 1,
+        });
+      }
+
+      const { successUrl, cancelUrl } = resolveStripeRedirectUrls();
+      const stripe = this.getStripe();
+
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ["card"],
         line_items: lineItems,
-        mode: 'payment',
-        success_url: `${process.env.FRONTEND_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${process.env.FRONTEND_URL}/payment/cancel`,
+        mode: "payment",
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+        client_reference_id: orderData.internalOrderId,
         metadata: {
           userId: orderData.userId,
           internalOrderId: orderData.internalOrderId,
-          orderType: 'ecommerce'
+          orderType: "ecommerce",
         },
-        shipping_address_collection: {
-          allowed_countries: ['US', 'CA', 'GB', 'IN']
-        }
       });
+
+      if (!session.url) {
+        return {
+          success: false,
+          error: "Stripe did not return a checkout URL",
+        };
+      }
 
       return {
         success: true,
         paymentId: session.id,
         orderId: session.id,
-        url: session.url!,
+        url: session.url,
         data: {
           sessionId: session.id,
-          url: session.url
-        }
+          url: session.url,
+        },
       };
     } catch (error) {
       return {
         success: false,
-        error: getErrorMessage(error)
+        error: getErrorMessage(error),
       };
     }
   }
 
   async capturePayment(paymentId: string): Promise<PaymentResult> {
     try {
-      const session = await this.stripe.checkout.sessions.retrieve(paymentId);
-      
-      if (session.payment_status === 'paid') {
+      const stripe = this.getStripe();
+      const session = await stripe.checkout.sessions.retrieve(paymentId, {
+        expand: ["payment_intent"],
+      });
+
+      if (session.payment_status === "paid") {
+        const paymentIntent =
+          typeof session.payment_intent === "object"
+            ? session.payment_intent
+            : null;
+
         return {
           success: true,
           paymentId: session.id,
-          data: session
-        };
-      } else {
-        return {
-          success: false,
-          error: 'Payment not completed'
+          captureId: paymentIntent?.id,
+          data: session,
         };
       }
+
+      return {
+        success: false,
+        error: `Payment not completed (status: ${session.payment_status})`,
+      };
     } catch (error) {
       return {
         success: false,
-        error: getErrorMessage(error)
+        error: getErrorMessage(error),
       };
     }
   }
 
-  validatePayment(data: any): boolean {
-    return this.validatePaymentData(data);
+  validatePayment(data: unknown): boolean {
+    return this.validatePaymentData(data as PaymentOrderData);
   }
 
   async getOrderDetails(paymentId: string): Promise<PaymentResult> {
     try {
-      const session = await this.stripe.checkout.sessions.retrieve(paymentId);
-      
+      const stripe = this.getStripe();
+      const session = await stripe.checkout.sessions.retrieve(paymentId);
+
       return {
         success: true,
         paymentId: session.id,
         orderId: session.id,
-        data: session
+        data: session,
       };
     } catch (error) {
       return {
         success: false,
-        error: getErrorMessage(error)
+        error: getErrorMessage(error),
       };
     }
   }
 
   async verifyWebhookSignature(
-    rawBody: string,
-    signature: string,
+    _rawBody: string,
+    _signature: string,
     _timestamp: string,
     _certUrl?: string,
     _transmissionId?: string
   ): Promise<boolean> {
-    try {
-      // Stripe automatically verifies in constructEvent
-      return true; // Stripe handles verification in handleWebhook
-    } catch (error) {
-      return false;
-    }
+    return Boolean(process.env.STRIPE_WEBHOOK_SECRET?.trim());
   }
 
-  async handleWebhook(payload: any, signature: string): Promise<any> {
+  async handleWebhook(payload: string | Buffer, signature: string): Promise<{
+    success: boolean;
+    event?: string;
+    data?: Stripe.Checkout.Session | Stripe.PaymentIntent;
+    error?: string;
+  }> {
     try {
-      const event = this.stripe.webhooks.constructEvent(
-        payload,
+      const stripe = this.getStripe();
+      const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET?.trim();
+      if (!webhookSecret) {
+        return { success: false, error: "STRIPE_WEBHOOK_SECRET is not configured" };
+      }
+
+      const rawBody =
+        typeof payload === "string" ? payload : payload.toString("utf8");
+
+      const event = stripe.webhooks.constructEvent(
+        rawBody,
         signature,
-        process.env.STRIPE_WEBHOOK_SECRET!
+        webhookSecret
       );
 
       switch (event.type) {
-        case 'checkout.session.completed':
-          const session = event.data.object;
-          return { success: true, event: 'payment_success', data: session };
-        
-        case 'payment_intent.payment_failed':
-          const paymentIntent = event.data.object;
-          return { success: false, event: 'payment_failed', data: paymentIntent };
-          
+        case "checkout.session.completed":
+          return {
+            success: true,
+            event: "payment_success",
+            data: event.data.object as Stripe.Checkout.Session,
+          };
+
+        case "payment_intent.payment_failed":
+          return {
+            success: false,
+            event: "payment_failed",
+            data: event.data.object as Stripe.PaymentIntent,
+          };
+
         default:
-          return { success: true, event: 'unknown', data: event };
+          return { success: true, event: "unknown", data: event.data.object as Stripe.Checkout.Session };
       }
     } catch (error) {
       return { success: false, error: getErrorMessage(error) };
     }
   }
 
-  // Stripe-specific methods
   isCheckoutBased(): boolean {
-    return true; // Stripe uses checkout sessions
+    return true;
+  }
+
+  isRedirectBased(): boolean {
+    return true;
   }
 }

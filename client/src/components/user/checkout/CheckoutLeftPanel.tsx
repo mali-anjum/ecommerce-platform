@@ -2,6 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
 import { AddressSelection } from "@/components/user/checkout/AddressSkeleton";
 import { PaymentMethods } from "@/components/user/checkout/PaymentMethods";
+import type { CheckoutPaymentMethodId } from "@/hooks/checkout/usePaymentMethods";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 
 interface CheckoutLeftPanelProps {
@@ -10,7 +11,10 @@ interface CheckoutLeftPanelProps {
   onSelectAddress: (addressId: string) => void;
   router: AppRouterInstance;
   checkoutReady: boolean;
-  onSelectPaymentMethod: (method: "PAYPAL" | "STRIPE" | "CARD") => Promise<void>;
+  availablePaymentMethods: CheckoutPaymentMethodId[];
+  paymentMethodsLoading?: boolean;
+  paymentMethodsError?: string | null;
+  onSelectPaymentMethod: (method: CheckoutPaymentMethodId) => Promise<void>;
   isPaymentProcessing: boolean;
 }
 
@@ -20,8 +24,11 @@ export const CheckoutLeftPanel = ({
   onSelectAddress,
   router,
   checkoutReady,
+  availablePaymentMethods,
+  paymentMethodsLoading,
+  paymentMethodsError,
   onSelectPaymentMethod,
-  isPaymentProcessing
+  isPaymentProcessing,
 }: CheckoutLeftPanelProps) => {
   return (
     <>
@@ -36,6 +43,9 @@ export const CheckoutLeftPanel = ({
       {/* Payment Methods - Only show if address is selected */}
       {selectedAddress ? (
         <PaymentMethods
+          availableMethods={availablePaymentMethods}
+          methodsLoading={paymentMethodsLoading}
+          methodsError={paymentMethodsError}
           onSelectPaymentMethod={onSelectPaymentMethod}
           isLoading={isPaymentProcessing}
           isReady={checkoutReady}

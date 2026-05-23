@@ -5,8 +5,6 @@ import {
   capturePayment,
   getAllOrdersAdminOnly,
   getAllOrdersForUser,
-  // getOrder,
-  // getOrdersByUserId,
   updateOrderStatusAdminOnly,
   getOrderById,
   getSellerOrderLines,
@@ -42,14 +40,13 @@ router.post("/create-order", createPaymentOrder);
 router.post("/capture-order", capturePayment);
 
 
-router.get('/methods', (req, res) => {
+router.get("/methods", (_req, res) => {
   const methods = PaymentFactory.getAvailableMethods();
-  res.json(new ApiResponse(200, methods, "Available payment methods"));
+  res.json(
+    new ApiResponse(200, methods, "Available payment methods")
+  );
 });
 
-// router.post("/create-final-order", createFinalOrderInDB);
-// router.get("/get-single-order/:orderId", getOrder);
-// router.get("/get-order-by-user-id", getOrdersByUserId);
 router.get("/get-all-orders-for-admin", isSuperAdmin, getAllOrdersAdminOnly);
 router.get("/get-all-orders", getAllOrdersForUser);
 router.put("/:orderId/status", isSuperAdmin, updateOrderStatusAdminOnly);

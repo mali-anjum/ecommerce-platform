@@ -1,57 +1,57 @@
 // components/user/checkout/PaymentMethods.tsx
-import { CreditCard, Lock, Shield, AlertCircle, Check } from "lucide-react";
+import { CreditCard, Lock, Shield, AlertCircle, Check, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import type { CheckoutPaymentMethodId } from "@/hooks/checkout/usePaymentMethods";
 
 interface PaymentMethodsProps {
-  onSelectPaymentMethod: (method: "PAYPAL" | "STRIPE" | "CARD") => void;
+  availableMethods: CheckoutPaymentMethodId[];
+  methodsLoading?: boolean;
+  methodsError?: string | null;
+  onSelectPaymentMethod: (method: CheckoutPaymentMethodId) => void;
   isLoading?: boolean;
   isReady?: boolean;
 }
 
-export function PaymentMethods({
-  onSelectPaymentMethod,
-  isLoading = false,
-  isReady = false,
-}: PaymentMethodsProps) {
-  type PaymentOption = {
-    id: "PAYPAL" | "STRIPE" | "CARD";
+const PAYMENT_OPTION_META: Record<
+  CheckoutPaymentMethodId,
+  {
     name: string;
     icon: string;
     description: string;
     badge: string;
     recommended: boolean;
-    disabled?: boolean;
-  };
+  }
+> = {
+  PAYPAL: {
+    name: "PayPal",
+    icon: "/images/payments/paypal.svg",
+    description: "Pay with PayPal account or card",
+    badge: "Fast & Secure",
+    recommended: true,
+  },
+  STRIPE: {
+    name: "Credit / Debit Card",
+    icon: "/images/payments/card-brands.svg",
+    description: "Visa, Mastercard, Amex — secure Stripe Checkout",
+    badge: "Stripe",
+    recommended: false,
+  },
+};
 
-  const paymentOptions: PaymentOption[] = [
-    {
-      id: "PAYPAL" as const,
-      name: "PayPal",
-      icon: "/images/payments/paypal.svg",
-      description: "Pay with PayPal account or card",
-      badge: "Fast & Secure",
-      recommended: true,
-    },
-    {
-      id: "STRIPE" as const,
-      name: "Credit/Debit Card",
-      icon: "/images/payments/card-brands.svg",
-      description: "Visa, Mastercard, American Express",
-      badge: "3D Secure",
-      recommended: false,
-    },
-    {
-      id: "CARD" as const,
-      name: "Direct Card",
-      icon: "/images/payments/direct-card.svg",
-      description: "Process card directly",
-      badge: "Beta",
-      recommended: false,
-      disabled: true,
-    },
-  ];
+export function PaymentMethods({
+  availableMethods,
+  methodsLoading = false,
+  methodsError = null,
+  onSelectPaymentMethod,
+  isLoading = false,
+  isReady = false,
+}: PaymentMethodsProps) {
+  const paymentOptions = availableMethods.map((id) => ({
+    id,
+    ...PAYMENT_OPTION_META[id],
+  }));
 
   return (
     <Card className="glass-effect border border-glass-border">
@@ -71,7 +71,6 @@ export function PaymentMethods({
         </div>
 
         <div className="space-y-6">
-          {/* Security Badge */}
           <div className="p-4 rounded-xl bg-gradient-to-r from-primary/5 to-secondary/5 border border-primary/20">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
@@ -90,22 +89,44 @@ export function PaymentMethods({
             </p>
           </div>
 
-          {/* Payment Options */}
+          {methodsLoading && (
+            <div className="flex items-center justify-center gap-2 py-8 text-muted-foreground">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              <span>Loading payment options…</span>
+            </div>
+          )}
+
+          {methodsError && !methodsLoading && (
+            <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 p-3 rounded-lg">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>{methodsError}</span>
+            </div>
+          )}
+
+          {!methodsLoading && !methodsError && paymentOptions.length === 0 && (
+            <div className="flex items-center gap-2 text-sm text-amber-600 bg-amber-50 dark:bg-amber-950/30 p-3 rounded-lg">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>
+                No payment providers are configured. Add PayPal or Stripe keys to the server environment.
+              </span>
+            </div>
+          )}
+
           <div className="space-y-3">
             {paymentOptions.map((option) => (
               <div key={option.id} className="relative">
                 {option.recommended && (
-                  <div className="absolute -top-2 -right-2">
+                  <div className="absolute -top-2 -right-2 z-10">
                     <Badge className="bg-primary text-primary-foreground text-xs">
                       <Check className="h-3 w-3 mr-1" />
                       Recommended
                     </Badge>
                   </div>
                 )}
-                
+
                 <Button
-                  onClick={() => !option.disabled && onSelectPaymentMethod(option.id)}
-                  disabled={option.disabled || isLoading || !isReady}
+                  onClick={() => onSelectPaymentMethod(option.id)}
+                  disabled={isLoading || !isReady}
                   variant="outline"
                   className="h-auto w-full justify-start border-2 p-4 transition-all hover:border-primary"
                 >
@@ -131,7 +152,7 @@ export function PaymentMethods({
                       <Badge
                         variant="secondary"
                         className={
-                          option.disabled || !isReady
+                          !isReady
                             ? "bg-muted text-muted-foreground"
                             : "bg-primary/10 text-primary"
                         }
@@ -145,7 +166,6 @@ export function PaymentMethods({
             ))}
           </div>
 
-          {/* Terms & Support */}
           <div className="pt-4 border-t border-border space-y-4">
             <p className="text-xs text-muted-foreground">
               By completing your purchase you agree to our{" "}
@@ -157,9 +177,9 @@ export function PaymentMethods({
                 Privacy Policy
               </a>
             </p>
-            
+
             {!isReady && (
-              <div className="flex items-center gap-2 text-sm text-amber-600 bg-amber-50 p-3 rounded-lg">
+              <div className="flex items-center gap-2 text-sm text-amber-600 bg-amber-50 dark:bg-amber-950/30 p-3 rounded-lg">
                 <AlertCircle className="h-4 w-4" />
                 <span>Please complete shipping information first</span>
               </div>

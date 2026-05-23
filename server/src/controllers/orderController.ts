@@ -5,6 +5,11 @@ import { asyncHandler } from "../utils/asyncHandler";
 import { ApiResponse } from "../utils/ApiResponse";
 import { ApiError, UnauthorizedError } from "../utils/ApiError";
 import { PaymentFactory } from "../services/payment/payment.factory";
+import {
+  getAvailablePaymentMethods,
+  normalizePaymentMethod,
+  toPrismaPaymentMethod,
+} from "../services/payment/paymentMethod";
 import { PaymentOrderData } from "../services/interfaces/payment.interface";
 import {
   calculateCheckoutTotals,
@@ -40,14 +45,25 @@ const createPaymentOrder = asyncHandler(
     }
 
     try {
-      // 1. Validate payment method
-      const availableMethods = PaymentFactory.getAvailableMethods();
-      if (!availableMethods.includes(paymentMethod.toUpperCase())) {
+      const normalizedMethod = normalizePaymentMethod(paymentMethod);
+      const availableMethods = getAvailablePaymentMethods();
+
+      if (!normalizedMethod) {
+        return next(new ApiError(400, `Payment method '${paymentMethod}' is not supported`));
+      }
+
+      if (!availableMethods.includes(normalizedMethod)) {
         return next(
           new ApiError(
-            400,
-            `Payment method '${paymentMethod}' is not supported`,
+            503,
+            `Payment method '${normalizedMethod}' is not configured on the server. Check PayPal/Stripe env vars.`,
           ),
+        );
+      }
+
+      if (availableMethods.length === 0) {
+        return next(
+          new ApiError(503, "No payment providers are configured on the server"),
         );
       }
 
@@ -91,7 +107,7 @@ const createPaymentOrder = asyncHandler(
           total,
           currency: "USD",
           status: "DRAFT", // Use DRAFT status
-          paymentMethod: paymentMethod.toUpperCase() as any,
+          paymentMethod: toPrismaPaymentMethod(normalizedMethod),
           paymentStatus: "PENDING",
           items: {
             create: validatedItems.map((item) => ({
@@ -113,8 +129,7 @@ const createPaymentOrder = asyncHandler(
         },
       });
 
-      // FIXED: Use createPaymentService instead of createPaymentMethod
-      const paymentService = PaymentFactory.createPaymentService(paymentMethod);
+      const paymentService = PaymentFactory.createPaymentService(normalizedMethod);
 
       const paymentOrderData: PaymentOrderData = {
         items: validatedItems.map((item) => ({
@@ -157,7 +172,7 @@ const createPaymentOrder = asyncHandler(
       await prisma.payment.create({
         data: {
           orderId: draftOrder.id,
-          method: paymentMethod.toUpperCase() as "PAYPAL" | "STRIPE" | "CREDIT_CARD",
+          method: toPrismaPaymentMethod(normalizedMethod),
           attemptStatus: "PENDING",
           providerReferenceId: providerRef,
           approvalUrl: paymentResult.approvalUrl,
@@ -183,7 +198,7 @@ const createPaymentOrder = asyncHandler(
         paymentId: paymentResult.paymentId!,
         providerOrderId: paymentResult.orderId!,
         status: "PENDING_PAYMENT",
-        paymentMethod: paymentMethod.toUpperCase(),
+        paymentMethod: normalizedMethod,
       };
 
       // Add provider-specific response fields
@@ -219,6 +234,11 @@ const capturePayment = asyncHandler(
 
     if (!paymentId || !paymentMethod || !internalOrderId) {
       return next(new ApiError(400, "Missing required fields"));
+    }
+
+    const normalizedMethod = normalizePaymentMethod(paymentMethod);
+    if (!normalizedMethod) {
+      return next(new ApiError(400, `Payment method '${paymentMethod}' is not supported`));
     }
 
     if (!userId) {
@@ -280,18 +300,8 @@ const capturePayment = asyncHandler(
       }
 
       // 2. FIXED: Use createPaymentService instead of createPaymentMethod
-      const paymentService = PaymentFactory.createPaymentService(paymentMethod);
-
-      // For card payments, pass cardData as second parameter
-      let captureResult;
-      if (paymentMethod.toUpperCase() === "CARD" && cardData) {
-        captureResult = await paymentService.capturePayment(
-          paymentId,
-          cardData,
-        );
-      } else {
-        captureResult = await paymentService.capturePayment(paymentId);
-      }
+      const paymentService = PaymentFactory.createPaymentService(normalizedMethod);
+      const captureResult = await paymentService.capturePayment(paymentId);
 
       if (!captureResult.success) {
         await prisma.payment.update({
