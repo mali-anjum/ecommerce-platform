@@ -8,8 +8,8 @@ class Logger {
   constructor(prefix: string = '') {
     // Next.js compatible environment check
     this.isDevelopment = 
-      process.env.NODE_ENV === 'development' || 
-      process.env.NEXT_PUBLIC_APP_ENV === 'development';
+      process.env.NODE_ENV === "development" ||
+      process.env.NEXT_PUBLIC_APP_ENV === "development";
     this.prefix = prefix ? `[${prefix}]` : '';
   }
 
