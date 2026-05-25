@@ -1,3 +1,5 @@
+import { publicEnv } from "@/config/publicEnv";
+
 function stripTrailingSlash(url: string): string {
   return url.replace(/\/+$/, "");
 }
@@ -14,13 +16,7 @@ function normalizePublicApiOrigin(raw: string): string {
   return s;
 }
 
-/**
- * Browser-side API base (`/api` on the Express host). Use the same origin as
- * `getServerBackendUrl()` / `DEV_URL` in development (e.g. `http://localhost:4001`).
- */
-const publicOrigin = normalizePublicApiOrigin(
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001",
-);
+const publicOrigin = normalizePublicApiOrigin(publicEnv.apiUrl);
 
 export const API_BASE_URL = `${publicOrigin}/api`;
 
