@@ -15,6 +15,7 @@ import { authLogger } from "@/utils/Logger";
 import { normalizeRefreshResponseTokenInfo } from "@/lib/auth/normalizeTokenInfo";
 import { runWithRefreshLock } from "@/lib/auth/runWithRefreshLock";
 import { API_ROUTES } from "@/utils/routes/api";
+import { useWishlistStore } from "@/store/useWishlistStore";
 
 interface AuthStore {
   user: User | null;
@@ -160,6 +161,7 @@ export const useAuthStore = create<AuthStore>()(
           tokenExpiry: null,
         });
         persistTokenExpiry(null);
+        useWishlistStore.getState().clearWishlist();
       },
 
       clearError: () => set({ error: null }),
@@ -297,6 +299,7 @@ export const useAuthStore = create<AuthStore>()(
               user: response.data.user,
               error: null,
             });
+            void useWishlistStore.getState().fetchWishlist();
             return true;
           } else {
             const errorMessage = response.data.error || "Login failed";

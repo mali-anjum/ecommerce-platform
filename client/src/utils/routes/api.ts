@@ -27,6 +27,7 @@ export const API_ROUTES = {
   COUPON: `${API_BASE_URL}/coupon`,
   SETTINGS: `${API_BASE_URL}/settings`,
   CART: `${API_BASE_URL}/cart`,
+  WISHLIST: `${API_BASE_URL}/wishlist`,
   ADDRESS: `${API_BASE_URL}/address`,
   ORDER: `${API_BASE_URL}/order`,
   USERS: `${API_BASE_URL}/users`,
