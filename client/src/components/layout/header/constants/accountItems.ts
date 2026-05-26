@@ -1,7 +1,7 @@
 export const accountItems = [
   { title: "My Profile", to: "/account", icon: "User" },
   { title: "Orders", to: "/orders", icon: "Package", badge: "5" },
-  { title: "Wishlist", to: "/wishlist", icon: "Heart", badge: "12" },
+  { title: "Wishlist", to: "/wishlist", icon: "Heart" },
   { title: "Recently Viewed", to: "/recent", icon: "Eye" },
   { title: "Compare", to: "/compare", icon: "BarChart", badge: "3" },
   { title: "Saved Items", to: "/saved", icon: "Bookmark" },

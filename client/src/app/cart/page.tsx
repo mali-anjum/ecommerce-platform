@@ -19,17 +19,19 @@ import { CartSummary } from "@/components/user/cart/CartSummary";
 import { CartLoadingSkeleton } from "@/components/user/cart/CartLoadingSkeleton";
 import { CartEmptyState } from "@/components/user/cart/CartEmptyState";
 import { useCartSelection } from "@/hooks/cart/useCartSelection";
-import { calculateCartPricingTotals } from "@/utils/cartTotals";
+import { calculateCartPricingTotals } from "@/components/user/cart/cartTotals";
 import { useToast } from "@/hooks/use-toast";
 
 function getCartItems(items: unknown): Array<{
   id: string;
+  productId: string;
   name: string;
   price: number;
   quantity: number;
   image?: string | null;
   color?: string | null;
   size?: string | null;
+  category?: string;
 }> {
   if (Array.isArray(items)) return items;
   if (

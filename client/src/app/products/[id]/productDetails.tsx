@@ -205,6 +205,9 @@ import { useCartStore } from "@/store/useCartStore";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useToast } from "@/hooks/use-toast";
 import { Star, Truck, Shield, RefreshCw } from "lucide-react";
+import { WishlistHeartButton } from "@/components/wishlist/WishlistHeartButton";
+import { WishlistCtaButton } from "@/components/wishlist/WishlistCtaButton";
+import { buildWishlistSnapshot } from "@/components/wishlist/wishlistSnapshot";
 
 // Modular Components
 const ProductImageGallery = memo(({ 
@@ -599,7 +602,11 @@ function ProductDetailsContent({ id }: { id: string }) {
   const hasColorOptions = Array.isArray(product?.colors) && product.colors.length > 0;
   const selectedColorValue =
     selectedColor !== null && hasColorOptions ? product?.colors?.[selectedColor] : undefined;
+  const isInStock = !!product && typeof product.stock === "number" && product.stock > 0;
+  const wishlistSnapshot = product ? buildWishlistSnapshot(product) : null;
+
   const canAddToCart =
+    isInStock &&
     !!product &&
     (!hasSizeOptions || !!selectedSize) &&
     (!hasColorOptions || selectedColorValue !== undefined);
@@ -729,12 +736,21 @@ function ProductDetailsContent({ id }: { id: string }) {
 
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
           {/* Left Column - Images */}
-          <div className="lg:w-1/2">
+          <div className="lg:w-1/2 relative">
             <ProductImageGallery
               images={product.images}
               selectedImage={selectedImage}
               onSelect={setSelectedImage}
             />
+            {isInStock && wishlistSnapshot && (
+              <div className="absolute top-4 right-4 z-20">
+                <WishlistHeartButton
+                  productId={product.id}
+                  snapshot={wishlistSnapshot}
+                  size="lg"
+                />
+              </div>
+            )}
           </div>
 
           {/* Right Column - Product Info */}
@@ -766,40 +782,79 @@ function ProductDetailsContent({ id }: { id: string }) {
                 </div>
               )}
 
-              <QuantitySelector
-                quantity={quantity}
-                onIncrement={handleIncrement}
-                onDecrement={handleDecrement}
-              />
+              {!isInStock && (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                  <span className="font-semibold">Out of stock</span>
+                  <span className="text-amber-800">
+                    {" "}
+                    — Save this item to your wishlist and buy when it&apos;s back.
+                  </span>
+                </div>
+              )}
+
+              {isInStock && (
+                <QuantitySelector
+                  quantity={quantity}
+                  onIncrement={handleIncrement}
+                  onDecrement={handleDecrement}
+                />
+              )}
 
               <div className="space-y-4 pt-6 border-t border-border">
-                <Button
-                  className="w-full py-6 text-lg rounded-xl bg-primary text-primary-foreground hover:bg-primary-light neon-border hover:scale-[1.02] transition-all duration-300"
-                  onClick={handleAddToCart}
-                  disabled={!canAddToCart}
-                >
-                  {!canAddToCart ? "SELECT REQUIRED OPTIONS" : "ADD TO CART"}
-                </Button>
+                {isInStock ? (
+                  <>
+                    <Button
+                      className="w-full py-6 text-lg rounded-xl bg-primary text-primary-foreground hover:bg-primary-light neon-border hover:scale-[1.02] transition-all duration-300"
+                      onClick={handleAddToCart}
+                      disabled={!canAddToCart}
+                    >
+                      {!canAddToCart
+                        ? "SELECT REQUIRED OPTIONS"
+                        : "ADD TO CART"}
+                    </Button>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <Button
-                    variant="outline"
-                    className="py-6 rounded-xl border-glass-border hover:border-primary hover:text-primary hover:scale-[1.02] transition-all duration-300"
-                    onClick={handleBuyNow}
-                    disabled={isBuyingNow || !canAddToCart}
-                  >
-                    {isBuyingNow ? "PROCESSING..." : "BUY NOW"}
-                  </Button>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Button
+                        variant="outline"
+                        className="py-6 rounded-xl border-glass-border hover:border-primary hover:text-primary hover:scale-[1.02] transition-all duration-300"
+                        onClick={handleBuyNow}
+                        disabled={isBuyingNow || !canAddToCart}
+                      >
+                        {isBuyingNow ? "PROCESSING..." : "BUY NOW"}
+                      </Button>
+                      <Button
+                        asChild
+                        variant="outline"
+                        className="py-6 rounded-xl border-glass-border hover:border-secondary hover:text-secondary hover:scale-[1.02] transition-all duration-300"
+                      >
+                        <a
+                          href={`tel:${product.contactNumber || "1-800-123-4567"}`}
+                        >
+                          CALL US
+                        </a>
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  wishlistSnapshot && (
+                    <WishlistCtaButton
+                      productId={product.id}
+                      snapshot={wishlistSnapshot}
+                    />
+                  )
+                )}
+
+                {!isInStock && (
                   <Button
                     asChild
                     variant="outline"
-                    className="py-6 rounded-xl border-glass-border hover:border-secondary hover:text-secondary hover:scale-[1.02] transition-all duration-300"
+                    className="w-full py-6 rounded-xl border-glass-border"
                   >
                     <a href={`tel:${product.contactNumber || "1-800-123-4567"}`}>
                       CALL US
                     </a>
                   </Button>
-                </div>
+                )}
               </div>
             </div>
           </div>

@@ -44,6 +44,7 @@ import {
 } from "../ui/sheet";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useCartStore } from "@/store/useCartStore";
+import { useWishlistStore } from "@/store/useWishlistStore";
 // import ThemeToggle from "../layout/Themetoggle";
 import ThemeToggle from "../common/ThemeToggler";
 import { Input } from "../ui/input";
@@ -153,6 +154,10 @@ function Header() {
   const [selectedDepartment, setSelectedDepartment] = useState("all");
   const [selectedLanguage, setSelectedLanguage] = useState<string>("English");
   const { fetchCart, items } = useCartStore();
+  const {
+    fetchWishlist,
+    items: wishlistItems,
+  } = useWishlistStore();
   const { categories, fetchCategories } = useCategoryStore();
 
   const categoryItems = useMemo(() => categories, [categories]);
@@ -173,6 +178,12 @@ function Header() {
     if (items.length > 0) return;
     fetchCart();
   }, [fetchCart, user, items.length]);
+
+  useEffect(() => {
+    if (!user) return;
+    if (wishlistItems.length > 0) return;
+    void fetchWishlist();
+  }, [fetchWishlist, user, wishlistItems.length]);
 
   useEffect(() => {
     void fetchCategories();
@@ -503,7 +514,7 @@ function Header() {
                 className="w-full"
               >
                 <Heart className="h-4 w-4 mr-2" />
-                Wishlist
+                Wishlist ({wishlistItems.length})
               </Button>
             </div>
           </div>
@@ -630,9 +641,11 @@ function Header() {
               className="relative rounded-full"
             >
               <Heart className="h-5 w-5" />
-              <span className="absolute -top-1 -right-1 h-5 w-5 bg-accent text-accent-foreground text-xs rounded-full flex items-center justify-center">
-                3
-              </span>
+              {wishlistItems.length > 0 && (
+                <span className="absolute -top-1 -right-1 h-5 w-5 bg-accent text-accent-foreground text-xs rounded-full flex items-center justify-center">
+                  {wishlistItems.length}
+                </span>
+              )}
             </Button>
 
             {/* Cart */}
