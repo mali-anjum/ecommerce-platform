@@ -7,6 +7,7 @@ import productRoutes from "./routes/productRoutes";
 import couponRoutes from "./routes/couponRoutes";
 import settingsRoutes from "./routes/settingRoutes";
 import cartRoutes from "./routes/cartRoutes";
+import wishlistRoutes from "./routes/wishlistRoutes";
 import addressRoutes from "./routes/addressRoutes";
 import orderRoutes from "./routes/orderRoutes";
 import catalogRoutes from "./routes/catalogRoutes";
@@ -76,6 +77,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/coupon", couponRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/cart", cartRoutes);
+app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/address", addressRoutes);
 app.use("/api/order", orderRoutes);
 
