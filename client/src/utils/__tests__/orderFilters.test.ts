@@ -2,7 +2,9 @@ import {
   filterOrdersByTab,
   orderMatchesTab,
   countOrdersByTab,
-} from "../orderFilters";
+  isOrderTerminalFailure,
+  getOrderStatusBadgeTone,
+} from "../../components/orders/orderFilters";
 import type { Order } from "@/types/order/orderTypes";
 
 const base = (status: Order["status"]): Order =>
@@ -43,5 +45,14 @@ describe("orderFilters", () => {
   it("matches to-ship", () => {
     expect(orderMatchesTab(base("PROCESSING"), "to-ship")).toBe(true);
     expect(orderMatchesTab(base("DELIVERED"), "to-ship")).toBe(false);
+  });
+
+  it("identifies terminal failure statuses for badge UX", () => {
+    expect(isOrderTerminalFailure("CANCELLED")).toBe(true);
+    expect(isOrderTerminalFailure("PAYMENT_FAILED")).toBe(true);
+    expect(isOrderTerminalFailure("CAPTURE_FAILED")).toBe(true);
+    expect(isOrderTerminalFailure("DELIVERED")).toBe(false);
+    expect(getOrderStatusBadgeTone("CANCELLED")).toBe("destructive");
+    expect(getOrderStatusBadgeTone("SHIPPED")).toBe("primary");
   });
 });

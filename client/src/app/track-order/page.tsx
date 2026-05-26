@@ -2,10 +2,19 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useOrderStore } from "@/store/useOrderStore";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AccountOrdersSidebar } from "@/components/orders/AccountOrdersSidebar";
+import { OrderStatusTabs } from "@/components/orders/OrderStatusTabs";
 import OrderList from "@/components/orders/OrderList";
 import OrderDetailsPanel from "@/components/orders/OrderDetailsPanel";
+import {
+  countOrdersByTab,
+  filterOrdersBySearch,
+  filterOrdersByTab,
+  type OrderListTab,
+} from "@/components/orders/orderFilters";
 
 export default function TrackOrderPage() {
   const {
@@ -20,7 +29,9 @@ export default function TrackOrderPage() {
 
   const fetchedRef = useRef(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"orders" | "details">("orders");
+  const [activeTab, setActiveTab] = useState<OrderListTab>("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [mobileView, setMobileView] = useState<"list" | "details">("list");
 
   useEffect(() => {
     if (fetchedRef.current) return;
@@ -30,92 +41,126 @@ export default function TrackOrderPage() {
 
   const ordersSorted = useMemo(() => {
     const rows = userOrders ?? [];
-    return [...rows].sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+    return [...rows].sort((a, b) =>
+      a.createdAt < b.createdAt ? 1 : -1
+    );
   }, [userOrders]);
 
+  const tabCounts = useMemo(
+    () => countOrdersByTab(ordersSorted),
+    [ordersSorted]
+  );
+
+  const filteredOrders = useMemo(() => {
+    const byTab = filterOrdersByTab(ordersSorted, activeTab);
+    return filterOrdersBySearch(byTab, searchQuery);
+  }, [ordersSorted, activeTab, searchQuery]);
+
   useEffect(() => {
-    if (ordersSorted.length === 0) return;
-    if (selectedOrderId) return;
-    setSelectedOrderId(ordersSorted[0].id);
-  }, [ordersSorted, selectedOrderId]);
+    if (filteredOrders.length === 0) {
+      setSelectedOrderId(null);
+      setCurrentOrder(null);
+      return;
+    }
+    const stillVisible = filteredOrders.some((o) => o.id === selectedOrderId);
+    if (!stillVisible) {
+      setSelectedOrderId(filteredOrders[0].id);
+    }
+  }, [filteredOrders, selectedOrderId, setCurrentOrder]);
 
   useEffect(() => {
     if (!selectedOrderId) return;
     const minimal = ordersSorted.find((o) => o.id === selectedOrderId) ?? null;
-    // Show something immediately in the details panel while "Track now" fetches full data.
     setCurrentOrder(minimal);
-  }, [ordersSorted, selectedOrderId, setCurrentOrder]);
+    void getOrderForUser(selectedOrderId);
+  }, [selectedOrderId, ordersSorted, getOrderForUser, setCurrentOrder]);
 
-  async function handleTrackNow(orderId: string) {
+  const handleSelectOrder = (orderId: string) => {
+    if (orderId === selectedOrderId) return;
     setSelectedOrderId(orderId);
-    setActiveTab("details");
-    await getOrderForUser(orderId);
-  }
+    setMobileView("details");
+  };
+
+  const listPanel = (
+    <div className="space-y-4">
+      <OrderStatusTabs
+        activeTab={activeTab}
+        counts={tabCounts}
+        onChange={setActiveTab}
+      />
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search by product name or order ID"
+          className="pl-9"
+        />
+      </div>
+      <OrderList
+        orders={filteredOrders}
+        selectedOrderId={selectedOrderId}
+        onSelect={handleSelectOrder}
+      />
+    </div>
+  );
+
+  const detailsPanel = (
+    <OrderDetailsPanel order={currentOrder} isLoading={isLoading} />
+  );
 
   return (
-    <main className="container mx-auto max-w-6xl px-4 py-10">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">My orders</h1>
-        <p className="mt-2 text-muted-foreground">
-          View all your orders and track delivery progress.
-        </p>
-      </div>
+    <main className="bg-gradient-to-b from-background to-card/30 py-8">
+      <div className="container mx-auto max-w-7xl px-4">
+        <div className="flex gap-8">
+          <AccountOrdersSidebar />
 
-      {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
+          <div className="min-w-0 flex-1">
+            <div className="mb-6">
+              <h1 className="text-3xl font-bold tracking-tight">My Orders</h1>
+              <p className="mt-1 text-muted-foreground">
+                Track packages, view order details, and manage your purchases.
+              </p>
+            </div>
 
-      {/* Mobile: tabbed. Desktop: two-column. */}
-      <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
-        <div className="hidden lg:block">
-          <Card>
-            <CardHeader>
-              <CardTitle>Orders</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <OrderList
-                orders={ordersSorted}
-                selectedOrderId={selectedOrderId}
-                onSelect={(orderId) => setSelectedOrderId(orderId)}
-                onTrackNow={handleTrackNow}
-              />
-            </CardContent>
-          </Card>
-        </div>
+            {error && (
+              <p className="mb-4 text-sm text-destructive">{error}</p>
+            )}
 
-        <div className="hidden lg:block">
-          <OrderDetailsPanel order={currentOrder} isLoading={isLoading} />
-        </div>
+            <div className="hidden gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+              <section>{listPanel}</section>
+              <section>{detailsPanel}</section>
+            </div>
 
-        <div className="lg:hidden">
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
-            <TabsList className="w-full">
-              <TabsTrigger value="orders" className="flex-1">
-                Orders
-              </TabsTrigger>
-              <TabsTrigger value="details" className="flex-1">
-                Details
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="orders" className="mt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Orders</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <OrderList
-                    orders={ordersSorted}
-                    selectedOrderId={selectedOrderId}
-                    onSelect={(orderId) => setSelectedOrderId(orderId)}
-                    onTrackNow={handleTrackNow}
-                  />
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="details" className="mt-4">
-              <OrderDetailsPanel order={currentOrder} isLoading={isLoading} />
-            </TabsContent>
-          </Tabs>
+            <div className="lg:hidden">
+              <Tabs
+                value={mobileView}
+                onValueChange={(v) => setMobileView(v as "list" | "details")}
+              >
+                <TabsList className="mb-4 w-full">
+                  <TabsTrigger value="list" className="flex-1">
+                    Orders
+                  </TabsTrigger>
+                  <TabsTrigger value="details" className="flex-1" disabled={!selectedOrderId}>
+                    Details
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent value="list">{listPanel}</TabsContent>
+                <TabsContent value="details">
+                  {detailsPanel}
+                  {selectedOrderId && (
+                    <button
+                      type="button"
+                      className="mt-4 text-sm text-primary hover:underline"
+                      onClick={() => setMobileView("list")}
+                    >
+                      ← Back to orders
+                    </button>
+                  )}
+                </TabsContent>
+              </Tabs>
+            </div>
+          </div>
         </div>
       </div>
     </main>

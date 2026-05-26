@@ -1,4 +1,6 @@
 /** Provider payment attempt row (matches server `Payment` model). */
+import type { Address } from "@/types/address/Address";
+
 export interface OrderPaymentAttempt {
   id: string;
   method: "CREDIT_CARD" | "PAYPAL" | "STRIPE";
@@ -51,10 +53,13 @@ export interface OrderShipment {
   updatedAt: string;
 }
 
+export type OrderAddress = Address;
+
 export interface Order {
   id: string;
   userId: string;
   addressId: string;
+  address?: OrderAddress | null;
   items: OrderItem[];
   couponId?: string;
   total: number;
