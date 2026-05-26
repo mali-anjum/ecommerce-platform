@@ -1,23 +1,31 @@
-import { PayPalScriptProvider } from "@paypal/react-paypal-js";
+"use client";
 
-export function PayPalProviderWrapper({ children }: { children: React.ReactNode }) {
-  const locale =
-    process.env.NEXT_PUBLIC_PAYPAL_LOCALE?.trim() || "en_US";
+import { PayPalScriptProvider } from "@paypal/react-paypal-js";
+import {
+  isPayPalSdkConfigured,
+  publicEnv,
+} from "@/config/publicEnv";
+
+export function PayPalProviderWrapper({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  if (!isPayPalSdkConfigured()) {
+    return <>{children}</>;
+  }
 
   const options = {
-    clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "AYYtmQuBVHm_q4fO-nRv84xIKhQk1-BdhSLckYRxcBJLhxI5EcxafPKdkvKpqLDP-pNLNXalxvlUSgZE",
+    clientId: publicEnv.paypalClientId,
     currency: "USD",
     intent: "capture",
-    locale,
+    locale: publicEnv.paypalLocale,
     components: "buttons",
     "data-sdk-integration-source": "developer-studio",
   };
 
   return (
-    <PayPalScriptProvider 
-      options={options}
-      deferLoading={false}
-    >
+    <PayPalScriptProvider options={options} deferLoading={false}>
       {children}
     </PayPalScriptProvider>
   );

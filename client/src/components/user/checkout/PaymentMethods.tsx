@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { CheckoutPaymentMethodId } from "@/hooks/checkout/usePaymentMethods";
+import { isStripePublishableConfigured } from "@/config/publicEnv";
 
 interface PaymentMethodsProps {
   availableMethods: CheckoutPaymentMethodId[];
@@ -52,6 +53,9 @@ export function PaymentMethods({
     id,
     ...PAYMENT_OPTION_META[id],
   }));
+
+  const stripeListedButClientKeyMissing =
+    availableMethods.includes("STRIPE") && !isStripePublishableConfigured();
 
   return (
     <Card className="glass-effect border border-glass-border">
@@ -108,6 +112,18 @@ export function PaymentMethods({
               <AlertCircle className="h-4 w-4 shrink-0" />
               <span>
                 No payment providers are configured. Add PayPal or Stripe keys to the server environment.
+              </span>
+            </div>
+          )}
+
+          {stripeListedButClientKeyMissing && (
+            <div className="flex items-center gap-2 text-sm text-amber-600 bg-amber-50 dark:bg-amber-950/30 p-3 rounded-lg">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>
+                Stripe is enabled on the server but{" "}
+                <code className="rounded bg-muted px-1">NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY</code>{" "}
+                is missing or still a placeholder. Card checkout redirect still works; set the
+                publishable key from Stripe Dashboard (Developers → API keys).
               </span>
             </div>
           )}
