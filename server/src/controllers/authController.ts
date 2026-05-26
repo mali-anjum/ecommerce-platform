@@ -7,6 +7,8 @@ import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 import crypto from "crypto";
 import { buildTokenInfo } from "../utils/auth/tokenInfo";
+import { requireUserId } from "../utils/requireUserId";
+import { UnauthorizedError } from "../utils/ApiError";
 
 function signAccessToken(userId: string, email: string, role: string) {
   return jwt.sign({ userId, email, role }, process.env.JWT_SECRET!, {
@@ -30,7 +32,7 @@ const cookieOptions = {
 async function setTokens(
   res: Response,
   accessToken: string,
-  refreshToken: string
+  refreshToken: string,
 ) {
   const ACCESS_TOKEN_MAX_AGE = 15 * 60 * 1000; // ✅ 15 minutes (matches JWT)
   const REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -242,7 +244,7 @@ const getCurrentUser = async (req: Request, res: Response) => {
 
 const refreshAccessToken = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const refreshToken = req.cookies?.refreshToken;
@@ -302,16 +304,15 @@ const refreshAccessToken = async (
   }
 };
 
-
-const heartbeat = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+const heartbeat = async (
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> => {
   try {
-    if (!req.user?.userId) {
-      res.status(401).json({ success: false, error: "Authentication required" });
-      return;
-    }
+    const userId = requireUserId(req, "Authentication required");
 
     await prisma.user.update({
-      where: { id: req.user.userId },
+      where: { id: userId },
       data: { lastLogin: new Date() },
     });
 
@@ -321,6 +322,10 @@ const heartbeat = async (req: AuthenticatedRequest, res: Response): Promise<void
       tokenInfo: buildTokenInfo(),
     });
   } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      res.status(401).json({ success: false, error: error.message });
+      return;
+    }
     console.error("Heartbeat error:", error);
     res.status(500).json({ success: false, error: "Heartbeat failed" });
   }
@@ -352,7 +357,7 @@ const logout = async (req: Request, res: Response): Promise<void> => {
  */
 export const issueSessionForUser = async (
   res: Response,
-  userId: string
+  userId: string,
 ): Promise<{
   id: string;
   name: string | null;
@@ -377,4 +382,11 @@ export const issueSessionForUser = async (
   return user;
 };
 
-export { register, login, getCurrentUser, refreshAccessToken, heartbeat, logout };
+export {
+  register,
+  login,
+  getCurrentUser,
+  refreshAccessToken,
+  heartbeat,
+  logout,
+};

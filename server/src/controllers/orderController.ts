@@ -4,6 +4,7 @@ import { prisma } from "../lib/prisma";
 import { asyncHandler } from "../utils/asyncHandler";
 import { ApiResponse } from "../utils/ApiResponse";
 import { ApiError, UnauthorizedError } from "../utils/ApiError";
+import { requireUserId } from "../utils/requireUserId";
 import { PaymentFactory } from "../services/payment/payment.factory";
 import {
   getAvailablePaymentMethods,
@@ -33,11 +34,7 @@ import type { OrderStatus } from "@prisma/client";
 const createPaymentOrder = asyncHandler(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const { cartItemIds, paymentMethod, addressId, couponId } = req.body;
-    const userId = req.user?.userId;
-
-    if (!userId) {
-      return next(new UnauthorizedError("Unauthorized user"));
-    }
+    const userId = requireUserId(req);
 
     // Validate required fields
     if (!addressId) {
@@ -230,7 +227,7 @@ const createPaymentOrder = asyncHandler(
 const capturePayment = asyncHandler(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const { paymentId, paymentMethod, internalOrderId, cardData } = req.body;
-    const userId = req.user?.userId;
+    const userId = requireUserId(req);
 
     if (!paymentId || !paymentMethod || !internalOrderId) {
       return next(new ApiError(400, "Missing required fields"));
@@ -239,10 +236,6 @@ const capturePayment = asyncHandler(
     const normalizedMethod = normalizePaymentMethod(paymentMethod);
     if (!normalizedMethod) {
       return next(new ApiError(400, `Payment method '${paymentMethod}' is not supported`));
-    }
-
-    if (!userId) {
-      return next(new UnauthorizedError("Unauthorized user"));
     }
 
     try {
@@ -386,12 +379,7 @@ const capturePayment = asyncHandler(
 // TODO: should do it for single or multiple order? validate the input req.params+body
 const updateOrderStatusAdminOnly = asyncHandler(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    const userId = req.user?.userId;
-    if (!userId) {
-      return res
-        .status(401)
-        .json(new UnauthorizedError("Unauthenticated user"));
-    }
+    const userId = requireUserId(req, "Unauthenticated user");
 
     const { orderId } = req.params;
     const { status } = req.body;
@@ -417,10 +405,7 @@ const updateOrderStatusAdminOnly = asyncHandler(
 // TODO: optimize and reusable for date and add validation for the input
 const upsertOrderTrackingAdminOnly = asyncHandler(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    const userId = req.user?.userId;
-    if (!userId) {
-      return next(new UnauthorizedError("Unauthenticated user"));
-    }
+    const userId = requireUserId(req, "Unauthenticated user");
 
     const { orderId } = req.params;
     if (!orderId || typeof orderId !== "string" || orderId.trim() === "") {
@@ -521,10 +506,7 @@ const upsertOrderTrackingAdminOnly = asyncHandler(
 
 const addOrderTrackingEventAdminOnly = asyncHandler(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    const userId = req.user?.userId;
-    if (!userId) {
-      return next(new UnauthorizedError("Unauthenticated user"));
-    }
+    requireUserId(req, "Unauthenticated user");
 
     const { orderId } = req.params;
     if (!orderId || typeof orderId !== "string" || orderId.trim() === "") {
@@ -588,13 +570,7 @@ const addOrderTrackingEventAdminOnly = asyncHandler(
 
 const getAllOrdersAdminOnly = asyncHandler(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    const userId = req.user?.userId;
-
-    if (!userId) {
-      return res
-        .status(401)
-        .json(new UnauthorizedError("Unauthenticated user"));
-    }
+    requireUserId(req, "Unauthenticated user");
 
     const orders = await findOrdersForAdmin();
 
@@ -616,10 +592,7 @@ const getAllOrdersAdminOnly = asyncHandler(
 
 const getAllOrdersForUser = asyncHandler(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    const userId = req.user?.userId;
-    if (!userId) {
-      return next(new UnauthorizedError("Unauthenticated user"));
-    }
+    const userId = requireUserId(req, "Unauthenticated user");
 
     const orders = await findOrdersForUser(userId);
 
@@ -637,13 +610,9 @@ const getAllOrdersForUser = asyncHandler(
 
 
 const getOrderById = asyncHandler(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  const userId = req.user?.userId;
+  const userId = requireUserId(req);
   const { orderId } = req.params;
   const userRole = req.user?.role;
-
-  if (!userId) {
-    return next(new UnauthorizedError("Unauthorized user"));
-  }
 
   const query = await prepareGetOrderByIdQuery({
     orderId,
@@ -735,10 +704,7 @@ const getSellerOrderLines = asyncHandler(
 /** Super-admin transactions feed (payment attempts) with summary + filters. */
 const getAdminTransactions = asyncHandler(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    const userId = req.user?.userId;
-    if (!userId) {
-      return next(new UnauthorizedError("Unauthenticated user"));
-    }
+    requireUserId(req, "Unauthenticated user");
 
     const { items, summary, meta } = await fetchAdminTransactionsPage({
       pageRaw: req.query.page,

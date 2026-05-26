@@ -1,75 +1,48 @@
 import { Response } from "express";
 import { AuthenticatedRequest } from "../types/express";
 import { prisma } from "../lib/prisma";
+import { asyncHandler } from "../utils/asyncHandler";
+import { requireUserId } from "../utils/requireUserId";
 
-const createAddress = async (
-  req: AuthenticatedRequest,
-  res: Response
-): Promise<void> => {
- const userId = req.user?.userId;
-  // const userId = typeof rawUserId === "string" ? parseInt(rawUserId, 10) : rawUserId;
-  if (!userId) {
-    res.status(401).json({
-      success: false,
-      message: "Unauthenticated user",
-    });
-    return;
-  }
+const createAddress = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    const userId = requireUserId(req, "Unauthenticated user");
 
-  const { name, address, city, country, postalCode, phone, isDefault } =
-    req.body;
+    const { name, address, city, country, postalCode, phone, isDefault } =
+      req.body;
 
-  if (isDefault) {
-    await prisma.address.updateMany({
-      where: { userId },
+    if (isDefault) {
+      await prisma.address.updateMany({
+        where: { userId },
+        data: {
+          isDefault: false,
+        },
+      });
+    }
+
+    const newlyCreatedAddress = await prisma.address.create({
       data: {
-        isDefault: false,
+        userId,
+        name,
+        address,
+        city,
+        country,
+        postalCode,
+        phone,
+        isDefault: isDefault || false,
       },
     });
-  }
 
-  const newlyCreatedAddress = await prisma.address.create({
-    data: {
-      userId,
-      name,
-      address,
-      city,
-      country,
-      postalCode,
-      phone,
-      isDefault: isDefault || false,
-    },
-  });
-
-  res.status(201).json({
-    success: true,
-    address: newlyCreatedAddress,
-  });
-
-  try {
-  } catch (e) {
-    res.status(500).json({
-      success: false,
-      message: "Some error occured",
+    res.status(201).json({
+      success: true,
+      address: newlyCreatedAddress,
     });
-  }
-};
+  },
+);
 
-const getAddresses = async (
-  req: AuthenticatedRequest,
-  res: Response
-): Promise<void> => {
-  try {
- const userId = req.user?.userId;
-  // const userId = typeof rawUserId === "string" ? parseInt(rawUserId, 10) : rawUserId;
-    if (!userId) {
-      res.status(401).json({
-        success: false,
-        message: "Unauthenticated user",
-      });
-
-      return;
-    }
+const getAddresses = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    const userId = requireUserId(req, "Unauthenticated user");
 
     const fetchAllAddresses = await prisma.address.findMany({
       where: { userId },
@@ -80,30 +53,13 @@ const getAddresses = async (
       success: true,
       address: fetchAllAddresses,
     });
-  } catch (e) {
-    res.status(500).json({
-      success: false,
-      message: "Some error occured",
-    });
-  }
-};
+  },
+);
 
-const updateAddress = async (
-  req: AuthenticatedRequest,
-  res: Response
-): Promise<void> => {
-  try {
- const userId = req.user?.userId;
-  // const userId = typeof rawUserId === "string" ? parseInt(rawUserId, 10) : rawUserId;
+const updateAddress = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    const userId = requireUserId(req, "Unauthenticated user");
     const { id } = req.params;
-    if (!userId) {
-      res.status(401).json({
-        success: false,
-        message: "Unauthenticated user",
-      });
-
-      return;
-    }
 
     const existingAddress = await prisma.address.findFirst({
       where: { id, userId },
@@ -147,30 +103,13 @@ const updateAddress = async (
       success: true,
       address: updatedAddress,
     });
-  } catch (e) {
-    res.status(500).json({
-      success: false,
-      message: "Some error occured",
-    });
-  }
-};
+  },
+);
 
-const deleteAddress = async (
-  req: AuthenticatedRequest,
-  res: Response
-): Promise<void> => {
-  try {
+const deleteAddress = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    const userId = requireUserId(req, "Unauthenticated user");
     const { id } = req.params;
- const userId = req.user?.userId;
-
-    if (!userId) {
-      res.status(401).json({
-        success: false,
-        message: "Unauthenticated user",
-      });
-
-      return;
-    }
 
     const existingAddress = await prisma.address.findFirst({
       where: { id, userId },
@@ -193,17 +132,7 @@ const deleteAddress = async (
       success: true,
       message: "Address deleted successfully!",
     });
-  } catch (e) {
-    res.status(500).json({
-      success: false,
-      message: "Some error occured",
-    });
-  }
-};
+  },
+);
 
-export {
-  createAddress, 
-  getAddresses,
-  updateAddress,
-  deleteAddress
-}
+export { createAddress, getAddresses, updateAddress, deleteAddress };

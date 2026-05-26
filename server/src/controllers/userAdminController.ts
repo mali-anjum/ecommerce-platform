@@ -2,7 +2,8 @@ import { NextFunction, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { asyncHandler } from "../utils/asyncHandler";
 import { ApiResponse } from "../utils/ApiResponse";
-import { ApiError, UnauthorizedError } from "../utils/ApiError";
+import { ApiError } from "../utils/ApiError";
+import { requireUserId } from "../utils/requireUserId";
 import { AuthenticatedRequest } from "../types/express";
 import { Role } from "@prisma/client";
 import { ADMIN_USER_ROLE_ALLOWLIST } from "../constants/roles";
@@ -21,10 +22,7 @@ function parsePaging(pageRaw: unknown, limitRaw: unknown) {
  */
 const getAdminUsers = asyncHandler(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    const requesterId = req.user?.userId;
-    if (!requesterId) {
-      return next(new UnauthorizedError("Unauthorized user"));
-    }
+    requireUserId(req);
 
     const { page, limit, skip } = parsePaging(req.query.page, req.query.limit);
     const q = String(req.query.q ?? "").trim();
@@ -97,10 +95,7 @@ const getAdminUsers = asyncHandler(
  */
 const setUserActiveState = asyncHandler(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    const requesterId = req.user?.userId;
-    if (!requesterId) {
-      return next(new UnauthorizedError("Unauthorized user"));
-    }
+    const requesterId = requireUserId(req);
 
     const { userId } = req.params;
     const { isActive } = req.body as { isActive?: boolean };
@@ -137,10 +132,7 @@ const setUserActiveState = asyncHandler(
  */
 const setUserRole = asyncHandler(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    const requesterId = req.user?.userId;
-    if (!requesterId) {
-      return next(new UnauthorizedError("Unauthorized user"));
-    }
+    const requesterId = requireUserId(req);
 
     const { userId } = req.params;
     const role = String(req.body?.role ?? "")

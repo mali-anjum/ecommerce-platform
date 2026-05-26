@@ -2,25 +2,15 @@ import { Response } from "express";
 import { AuthenticatedRequest } from "../types/express";
 import { prisma } from "../lib/prisma";
 import { asyncHandler } from "../utils/asyncHandler";
-import { ApiError, ValidationError } from "../utils/ApiError";
+import { ApiError } from "../utils/ApiError";
 import { ApiResponse } from "../utils/ApiResponse";
+import { requireUserId } from "../utils/requireUserId";
 import { CartService } from "../services/cart/get-cart-item";
 
 const addToCart = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     console.log("Entered successfully.");
-    const userId = req.user?.userId;
-    // const userId =
-    //   typeof rawUserId === "string" ? parseInt(rawUserId, 10) : rawUserId;
-
-    // if (!userId || Number.isNaN(userId)) {
-    if (!userId) {
-      return res
-        .status(401)
-        .json(
-          new ValidationError("Unauthorized user or userId is not a number.")
-        );
-    }
+    const userId = requireUserId(req);
 
     const { productId, quantity, size, color } = req.body;
     if (!productId || !quantity) {
@@ -155,11 +145,7 @@ const addToCart = asyncHandler(
 const getCart = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     try {
-      const userId = req.user?.userId;
-
-      if (!userId) {
-        return res.status(401).json(new ValidationError("Unauthorized user"));
-      }
+      const userId = requireUserId(req);
 
       const cart = await CartService.getOrCreateCart(userId);
       const validationIssues = await CartService.validateCartItems(cart.items);
@@ -204,17 +190,11 @@ const getCart = asyncHandler(
 
 const removeFromCart = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
-    const userId = req.user?.userId;
-    // const userId =
-      // typeof rawUserId === "string" ? parseInt(rawUserId, 10) : rawUserId;
+    const userId = requireUserId(req);
     const { id } = req.params;
 
     if (!id) {
       return res.status(400).json(new ApiError(400, "Item id is required"));
-    }
-
-    if (!userId) {
-      return res.status(401).json(new ApiError(401, "Unauthorized user"));
     }
 
     await prisma.cartItem.delete({
@@ -232,15 +212,9 @@ const removeFromCart = asyncHandler(
 
 const updateCartItemQuantity = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
-    const userId = req.user?.userId;
-    // const userId =
-    //   typeof rawUserId === "string" ? parseInt(rawUserId, 10) : rawUserId;
+    const userId = requireUserId(req);
     const { quantity } = req.body;
     const { id } = req.params;
-
-    if (!userId) {
-      return res.status(401).json(new ApiError(401, "Unauthorized user"));
-    }
 
     if (!id) {
       return res.status(400).json(new ApiError(400, "Item id is required"));
@@ -294,13 +268,7 @@ const updateCartItemQuantity = asyncHandler(
 // all the items in the cart with the userId - for 1 item use delete()
 const clearEntireCart = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
-    const userId = req.user?.userId;
-    // const userId =
-    //   typeof rawUserId === "string" ? parseInt(rawUserId, 10) : rawUserId;
-
-    if (!userId) {
-      return res.status(401).json(new ApiError(401, "Unauthenticated user"));
-    }
+    const userId = requireUserId(req, "Unauthenticated user");
 
     await prisma.cartItem.deleteMany({
       where: {
