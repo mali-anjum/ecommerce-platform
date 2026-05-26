@@ -4,6 +4,8 @@ import { Product } from "@/types/product";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { ProducSkeleton } from "./ProductTableSkeleton";
+import { WishlistHeartButton } from "@/components/wishlist/WishlistHeartButton";
+import { buildWishlistSnapshot } from "@/components/wishlist/wishlistSnapshot";
 
 interface ProductGridProps {
   products: Product[];
@@ -57,6 +59,12 @@ export function ProductGrid({ products, isLoading, error }: ProductGridProps) {
               alt={productItem.name}
               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
             />
+            <div className="absolute right-2 top-2 z-10">
+              <WishlistHeartButton
+                productId={productItem.id}
+                snapshot={buildWishlistSnapshot(productItem)}
+              />
+            </div>
             <div className="absolute inset-0 bg-black bg-opacity-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
               <Button className="bg-white text-black hover:bg-gray-100">
                 Quick View
