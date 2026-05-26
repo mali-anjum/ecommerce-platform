@@ -42,11 +42,12 @@ export function WishlistSummary({
           <Row label="In stock" value={String(inStockCount)} />
           <Row label="Out of stock" value={String(outOfStockCount)} />
           <div className="border-t border-border/60 pt-3">
-            <Row
-              label="Estimated value"
-              value={`$${totalValue.toFixed(2)}`}
-              className="text-lg font-bold"
-            />
+            <div className="flex justify-between text-lg font-bold text-foreground">
+              <span>Estimated value</span>
+              <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                ${totalValue.toFixed(2)}
+              </span>
+            </div>
             <p className="mt-1 text-xs text-muted-foreground">
               Prices update when you open this page
             </p>

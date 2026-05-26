@@ -1,53 +1,31 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { Heart, ShoppingCart, Trash2, Sparkles } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import {
+  AlertCircle,
+  Heart,
+  RefreshCw,
+  ShoppingBag,
+  Sparkles,
+} from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
-
-type WishlistItem = {
-  id: string;
-  name: string;
-  price: number;
-  image: string;
-  category: string;
-};
-
-const demoWishlistItems: WishlistItem[] = [
-  {
-    id: "wl-1",
-    name: "Quantum Noise-Canceling Headphones",
-    price: 249.99,
-    image:
-      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1200&q=80",
-    category: "Electronics",
-  },
-  {
-    id: "wl-2",
-    name: "Neo Smart Lighting Set",
-    price: 89.0,
-    image:
-      "https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=1200&q=80",
-    category: "Home & Living",
-  },
-  {
-    id: "wl-3",
-    name: "Aero Streetwear Jacket",
-    price: 129.5,
-    image:
-      "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1200&q=80",
-    category: "Fashion",
-  },
-];
+import { useWishlistStore } from "@/store/useWishlistStore";
+import { WishlistItemCard } from "@/components/wishlist/WishlistItemCard";
+import { WishlistSummary } from "@/components/wishlist/WishlistSummary";
+import { WishlistLoadingSkeleton } from "@/components/wishlist/WishlistLoadingSkeleton";
+import { WishlistEmptyState } from "@/components/wishlist/WishlistEmptyState";
+import { getDisplayPrice } from "@/components/products/productPricing";
 
 export default function WishlistPage() {
   const router = useRouter();
   const { user } = useAuthStore();
+  const { items, isLoading, error, fetchWishlist } = useWishlistStore();
   const [isMounted, setIsMounted] = useState(false);
-  const [items, setItems] = useState<WishlistItem[]>(demoWishlistItems);
 
   useEffect(() => {
     setIsMounted(true);
@@ -59,100 +37,137 @@ export default function WishlistPage() {
     }
   }, [isMounted, router, user]);
 
-  const totalValue = useMemo(
-    () => items.reduce((sum, item) => sum + item.price, 0),
-    [items],
+  useEffect(() => {
+    if (user) {
+      void fetchWishlist();
+    }
+  }, [user, fetchWishlist]);
+
+  const inStockCount = useMemo(
+    () => items.filter((i) => i.isPurchasable).length,
+    [items]
   );
 
-  const handleRemove = (id: string) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
-  };
+  const outOfStockCount = useMemo(
+    () => items.filter((i) => !i.isPurchasable).length,
+    [items]
+  );
+
+  const totalValue = useMemo(
+    () =>
+      items.reduce(
+        (sum, item) =>
+          sum + getDisplayPrice({ price: item.price, salePrice: item.salePrice }),
+        0
+      ),
+    [items]
+  );
 
   if (!isMounted || !user) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-card/30 py-8">
+    <div className="min-h-screen bg-gradient-to-b from-background to-card/20 py-8">
       <div className="container mx-auto max-w-7xl px-4">
-        <div className="mb-8 rounded-2xl border border-glass-border glass-effect p-6">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-r from-primary to-accent">
-                <Heart className="h-6 w-6 text-white" />
+        {/* Header — matches cart page */}
+        <header className="glass-effect mb-8 rounded-2xl border border-glass-border p-6">
+          <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-center">
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent">
+                  <Heart className="h-6 w-6 fill-white/20 text-white" />
+                </div>
+                <div className="absolute -inset-2 animate-pulse rounded-xl bg-primary/20" />
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-foreground">My Wishlist</h1>
                 <p className="text-muted-foreground">
-                  Save favorites and move them to cart anytime.
+                  Saved across devices · live price & stock on refresh
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="border-primary text-primary">
-                <Sparkles className="mr-1 h-3 w-3" />
-                {items.length} saved
-              </Badge>
-              <Badge variant="outline" className="border-border">
-                ${totalValue.toFixed(2)} total
-              </Badge>
+
+            <div className="flex flex-wrap items-center gap-3">
+              {!isLoading && items.length > 0 && (
+                <>
+                  <Badge
+                    variant="outline"
+                    className="border-primary text-primary"
+                  >
+                    <Heart className="mr-1 h-3 w-3" />
+                    {items.length} saved
+                  </Badge>
+                  <Badge variant="outline" className="border-border">
+                    <Sparkles className="mr-1 h-3 w-3" />
+                    ${totalValue.toFixed(2)} est.
+                  </Badge>
+                </>
+              )}
+              <Button
+                onClick={() => void fetchWishlist()}
+                variant="outline"
+                size="icon"
+                className="border-border hover:border-primary"
+                aria-label="Refresh wishlist"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                className="border-glass-border hover:border-primary hover:text-primary"
+                asChild
+              >
+                <Link href="/products">
+                  <ShoppingBag className="mr-2 h-4 w-4" />
+                  Shop more
+                </Link>
+              </Button>
             </div>
           </div>
-        </div>
+        </header>
 
-        {items.length === 0 ? (
-          <Card className="border-border/70 bg-card/95">
-            <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
-              <Heart className="h-10 w-10 text-muted-foreground" />
-              <h2 className="text-xl font-semibold">Your wishlist is empty</h2>
-              <p className="text-muted-foreground">
-                Browse products and save items you want later.
-              </p>
-              <Button onClick={() => router.push("/products")}>Explore products</Button>
-            </CardContent>
-          </Card>
+        {error && (
+          <div className="mb-6 flex items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3">
+            <AlertCircle className="h-5 w-5 shrink-0 text-destructive" />
+            <p className="flex-1 text-sm text-destructive">{error}</p>
+            <Button size="sm" variant="outline" onClick={() => void fetchWishlist()}>
+              Retry
+            </Button>
+          </div>
+        )}
+
+        {isLoading ? (
+          <WishlistLoadingSkeleton />
+        ) : items.length === 0 ? (
+          <WishlistEmptyState onContinueShopping={() => router.push("/products")} />
         ) : (
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {items.map((item) => (
-              <Card
-                key={item.id}
-                className="overflow-hidden border-border/70 bg-card/95 shadow-lg transition-all hover:border-primary/50"
-              >
-                <div className="aspect-[4/3] w-full overflow-hidden">
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
-                    loading="lazy"
-                  />
+          <div className="flex flex-col gap-8 lg:flex-row">
+            {/* List — Daraz / AliExpress row layout inside themed card */}
+            <div className="flex-1">
+              <Card className="glass-effect overflow-hidden border border-glass-border">
+                <div className="flex items-center justify-between gap-3 border-b border-border/60 bg-card/40 px-4 py-3 sm:px-5">
+                  <p className="text-sm font-medium text-foreground">
+                    All items ({items.length})
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {inStockCount} ready to buy
+                  </p>
                 </div>
-                <CardContent className="space-y-4 p-4">
-                  <Badge variant="outline" className="border-border">
-                    {item.category}
-                  </Badge>
-                  <h3 className="line-clamp-2 text-base font-semibold text-foreground">
-                    {item.name}
-                  </h3>
-                  <p className="text-lg font-bold text-primary">${item.price.toFixed(2)}</p>
-                  <div className="flex gap-2">
-                    <Button
-                      className="flex-1"
-                      onClick={() => router.push(`/products/${item.id}`)}
-                    >
-                      View item
-                    </Button>
-                    <Button variant="outline" onClick={() => router.push("/cart")}>
-                      <ShoppingCart className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="border-destructive/40 text-destructive hover:bg-destructive/10"
-                      onClick={() => handleRemove(item.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardContent>
+                <div>
+                  {items.map((item) => (
+                    <WishlistItemCard key={item.id} item={item} />
+                  ))}
+                </div>
               </Card>
-            ))}
+            </div>
+
+            <div className="w-full lg:w-96">
+              <WishlistSummary
+                totalItems={items.length}
+                inStockCount={inStockCount}
+                outOfStockCount={outOfStockCount}
+                totalValue={totalValue}
+              />
+            </div>
           </div>
         )}
       </div>
