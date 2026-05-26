@@ -1,6 +1,6 @@
 import { CartItemWithProduct } from '@/types/cart/cartItemStore';
 import type { Coupon } from '@/types/checkout';
-import { calculateCartPricingTotals } from '@/utils/cartTotals';
+import { calculateCartPricingTotals } from '@/components/user/cart/cartTotals';
 
 export const calculateTotals = (
   cartItems: CartItemWithProduct[],

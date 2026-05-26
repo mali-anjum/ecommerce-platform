@@ -3,7 +3,7 @@ import { useToast } from '@/hooks/use-toast';
 import { CartItemWithProduct } from '@/types/cart/cartItemStore';
 import type { Coupon } from '@/types/checkout/Coupon';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
-import { calculateTotals } from '@/utils/checkoutUtils';
+import { calculateTotals } from '@/components/user/checkout/checkoutUtils';
 import { useCartSelectionStore } from '@/store/useCartSelectionStore';
 import { useCartStore } from '@/store/useCartStore';
 import type { CheckoutPaymentMethodId } from '@/hooks/checkout/usePaymentMethods';

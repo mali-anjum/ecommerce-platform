@@ -1,6 +1,7 @@
 export interface CartItemProps {
   item: {
     id: string;
+    productId: string;
     name: string;
     price: number;
     quantity: number;
@@ -8,6 +9,7 @@ export interface CartItemProps {
     color?: string | null;
     size?: string | null;
     originalPrice?: number;
+    category?: string;
   };
   selected: boolean;
   onToggleSelect: (id: string) => void;

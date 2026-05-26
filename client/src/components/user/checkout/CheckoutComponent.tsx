@@ -26,7 +26,7 @@ import { CheckoutSupportCard } from './CheckoutSupportCard';
 import { PaymentProcessing } from "@/components/user/checkout/PaymentProcessing";
 
 // Utils
-import { calculateTotals, isCheckoutReady } from '@/utils/checkoutUtils';
+import { calculateTotals, isCheckoutReady } from '@/components/user/checkout/checkoutUtils';
 
 export function CheckoutContent() {
   const router = useRouter();

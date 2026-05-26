@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Heart, Minus, Plus, Trash2 } from "lucide-react";
 import type { CartItemProps } from "@/types/cart/CartItemProps";
+import { useWishlistStore } from "@/store/useWishlistStore";
+import { useToast } from "@/hooks/use-toast";
 
 export function CartItem({
   item,
@@ -14,6 +16,27 @@ export function CartItem({
   onRemove,
   isUpdating,
 }: CartItemProps) {
+  const { toggleWishlist, isInWishlist } = useWishlistStore();
+  const { toast } = useToast();
+  const saved = isInWishlist(item.productId);
+
+  const handleSaveForLater = async () => {
+    const result = await toggleWishlist(item.productId, {
+      productId: item.productId,
+      name: item.name,
+      category: item.category ?? "General",
+      thumbnail: item.image ?? null,
+      price: item.price,
+    });
+    if (result?.action === "added") {
+      await onRemove(item.id);
+      toast({
+        title: "Saved for later",
+        description: `${item.name} moved to your wishlist.`,
+      });
+    }
+  };
+
   return (
     <div
       className={`transition-colors ${
@@ -155,12 +178,16 @@ export function CartItem({
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8"
+                          disabled={isUpdating || saved}
+                          onClick={() => void handleSaveForLater()}
                         >
-                          <Heart className="h-4 w-4" />
+                          <Heart
+                            className={`h-4 w-4 ${saved ? "fill-current text-destructive" : ""}`}
+                          />
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Save for later</p>
+                        <p>{saved ? "Already in wishlist" : "Save for later"}</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>

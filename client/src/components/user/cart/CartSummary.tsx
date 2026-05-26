@@ -12,7 +12,7 @@ import {
   Truck
 } from "lucide-react";
 import type { CartSummaryProps } from "@/types/cart/CartSummaryProps";
-import { CART_FREE_SHIPPING_THRESHOLD } from "@/utils/cartTotals";
+import { CART_FREE_SHIPPING_THRESHOLD } from "@/components/user/cart/cartTotals";
 
 export function CartSummary({
   pricing,
