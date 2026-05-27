@@ -33,6 +33,8 @@ describe("getProductByID", () => {
       images: ["img-1"],
       brand: "peak",
       category: "Shoes",
+      gender: "unisex",
+      stock: 10,
       subcategoryId: "sub-shoes",
       sizes: ["42"],
       colors: ["black"],
@@ -55,6 +57,8 @@ describe("getProductByID", () => {
         select: expect.objectContaining({
           subcategoryId: true,
           sellerId: true,
+          stock: true,
+          gender: true,
         }),
       })
     );

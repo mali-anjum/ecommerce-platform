@@ -802,7 +802,7 @@ function ProductDetailsContent({ id }: { id: string }) {
 
               <div className="space-y-4 pt-6 border-t border-border">
                 {isInStock ? (
-                  <>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <Button
                       className="w-full py-6 text-lg rounded-xl bg-primary text-primary-foreground hover:bg-primary-light neon-border hover:scale-[1.02] transition-all duration-300"
                       onClick={handleAddToCart}
@@ -813,47 +813,34 @@ function ProductDetailsContent({ id }: { id: string }) {
                         : "ADD TO CART"}
                     </Button>
 
-                    <div className="grid grid-cols-2 gap-3">
-                      <Button
-                        variant="outline"
-                        className="py-6 rounded-xl border-glass-border hover:border-primary hover:text-primary hover:scale-[1.02] transition-all duration-300"
-                        onClick={handleBuyNow}
-                        disabled={isBuyingNow || !canAddToCart}
-                      >
-                        {isBuyingNow ? "PROCESSING..." : "BUY NOW"}
-                      </Button>
-                      <Button
-                        asChild
-                        variant="outline"
-                        className="py-6 rounded-xl border-glass-border hover:border-secondary hover:text-secondary hover:scale-[1.02] transition-all duration-300"
-                      >
-                        <a
-                          href={`tel:${product.contactNumber || "1-800-123-4567"}`}
-                        >
-                          CALL US
-                        </a>
-                      </Button>
-                    </div>
-                  </>
+                    <Button
+                      variant="outline"
+                      className="w-full py-6 text-lg rounded-xl border-glass-border hover:border-primary hover:text-primary hover:scale-[1.02] transition-all duration-300"
+                      onClick={handleBuyNow}
+                      disabled={isBuyingNow || !canAddToCart}
+                    >
+                      {isBuyingNow ? "PROCESSING..." : "BUY NOW"}
+                    </Button>
+                  </div>
                 ) : (
-                  wishlistSnapshot && (
-                    <WishlistCtaButton
-                      productId={product.id}
-                      snapshot={wishlistSnapshot}
-                    />
-                  )
-                )}
-
-                {!isInStock && (
-                  <Button
-                    asChild
-                    variant="outline"
-                    className="w-full py-6 rounded-xl border-glass-border"
-                  >
-                    <a href={`tel:${product.contactNumber || "1-800-123-4567"}`}>
-                      CALL US
-                    </a>
-                  </Button>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    {wishlistSnapshot ? (
+                      <WishlistCtaButton
+                        productId={product.id}
+                        snapshot={wishlistSnapshot}
+                        className="sm:col-span-1"
+                      />
+                    ) : null}
+                    <Button
+                      asChild
+                      variant="outline"
+                      className="w-full py-6 rounded-xl border-glass-border"
+                    >
+                      <a href={`tel:${product.contactNumber || "1-800-123-4567"}`}>
+                        CALL US
+                      </a>
+                    </Button>
+                  </div>
                 )}
               </div>
             </div>

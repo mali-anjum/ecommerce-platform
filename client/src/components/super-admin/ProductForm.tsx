@@ -36,6 +36,7 @@ import {
   Box,
   DollarSign,
   List,
+  Loader2,
   Package,
   Sparkles,
   Tag,
@@ -43,7 +44,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Controller,
   FormProvider,
@@ -78,6 +79,8 @@ function ProductForm({
   const [selectedSubcategoryId, setSelectedSubcategoryId] = useState("");
   const [categoryAutoLocked, setCategoryAutoLocked] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isEditHydrating, setIsEditHydrating] = useState(false);
+  const wasEditModeRef = useRef(false);
 
   const { toast } = useToast();
   const searchParams = useSearchParams();
@@ -146,44 +149,57 @@ function ProductForm({
   useEffect(() => {
     if (!isEditMode || !getCurrentEditedProductId) return;
 
-    getProductById(getCurrentEditedProductId).then((product) => {
-      if (!product) return;
+    let cancelled = false;
+    setIsEditHydrating(true);
 
-      reset({
-        name: product.name,
-        brand: product.brand,
-        description: product.description ?? "",
-        category: product.category,
-        gender: product.gender ?? "",
-        price: product.price.toString(),
-        stock: product.stock.toString(),
-        sizes: product.sizes ?? [],
-        colors: product.colors ?? [],
-      });
+    getProductById(getCurrentEditedProductId)
+      .then((product) => {
+        if (cancelled || !product) return;
 
-      if (product.subcategoryId) {
-        setSelectedSubcategoryId(product.subcategoryId);
-        for (const dept of catalogDepartments) {
-          if (
-            dept.subcategories.some((sub) => sub.id === product.subcategoryId)
-          ) {
-            setSelectedDepartmentId(dept.id);
-            break;
+        reset({
+          name: product.name,
+          brand: product.brand,
+          description: product.description ?? "",
+          category: product.category,
+          gender: product.gender ?? "",
+          price: product.price.toString(),
+          stock: String(product.stock ?? 0),
+          sizes: product.sizes ?? [],
+          colors: product.colors ?? [],
+        });
+
+        if (product.subcategoryId) {
+          setSelectedSubcategoryId(product.subcategoryId);
+          for (const dept of catalogDepartments) {
+            if (
+              dept.subcategories.some((sub) => sub.id === product.subcategoryId)
+            ) {
+              setSelectedDepartmentId(dept.id);
+              break;
+            }
+          }
+          setCategoryAutoLocked(true);
+        } else {
+          const guess = inferSubcategoryFromTitle(
+            product.name,
+            catalogDepartments
+          );
+          if (guess) {
+            setSelectedDepartmentId(guess.departmentId);
+            setSelectedSubcategoryId(guess.subcategoryId);
+            setCategoryAutoLocked(true);
           }
         }
-        setCategoryAutoLocked(true);
-      } else {
-        const guess = inferSubcategoryFromTitle(
-          product.name,
-          catalogDepartments
-        );
-        if (guess) {
-          setSelectedDepartmentId(guess.departmentId);
-          setSelectedSubcategoryId(guess.subcategoryId);
-          setCategoryAutoLocked(true);
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsEditHydrating(false);
         }
-      }
-    });
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [
     isEditMode,
     getCurrentEditedProductId,
@@ -193,14 +209,20 @@ function ProductForm({
   ]);
 
   useEffect(() => {
-    if (getCurrentEditedProductId !== null) return;
+    if (isEditMode) {
+      wasEditModeRef.current = true;
+      return;
+    }
 
+    if (!wasEditModeRef.current) return;
+
+    wasEditModeRef.current = false;
     reset(emptyProductFormValues);
     setSelectedFiles([]);
     setSelectedDepartmentId("");
     setSelectedSubcategoryId("");
     setCategoryAutoLocked(true);
-  }, [getCurrentEditedProductId, reset]);
+  }, [isEditMode, reset]);
 
   // When catalog loads after the product, align department with subcategory selection.
   useEffect(() => {
@@ -367,9 +389,21 @@ function ProductForm({
 
           <form
             onSubmit={handleSubmit(onSubmit)}
-            className="space-y-8"
+            className="relative space-y-8"
             noValidate
           >
+            {isEditHydrating ? (
+              <div
+                className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-background/70 backdrop-blur-sm"
+                aria-busy="true"
+                aria-live="polite"
+              >
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                  Loading product details...
+                </div>
+              </div>
+            ) : null}
             <ProductFormFileUpload
               selectedFiles={selectedFiles}
               onFilesAdded={(incoming) =>
