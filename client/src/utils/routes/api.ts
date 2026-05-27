@@ -32,6 +32,7 @@ export const API_ROUTES = {
   ORDER: `${API_BASE_URL}/order`,
   USERS: `${API_BASE_URL}/users`,
   CATALOG: `${API_BASE_URL}/catalog`,
+  ANALYTICS: `${API_BASE_URL}/analytics`,
 };
 
 export const ROUTES = {
