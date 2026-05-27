@@ -152,6 +152,7 @@ import {
   Database as DatabaseIcon,
   Globe as GlobeIcon,
   Zap as ZapIcon,
+  TrendingUp,
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -305,10 +306,40 @@ const menuSections = [
     icon: LayoutDashboard,
     items: [
       {
-        name: "Analytics",
+        name: "Overview",
         icon: BarChart3,
         href: "/super-admin",
         badge: "NEW",
+      },
+      {
+        name: "Sales",
+        icon: TrendingUp,
+        href: "/super-admin/analytics/sales",
+      },
+      {
+        name: "Products",
+        icon: Package,
+        href: "/super-admin/analytics/products",
+      },
+      {
+        name: "Customers",
+        icon: User,
+        href: "/super-admin/analytics/customers",
+      },
+      {
+        name: "Marketing",
+        icon: Tag,
+        href: "/super-admin/analytics/marketing",
+      },
+      {
+        name: "Operations",
+        icon: SendToBack,
+        href: "/super-admin/analytics/operations",
+      },
+      {
+        name: "Global",
+        icon: Globe,
+        href: "/super-admin/analytics/global",
       },
     ],
   },
@@ -418,8 +449,13 @@ function SuperAdminSidebar({ isOpen, toggle }: SidebarProps) {
 
   // Determine active section based on pathname
   useEffect(() => {
-    const section = menuSections.find(section => 
-      section.items.some(item => pathname.startsWith(item.href))
+    const section = menuSections.find((sectionItem) =>
+      sectionItem.items.some((item) =>
+        item.href === "/super-admin"
+          ? pathname === "/super-admin" ||
+            pathname.startsWith("/super-admin/analytics")
+          : pathname === item.href || pathname.startsWith(`${item.href}/`),
+      ),
     );
     setActiveSection(section?.title || "");
   }, [pathname]);
@@ -490,7 +526,12 @@ function SuperAdminSidebar({ isOpen, toggle }: SidebarProps) {
               
               <div className="space-y-1">
                 {section.items.map((item) => {
-                  const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+                  const isActive =
+                    item.href === "/super-admin"
+                      ? pathname === "/super-admin" ||
+                        pathname.startsWith("/super-admin/analytics")
+                      : pathname === item.href ||
+                        pathname.startsWith(item.href + "/");
                   
                   return (
                     <MenuItem
