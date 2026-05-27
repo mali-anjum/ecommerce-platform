@@ -13,6 +13,7 @@ import orderRoutes from "./routes/orderRoutes";
 import catalogRoutes from "./routes/catalogRoutes";
 import sellerRoutes from "./routes/sellerRoutes";
 import userRoutes from "./routes/userRoutes";
+import analyticsRoutes from "./routes/analyticsRoutes";
 import warmRoutes from "./routes/warm"
 import { ApiError } from "./utils/ApiError";
 import { errorHandler } from "./middleware/errHandler";
@@ -80,6 +81,7 @@ app.use("/api/cart", cartRoutes);
 app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/address", addressRoutes);
 app.use("/api/order", orderRoutes);
+app.use("/api/analytics", analyticsRoutes);
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Hello from E-Commerce backend");
