@@ -1,52 +1,31 @@
 "use client";
 
 import { protectProductFormAction } from "@/actions/product";
-import { ProductFormCatalogAlerts } from "@/components/super-admin/product-form/ProductFormCatalogAlerts";
-import { ProductFormField } from "@/components/super-admin/product-form/ProductFormField";
 import { ProductFormFileUpload } from "@/components/super-admin/product-form/ProductFormFileUpload";
+import { ProductFormHeader } from "@/components/super-admin/product-form/ProductFormHeader";
+import { ProductFormLoadingOverlay } from "@/components/super-admin/product-form/ProductFormLoadingOverlay";
+import { ProductFormDetailsSection } from "@/components/super-admin/product-form/ProductFormDetailsSection";
+import { ProductFormVariantsPricingSection } from "@/components/super-admin/product-form/ProductFormVariantsPricingSection";
 import {
-  ProductFormColorPicker,
-  ProductFormSizePicker,
-} from "@/components/super-admin/product-form/ProductFormVariantPickers";
-import {
+  type ProductFormValues,
   emptyProductFormValues,
   productFormSchema,
-  type ProductFormValues,
 } from "@/components/schemas/productFormSchema";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+  // (keep Button import for file upload + header)
+  Button,
+} from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useProductCatalog } from "@/hooks/useProductCatalog";
 import {
   inferSubcategoryFromTitle,
 } from "@/lib/catalog/inferSubcategoryFromTitle";
 import { useProductStore } from "@/store/useProductStore";
-import { brands } from "@/utils/config";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
-import {
-  Box,
-  DollarSign,
-  List,
-  Loader2,
-  Package,
-  Sparkles,
-  Tag,
-  Users,
-  Zap,
-} from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Controller,
   FormProvider,
   useForm,
 } from "react-hook-form";
@@ -356,54 +335,17 @@ function ProductForm({
     <FormProvider {...methods}>
       <div className="min-h-screen bg-gradient-to-b from-background to-card/30 p-4 md:p-6">
         <div className="max-w-6xl mx-auto">
-          <header className="glass-effect rounded-2xl p-6 mb-8 border border-glass-border">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div>
-                <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-                  <Package className="h-8 w-8 text-primary" />
-                  {isEditMode ? "Edit Product" : "Create New Product"}
-                </h1>
-                <p className="text-muted-foreground mt-2">
-                  {isEditMode
-                    ? "Update your futuristic product details"
-                    : "Add a new product to your futuristic collection"}
-                </p>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  type="button"
-                  onClick={() => router.push(listPath)}
-                  className="border-border hover:border-primary"
-                >
-                  Back to List
-                </Button>
-                <div className="h-10 w-1 bg-border"></div>
-                <span className="text-sm text-muted-foreground">
-                  {isEditMode ? "Edit Mode" : "Create Mode"}
-                </span>
-              </div>
-            </div>
-          </header>
+          <ProductFormHeader
+            isEditMode={isEditMode}
+            onBackToList={() => router.push(listPath)}
+          />
 
           <form
             onSubmit={handleSubmit(onSubmit)}
             className="relative space-y-8"
             noValidate
           >
-            {isEditHydrating ? (
-              <div
-                className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-background/70 backdrop-blur-sm"
-                aria-busy="true"
-                aria-live="polite"
-              >
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                  Loading product details...
-                </div>
-              </div>
-            ) : null}
+            <ProductFormLoadingOverlay show={isEditHydrating} />
             <ProductFormFileUpload
               selectedFiles={selectedFiles}
               onFilesAdded={(incoming) =>
@@ -416,316 +358,35 @@ function ProductForm({
             />
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="glass-effect rounded-2xl p-6 border border-glass-border space-y-6">
-                <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-                  <Tag className="h-5 w-5 text-primary" />
-                  Product Details
-                </h2>
+              <ProductFormDetailsSection
+                catalogDepartments={catalogDepartments}
+                catalogLoading={catalogLoading}
+                catalogError={catalogError}
+                selectedDepartmentId={selectedDepartmentId}
+                selectedSubcategoryId={selectedSubcategoryId}
+                selectedDepartment={selectedDepartment}
+                onDepartmentChange={handleDepartmentChange}
+                onSubcategoryChange={handleSubcategoryChange}
+                onCategoryManualChange={() => setCategoryAutoLocked(false)}
+                errors={errors}
+                registerName={register("name")}
+                registerDescription={register("description")}
+                registerCategory={categoryRegister}
+                control={control}
+              />
 
-                <ProductFormCatalogAlerts
-                  catalogLoading={catalogLoading}
-                  catalogError={catalogError}
-                  hasDepartments={catalogDepartments.length > 0}
-                />
-
-                <ProductFormField
-                  label="Product Name"
-                  name="name"
-                  icon={<Package className="h-4 w-4" />}
-                  error={errors.name?.message}
-                >
-                  <Input
-                    id="name"
-                    placeholder="Enter futuristic product name"
-                    className="bg-input border-border focus:ring-primary/50"
-                    aria-invalid={!!errors.name}
-                    {...register("name")}
-                  />
-                </ProductFormField>
-
-                <ProductFormField
-                  label="Brand"
-                  name="brand"
-                  icon={<Tag className="h-4 w-4" />}
-                  error={errors.brand?.message}
-                >
-                  <Controller
-                    name="brand"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        value={field.value || undefined}
-                        onValueChange={field.onChange}
-                      >
-                        <SelectTrigger
-                          id="brand"
-                          className="bg-input border-border"
-                          aria-invalid={!!errors.brand}
-                        >
-                          <SelectValue placeholder="Select futuristic brand" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-card border-border">
-                          {brands.map((item) => (
-                            <SelectItem key={item} value={item.toLowerCase()}>
-                              <div className="flex items-center gap-2">
-                                <div className="h-3 w-3 rounded-full bg-primary/20"></div>
-                                {item}
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                </ProductFormField>
-
-                <ProductFormField
-                  label="Description"
-                  name="description"
-                  icon={<List className="h-4 w-4" />}
-                  error={errors.description?.message}
-                >
-                  <Textarea
-                    id="description"
-                    className="min-h-[150px] bg-input border-border focus:ring-primary/50"
-                    placeholder="Describe your futuristic product features..."
-                    aria-invalid={!!errors.description}
-                    {...register("description")}
-                  />
-                </ProductFormField>
-
-                <ProductFormField
-                  label="Department"
-                  name="department"
-                  icon={<List className="h-4 w-4" />}
-                >
-                  <Select
-                    value={selectedDepartmentId || undefined}
-                    onValueChange={handleDepartmentChange}
-                    disabled={catalogLoading}
-                  >
-                    <SelectTrigger className="bg-input border-border">
-                      <SelectValue
-                        placeholder={
-                          catalogLoading
-                            ? "Loading departments…"
-                            : "Select department"
-                        }
-                      />
-                    </SelectTrigger>
-                    <SelectContent className="bg-card border-border">
-                      {catalogDepartments.map((dept) => (
-                        <SelectItem key={dept.id} value={dept.id}>
-                          {dept.title}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </ProductFormField>
-
-                <ProductFormField
-                  label="Subcategory"
-                  name="subcategory"
-                  icon={<Tag className="h-4 w-4" />}
-                >
-                  <Select
-                    value={selectedSubcategoryId || undefined}
-                    onValueChange={handleSubcategoryChange}
-                    disabled={
-                      !selectedDepartment ||
-                      selectedDepartment.subcategories.length === 0
-                    }
-                  >
-                    <SelectTrigger className="bg-input border-border">
-                      <SelectValue placeholder="Select subcategory" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-card border-border">
-                      {(selectedDepartment?.subcategories ?? []).map((sub) => (
-                        <SelectItem key={sub.id} value={sub.id}>
-                          {sub.title}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </ProductFormField>
-
-                <ProductFormField
-                  label="Category (resolved)"
-                  name="category"
-                  icon={<List className="h-4 w-4" />}
-                  error={errors.category?.message}
-                >
-                  <Input
-                    id="category"
-                    placeholder="Auto-filled from subcategory"
-                    className="bg-input border-border focus:ring-primary/50"
-                    aria-invalid={!!errors.category}
-                    {...categoryRegister}
-                    onChange={(e) => {
-                      setCategoryAutoLocked(false);
-                      categoryRegister.onChange(e);
-                    }}
-                  />
-                </ProductFormField>
-
-                <ProductFormField
-                  label="Gender"
-                  name="gender"
-                  icon={<Users className="h-4 w-4" />}
-                  error={errors.gender?.message}
-                >
-                  <Controller
-                    name="gender"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        value={field.value || undefined}
-                        onValueChange={field.onChange}
-                      >
-                        <SelectTrigger
-                          id="gender"
-                          className="bg-input border-border"
-                          aria-invalid={!!errors.gender}
-                        >
-                          <SelectValue placeholder="Select target gender" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-card border-border">
-                          <SelectItem value="men">
-                            <div className="flex items-center gap-2">
-                              <div className="h-3 w-3 rounded-full bg-blue-500"></div>
-                              Men
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="women">
-                            <div className="flex items-center gap-2">
-                              <div className="h-3 w-3 rounded-full bg-pink-500"></div>
-                              Women
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="kids">
-                            <div className="flex items-center gap-2">
-                              <div className="h-3 w-3 rounded-full bg-green-500"></div>
-                              Kids
-                            </div>
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                </ProductFormField>
-              </div>
-
-              <div className="glass-effect rounded-2xl p-6 border border-glass-border space-y-6">
-                <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-                  <Box className="h-5 w-5 text-secondary" />
-                  Variants & Pricing
-                </h2>
-
-                <div className="space-y-1">
-                  <ProductFormSizePicker
-                    selectedSizes={sizesValue ?? []}
-                    onToggleSize={toggleSize}
-                  />
-                  {errors.sizes?.message ? (
-                    <p className="text-sm text-destructive" role="alert">
-                      {errors.sizes.message}
-                    </p>
-                  ) : null}
-                </div>
-
-                <div className="space-y-1">
-                  <ProductFormColorPicker
-                    selectedColors={colorsValue ?? []}
-                    onToggleColor={toggleColor}
-                  />
-                  {errors.colors?.message ? (
-                    <p className="text-sm text-destructive" role="alert">
-                      {errors.colors.message}
-                    </p>
-                  ) : null}
-                </div>
-
-                <ProductFormField
-                  label="Price"
-                  name="price"
-                  icon={<DollarSign className="h-4 w-4" />}
-                  error={errors.price?.message}
-                >
-                  <div className="relative">
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                      $
-                    </div>
-                    <Input
-                      id="price"
-                      type="number"
-                      min={0}
-                      step="0.01"
-                      placeholder="0.00"
-                      className="pl-8 bg-input border-border focus:ring-primary/50"
-                      aria-invalid={!!errors.price}
-                      {...register("price")}
-                    />
-                  </div>
-                </ProductFormField>
-
-                <ProductFormField
-                  label="Stock Quantity"
-                  name="stock"
-                  icon={<Box className="h-4 w-4" />}
-                  error={errors.stock?.message}
-                >
-                  <Input
-                    id="stock"
-                    type="number"
-                    min={0}
-                    placeholder="Enter available stock"
-                    className="bg-input border-border focus:ring-primary/50"
-                    aria-invalid={!!errors.stock}
-                    {...register("stock")}
-                  />
-                </ProductFormField>
-
-                <div className="pt-6 border-t border-border">
-                  <Button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full py-6 text-lg font-semibold rounded-xl transition-all duration-300"
-                  >
-                    {isSubmitting ? (
-                      <div className="flex items-center gap-2">
-                        <div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
-                        {isEditMode ? "Updating..." : "Creating..."}
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <Sparkles className="h-5 w-5" />
-                        {isEditMode
-                          ? "Update Product"
-                          : "Create Futuristic Product"}
-                      </div>
-                    )}
-                  </Button>
-
-                  {error && (
-                    <div className="mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-                      <p className="text-destructive text-sm">{error}</p>
-                    </div>
-                  )}
-
-                  <div className="mt-6 p-4 bg-primary/5 border border-primary/10 rounded-lg">
-                    <h4 className="font-semibold text-foreground mb-2 flex items-center gap-2">
-                      <Zap className="h-4 w-4 text-primary" />
-                      Tips for Success
-                    </h4>
-                    <ul className="text-sm text-muted-foreground space-y-1">
-                      <li>• Use high-quality images (min. 1200x1200px)</li>
-                      <li>• Provide detailed, futuristic descriptions</li>
-                      <li>• Set competitive pricing for your market</li>
-                      <li>• Select accurate categories for better visibility</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
+              <ProductFormVariantsPricingSection
+                isEditMode={isEditMode}
+                isSubmitting={isSubmitting}
+                errorMessage={error}
+                selectedSizes={sizesValue ?? []}
+                selectedColors={colorsValue ?? []}
+                onToggleSize={toggleSize}
+                onToggleColor={toggleColor}
+                errors={errors}
+                registerPrice={register("price")}
+                registerStock={register("stock")}
+              />
             </div>
           </form>
         </div>
