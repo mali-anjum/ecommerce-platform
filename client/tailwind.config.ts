@@ -1,4 +1,5 @@
 import type { Config } from 'tailwindcss'
+import tailwindcssAnimate from 'tailwindcss-animate'
 
 const config: Config = {
   darkMode: ['class', '[data-theme="dark"]'],
@@ -69,6 +70,8 @@ const config: Config = {
         'glow-pulse': 'glow-pulse 4s ease-in-out infinite',
         'hologram-shimmer': 'hologram-shimmer 3s ease-in-out infinite',
         'float': 'float 6s ease-in-out infinite',
+        'theme-icon-in': 'theme-icon-in 0.4s cubic-bezier(0.34, 1.4, 0.64, 1) forwards',
+        'theme-glow-in': 'theme-glow-in 0.35s ease-out forwards',
       },
       keyframes: {
         'glow-pulse': {
@@ -89,12 +92,23 @@ const config: Config = {
           '0%, 100%': { transform: 'translateY(0px)' },
           '50%': { transform: 'translateY(-20px)' },
         },
+        'theme-icon-in': {
+          '0%': { opacity: '0', transform: 'scale(0.75) rotate(-20deg)' },
+          '100%': { opacity: '1', transform: 'scale(1) rotate(0deg)' },
+        },
+        'theme-glow-in': {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+      },
+      transitionTimingFunction: {
+        'theme-smooth': 'cubic-bezier(0.4, 0, 0.2, 1)',
       },
       backdropBlur: {
         'glass': '12px',
       },
     },
   },
-  plugins: [],
+  plugins: [tailwindcssAnimate],
 }
 export default config
