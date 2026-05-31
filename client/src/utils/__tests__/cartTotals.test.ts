@@ -1,7 +1,7 @@
 import {
   calculateCartPricingTotals,
   CART_SHIPPING_FEE,
-} from "../../components/user/cart/cartTotals";
+} from "../../components/storefront/cart/utils/cartTotals";
 
 describe("calculateCartPricingTotals", () => {
   it("calculates shipping and tax for small orders", () => {
