@@ -4,7 +4,7 @@ import {
   countOrdersByTab,
   isOrderTerminalFailure,
   getOrderStatusBadgeTone,
-} from "../../components/orders/orderFilters";
+} from "../../components/storefront/orders/utils/orderFilters";
 import type { Order } from "@/types/order/orderTypes";
 
 const base = (status: Order["status"]): Order =>
