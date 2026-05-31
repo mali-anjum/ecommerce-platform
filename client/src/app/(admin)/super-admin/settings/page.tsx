@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/hooks/use-toast";
 import { useProductStore } from "@/store/useProductStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { 
