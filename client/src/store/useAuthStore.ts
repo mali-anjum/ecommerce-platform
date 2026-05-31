@@ -3,7 +3,6 @@ import axios from "axios";
 import type { AxiosError } from "axios";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-// import { warmupService } from "@/utils/warmupService";
 import type { User } from "@/types/auth/User";
 import type { TokenExpiryInfoBackendRes } from "@/types/auth/TokenExpiryInfoFromBackend";
 import type { Session } from "@/types/auth/Session";
@@ -281,8 +280,6 @@ export const useAuthStore = create<AuthStore>()(
           if (process.env.NODE_ENV === "development") {
             console.log("🔄 AuthStore: Login process started for:", email);
           }
-
-          // await warmupService.ensureWarm();
 
           const response = await axiosInstance.post("/login", {
             email,
