@@ -15,11 +15,11 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useWishlistStore } from "@/store/useWishlistStore";
-import { WishlistItemCard } from "@/components/wishlist/WishlistItemCard";
-import { WishlistSummary } from "@/components/wishlist/WishlistSummary";
-import { WishlistLoadingSkeleton } from "@/components/wishlist/WishlistLoadingSkeleton";
-import { WishlistEmptyState } from "@/components/wishlist/WishlistEmptyState";
-import { getDisplayPrice } from "@/components/products/productPricing";
+import { WishlistItemCard } from "@/components/storefront/wishlist/molecules/WishlistItemCard";
+import { WishlistSummary } from "@/components/storefront/wishlist/molecules/WishlistSummary";
+import { WishlistLoadingSkeleton } from "@/components/storefront/wishlist/atoms/WishlistLoadingSkeleton";
+import { WishlistEmptyState } from "@/components/storefront/wishlist/organisms/WishlistEmptyState";
+import { getDisplayPrice } from "@/components/products/utils/productPricing";
 
 export default function WishlistPage() {
   const router = useRouter();
