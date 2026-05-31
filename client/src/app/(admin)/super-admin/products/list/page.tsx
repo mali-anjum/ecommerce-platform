@@ -1,4 +1,4 @@
-import ProductManagementList from "@/components/products/ProductManagementList";
+import ProductManagementList from "@/components/products/organisms/ProductManagementList";
 
 export default function SuperAdminProductListingPage() {
   return (
