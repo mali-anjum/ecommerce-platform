@@ -8,8 +8,8 @@ import Link from "next/link";
 import axios from "axios";
 import { API_ROUTES } from "@/utils/routes/api";
 import type { Product } from "@/types/product";
-import { WishlistHeartButton } from "@/components/wishlist/WishlistHeartButton";
-import { buildWishlistSnapshot } from "@/components/wishlist/wishlistSnapshot";
+import { WishlistHeartButton } from "@/components/storefront/wishlist/atoms/WishlistHeartButton";
+import { buildWishlistSnapshot } from "@/components/storefront/wishlist/utils/wishlistSnapshot";
 
 const TILE_IMAGE_FALLBACK =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='1600' viewBox='0 0 1200 1600'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%' stop-color='%230f172a'/><stop offset='100%' stop-color='%23334155'/></linearGradient></defs><rect width='1200' height='1600' fill='url(%23g)'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23e2e8f0' font-size='62' font-family='Arial, sans-serif'>Category Image</text></svg>";
