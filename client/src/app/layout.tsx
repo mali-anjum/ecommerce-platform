@@ -2,9 +2,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
-import CommonLayout from "@/components/common/layout";
+import CommonLayout from "@/components/common/organisms/AppShell";
 import AuthProvider from "@/components/providers/AuthProvider";
-// import { WarmupProvider } from "@/components/providers/warmUpProvider";
 import ThemeInitializer from "@/components/layout/ThemeInitializer";
 
 
@@ -33,11 +32,9 @@ export default function RootLayout({
       <body className="antialiased">
         <ThemeInitializer />
         
-        {/* <WarmupProvider> */}
           <AuthProvider>
             <CommonLayout>{children}</CommonLayout>
           </AuthProvider>
-        {/* </WarmupProvider> */}
         <Toaster />
         
         {/* Performance monitoring script */}
