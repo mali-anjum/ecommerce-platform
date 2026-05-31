@@ -1,6 +1,6 @@
 "use client";
 
-import SuperAdminSidebar from "@/components/super-admin/sidebar";
+import SuperAdminSidebar from "@/components/super-admin/organisms/SuperAdminSidebar";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
