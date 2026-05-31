@@ -4,14 +4,14 @@ import {
   HourlyOrdersChart,
   PaymentMethodChart,
   RevenueTrendChart,
-} from "@/components/super-admin/analytics/AnalyticsCharts";
-import { AnalyticsPageBase } from "@/components/super-admin/analytics/AnalyticsPageBase";
-import { DataTablePanel } from "@/components/super-admin/analytics/AnalyticsCharts";
-import { KpiCard } from "@/components/super-admin/analytics/KpiCard";
+} from "@/components/super-admin/analytics/molecules/AnalyticsCharts";
+import { AnalyticsPageBase } from "@/components/super-admin/analytics/organisms/AnalyticsPageBase";
+import { DataTablePanel } from "@/components/super-admin/analytics/molecules/AnalyticsCharts";
+import { KpiCard } from "@/components/super-admin/analytics/atoms/KpiCard";
 import {
   formatCurrency,
   formatStatusLabel,
-} from "@/components/super-admin/analytics/formatters";
+} from "@/components/super-admin/analytics/utils/formatters";
 import { DollarSign, ShoppingCart, TrendingUp } from "lucide-react";
 
 export default function AnalyticsSalesPage() {
