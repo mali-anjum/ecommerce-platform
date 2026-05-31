@@ -1,7 +1,7 @@
 "use client";
 
-import { LoginBanner } from "@/components/auth/LoginBanner";
-import { LoginForm } from "@/components/auth/LoginForm";
+import { LoginBanner } from "@/components/auth/molecules/LoginBanner";
+import { LoginForm } from "@/components/auth/organisms/LoginForm";
 
 export default function LoginPage() {
   return (
