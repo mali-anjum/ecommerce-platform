@@ -7,7 +7,7 @@
 // import { useEffect, useState } from "react";
 // import ProductDetailsSkeleton from "./productSkeleton";
 // import { useCartStore } from "@/store/useCartStore";
-// import { useToast } from "@/hooks/use-toast";
+// import { useToast } from "@/components/ui/hooks/use-toast";
 
 // function ProductDetailsContent({ id }: { id: string }) {
 //   const [product, setProduct] = useState<any>(null);
@@ -203,11 +203,11 @@ import { useEffect, useState, useCallback, memo } from "react";
 import ProductDetailsSkeleton from "./productSkeleton";
 import { useCartStore } from "@/store/useCartStore";
 import { useAuthStore } from "@/store/useAuthStore";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/hooks/use-toast";
 import { Star, Truck, Shield, RefreshCw } from "lucide-react";
-import { WishlistHeartButton } from "@/components/wishlist/WishlistHeartButton";
-import { WishlistCtaButton } from "@/components/wishlist/WishlistCtaButton";
-import { buildWishlistSnapshot } from "@/components/wishlist/wishlistSnapshot";
+import { WishlistHeartButton } from "@/components/storefront/wishlist/atoms/WishlistHeartButton";
+import { WishlistCtaButton } from "@/components/storefront/wishlist/atoms/WishlistCtaButton";
+import { buildWishlistSnapshot } from "@/components/storefront/wishlist/utils/wishlistSnapshot";
 
 // Modular Components
 const ProductImageGallery = memo(({ 
