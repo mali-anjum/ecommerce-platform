@@ -1,9 +1,9 @@
 "use client";
 
-import { DataTablePanel } from "@/components/super-admin/analytics/AnalyticsCharts";
-import { AnalyticsPageBase } from "@/components/super-admin/analytics/AnalyticsPageBase";
-import { KpiCard } from "@/components/super-admin/analytics/KpiCard";
-import { formatNumber } from "@/components/super-admin/analytics/formatters";
+import { DataTablePanel } from "@/components/super-admin/analytics/molecules/AnalyticsCharts";
+import { AnalyticsPageBase } from "@/components/super-admin/analytics/organisms/AnalyticsPageBase";
+import { KpiCard } from "@/components/super-admin/analytics/atoms/KpiCard";
+import { formatNumber } from "@/components/super-admin/analytics/utils/formatters";
 import { Badge } from "@/components/ui/badge";
 import { Gift, Heart, Tag } from "lucide-react";
 
