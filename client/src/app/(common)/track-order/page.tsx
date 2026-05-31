@@ -5,16 +5,16 @@ import { useOrderStore } from "@/store/useOrderStore";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AccountOrdersSidebar } from "@/components/orders/AccountOrdersSidebar";
-import { OrderStatusTabs } from "@/components/orders/OrderStatusTabs";
-import OrderList from "@/components/orders/OrderList";
-import OrderDetailsPanel from "@/components/orders/OrderDetailsPanel";
+import { AccountOrdersSidebar } from "@/components/storefront/orders/organisms/AccountOrdersSidebar";
+import { OrderStatusTabs } from "@/components/storefront/orders/molecules/OrderStatusTabs";
+import OrderList from "@/components/storefront/orders/organisms/OrderList";
+import OrderDetailsPanel from "@/components/storefront/orders/organisms/OrderDetailsPanel";
 import {
   countOrdersByTab,
   filterOrdersBySearch,
   filterOrdersByTab,
   type OrderListTab,
-} from "@/components/orders/orderFilters";
+} from "@/components/storefront/orders/utils/orderFilters";
 
 export default function TrackOrderPage() {
   const {
