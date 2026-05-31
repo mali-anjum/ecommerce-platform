@@ -3,7 +3,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
-import useSilentAuth from "@/hooks/useSilentAuth";
+import useSilentAuth from "@/components/providers/hooks/useSilentAuth";
 import { usePathname } from "next/navigation";
 import { authLogger } from "@/utils/Logger";
 
