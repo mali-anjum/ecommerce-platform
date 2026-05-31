@@ -1,4 +1,4 @@
-import { computeProductPricing, getDisplayPrice } from "../../components/products/productPricing";
+import { computeProductPricing, getDisplayPrice } from "../../components/products/utils/productPricing";
 
 describe("computeProductPricing (client)", () => {
   it("uses sale price when deal is active", () => {
