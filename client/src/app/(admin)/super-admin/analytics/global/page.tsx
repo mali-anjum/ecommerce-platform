@@ -1,10 +1,10 @@
 "use client";
 
-import { GeographicChart } from "@/components/super-admin/analytics/AnalyticsCharts";
-import { AnalyticsPageBase } from "@/components/super-admin/analytics/AnalyticsPageBase";
-import { DataTablePanel } from "@/components/super-admin/analytics/AnalyticsCharts";
-import { KpiCard } from "@/components/super-admin/analytics/KpiCard";
-import { formatCurrency } from "@/components/super-admin/analytics/formatters";
+import { GeographicChart } from "@/components/super-admin/analytics/molecules/AnalyticsCharts";
+import { AnalyticsPageBase } from "@/components/super-admin/analytics/organisms/AnalyticsPageBase";
+import { DataTablePanel } from "@/components/super-admin/analytics/molecules/AnalyticsCharts";
+import { KpiCard } from "@/components/super-admin/analytics/atoms/KpiCard";
+import { formatCurrency } from "@/components/super-admin/analytics/utils/formatters";
 import { Globe2, MapPin, Plane } from "lucide-react";
 
 export default function AnalyticsGlobalPage() {
