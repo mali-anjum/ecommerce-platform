@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { CartCheckbox } from "@/components/user/cart/CartCheckbox";
+import { CartCheckbox } from "@/components/storefront/cart/atoms/CartCheckbox";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useCartStore } from "@/store/useCartStore";
 import {
@@ -14,13 +14,13 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { CartItem } from "@/components/user/cart/CartItem";
-import { CartSummary } from "@/components/user/cart/CartSummary";
-import { CartLoadingSkeleton } from "@/components/user/cart/CartLoadingSkeleton";
-import { CartEmptyState } from "@/components/user/cart/CartEmptyState";
-import { useCartSelection } from "@/hooks/cart/useCartSelection";
-import { calculateCartPricingTotals } from "@/components/user/cart/cartTotals";
-import { useToast } from "@/hooks/use-toast";
+import { CartItem } from "@/components/storefront/cart/molecules/CartItem";
+import { CartSummary } from "@/components/storefront/cart/organisms/CartSummary";
+import { CartLoadingSkeleton } from "@/components/storefront/cart/atoms/CartLoadingSkeleton";
+import { CartEmptyState } from "@/components/storefront/cart/organisms/CartEmptyState";
+import { useCartSelection } from "@/components/storefront/cart/hooks/useCartSelection";
+import { calculateCartPricingTotals } from "@/components/storefront/cart/utils/cartTotals";
+import { useToast } from "@/components/ui/hooks/use-toast";
 
 function getCartItems(items: unknown): Array<{
   id: string;
