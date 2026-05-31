@@ -4,7 +4,7 @@ import { protectCouponFormAction } from "@/actions/coupon";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/hooks/use-toast";
 import { useCouponStore } from "@/store/useCouponStore";
 import {
   Tag,
@@ -23,10 +23,10 @@ import {
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
-import { CouponHeader } from "@/components/super-admin/coupon/CouponHeader";
-import { CouponPreview } from "@/components/super-admin/coupon/CouponPreview";
-import { FormField } from "@/components/super-admin/coupon/CouponFormField";
-import { DateValidation } from "@/components/super-admin/coupon/CouponDateValidation";
+import { CouponHeader } from "@/components/super-admin/coupon/molecules/CouponHeader";
+import { CouponPreview } from "@/components/super-admin/coupon/molecules/CouponPreview";
+import { FormField } from "@/components/super-admin/coupon/atoms/CouponFormField";
+import { DateValidation } from "@/components/super-admin/coupon/molecules/CouponDateValidation";
 import {
   generateCouponCode,
   validateGeneratedCode,
