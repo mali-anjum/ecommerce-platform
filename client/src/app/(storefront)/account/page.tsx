@@ -16,7 +16,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/hooks/use-toast";
 import { useAddressStore } from "@/store/useAddressStore";
 import type { Address } from "@/types/address/Address";
 import type { Order } from "@/types/order/orderTypes";
