@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
-import ProductForm from "@/components/super-admin/ProductForm";
+import ProductForm from "@/components/super-admin/organisms/ProductForm";
 import { Loader2 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
