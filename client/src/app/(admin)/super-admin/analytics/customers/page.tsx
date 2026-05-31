@@ -3,10 +3,10 @@
 import {
   CustomerGrowthChart,
   FunnelPanel,
-} from "@/components/super-admin/analytics/AnalyticsCharts";
-import { AnalyticsPageBase } from "@/components/super-admin/analytics/AnalyticsPageBase";
-import { KpiCard } from "@/components/super-admin/analytics/KpiCard";
-import { formatNumber } from "@/components/super-admin/analytics/formatters";
+} from "@/components/super-admin/analytics/molecules/AnalyticsCharts";
+import { AnalyticsPageBase } from "@/components/super-admin/analytics/organisms/AnalyticsPageBase";
+import { KpiCard } from "@/components/super-admin/analytics/atoms/KpiCard";
+import { formatNumber } from "@/components/super-admin/analytics/utils/formatters";
 import { ShoppingCart, UserPlus, Users } from "lucide-react";
 
 export default function AnalyticsCustomersPage() {
