@@ -1,6 +1,6 @@
 "use client";
 
-import { FuturisticCheckoutLoader } from "@/components/user/checkout/FuturisticCheckoutLoader";
+import { FuturisticCheckoutLoader } from "@/components/storefront/checkout/atoms/FuturisticCheckoutLoader";
 import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
