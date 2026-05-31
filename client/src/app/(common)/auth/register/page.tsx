@@ -1,7 +1,7 @@
 "use client";
 
-import { LoginBanner } from "@/components/auth/LoginBanner"; // Reused from login
-import { RegisterForm } from "@/components/auth/RegisterForm";
+import { LoginBanner } from "@/components/auth/molecules/LoginBanner"; // Reused from login
+import { RegisterForm } from "@/components/auth/organisms/RegisterForm";
 import "@/styles/login.css"; // Import animations
 
 export default function RegisterPage() {
