@@ -1,4 +1,4 @@
-import type { CartPricingTotals } from "@/components/user/cart/cartTotals";
+import type { CartPricingTotals } from "@/components/storefront/cart/utils/cartTotals";
 
 export interface CartSummaryProps {
   pricing: CartPricingTotals;
