@@ -1,7 +1,7 @@
 // app/api/auth/check-session/route.ts - PRODUCTION READY
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { proxyLogger } from "@/utils/Logger";
+import { proxyLogger } from "@/lib/logger";
 
 export async function GET(req: NextRequest) {
   const traceId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;

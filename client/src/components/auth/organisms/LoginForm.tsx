@@ -9,7 +9,7 @@ import Image from "next/image";
 
 import logo from "../../../../public/images/logo.webp"
 import { loginSchema, LoginFormData } from "@/components/schemas/loginSchema";
-import { ROUTES } from "@/utils/routes/api";
+import { ROUTES } from "@/lib/routes/api";
 import { InputField } from "@/components/auth/atoms/FormInput";
 import { LoadingButton } from "@/components/auth/atoms/LoadingButton";
 import { SecurityBadge } from "@/components/auth/atoms/SecurityBadge";

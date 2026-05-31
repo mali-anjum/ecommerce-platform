@@ -1,11 +1,11 @@
 import { useCallback, useEffect } from 'react';
 import { useToast } from '@/components/ui/hooks/use-toast';
-import { CartItemWithProduct } from '@/types/cart/cartItemStore';
-import type { Coupon } from '@/types/checkout/Coupon';
+import { CartItemWithProduct } from '@/components/storefront/cart/types/cartItemStore';
+import type { Coupon } from '@/components/storefront/checkout/types/Coupon';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { calculateTotals } from '@/components/storefront/checkout/utils/checkoutUtils';
-import { useCartSelectionStore } from '@/store/useCartSelectionStore';
-import { useCartStore } from '@/store/useCartStore';
+import { useCartSelectionStore } from '@/components/storefront/cart/state/useCartSelectionStore';
+import { useCartStore } from '@/components/storefront/cart/state/useCartStore';
 import type { CheckoutPaymentMethodId } from './usePaymentMethods';
 
 interface UseCheckoutPaymentProps {

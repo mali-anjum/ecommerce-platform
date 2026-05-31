@@ -1,8 +1,8 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { getThemeHelper, getThemeLabel } from "@/lib/theme/theme-utils";
-import { useThemeStore } from "@/store/useThemeStore";
+import { getThemeHelper, getThemeLabel } from "@/components/common/utils/theme/theme-utils";
+import { useThemeStore } from "@/components/common/state/useThemeStore";
 import { ThemeIconStack } from "@/components/common/atoms/theme/ThemeIconStack";
 import { ThemeSegmentedControl } from "@/components/common/molecules/theme/ThemeSegmentedControl";
 

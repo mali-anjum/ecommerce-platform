@@ -10,10 +10,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useAuthStore } from "@/store/useAuthStore";
-import { useWishlistStore } from "@/store/useWishlistStore";
+import { useAuthStore } from "@/components/auth/state/useAuthStore";
+import { useWishlistStore } from "@/components/storefront/wishlist/state/useWishlistStore";
 import { useToast } from "@/components/ui/hooks/use-toast";
-import type { WishlistProductSnapshot } from "@/types/wishlist/wishlistTypes";
+import type { WishlistProductSnapshot } from "@/components/storefront/wishlist/types/wishlistTypes";
 import { cn } from "@/lib/utils";
 
 type WishlistHeartButtonProps = {

@@ -1,8 +1,8 @@
 "use client";
 
-import type { Order } from "@/types/order/orderTypes";
+import type { Order } from "@/components/storefront/orders/types/orderTypes";
 import { cn } from "@/lib/utils";
-import { formatCurrency, formatDate } from "@/types/formatCurrency";
+import { formatCurrency, formatDate } from "@/components/common/utils/formatCurrency";
 import { isOrderTerminalFailure } from "@/components/storefront/orders/utils/orderFilters";
 import { OrderStatusBadge } from "@/components/storefront/orders/atoms/OrderStatusBadge";
 import { Package } from "lucide-react";

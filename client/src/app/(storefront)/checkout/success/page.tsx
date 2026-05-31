@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useOrderStore } from "@/store/useOrderStore";
+import { useOrderStore } from "@/components/storefront/orders/state/useOrderStore";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Suspense, useEffect } from "react";

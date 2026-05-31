@@ -2,11 +2,11 @@
 
 // import { Button } from "@/components/ui/button";
 // import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-// import { useProductStore } from "@/store/useProductStore";
+// import { useProductStore } from "@/components/products/state/useProductStore";
 // import { useRouter } from "next/navigation";
 // import { useEffect, useState } from "react";
 // import ProductDetailsSkeleton from "./productSkeleton";
-// import { useCartStore } from "@/store/useCartStore";
+// import { useCartStore } from "@/components/storefront/cart/state/useCartStore";
 // import { useToast } from "@/components/ui/hooks/use-toast";
 
 // function ProductDetailsContent({ id }: { id: string }) {
@@ -197,12 +197,12 @@
 
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useProductStore } from "@/store/useProductStore";
+import { useProductStore } from "@/components/products/state/useProductStore";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useCallback, memo } from "react";
 import ProductDetailsSkeleton from "./productSkeleton";
-import { useCartStore } from "@/store/useCartStore";
-import { useAuthStore } from "@/store/useAuthStore";
+import { useCartStore } from "@/components/storefront/cart/state/useCartStore";
+import { useAuthStore } from "@/components/auth/state/useAuthStore";
 import { useToast } from "@/components/ui/hooks/use-toast";
 import { Star, Truck, Shield, RefreshCw } from "lucide-react";
 import { WishlistHeartButton } from "@/components/storefront/wishlist/atoms/WishlistHeartButton";

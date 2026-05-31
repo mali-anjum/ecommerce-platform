@@ -1,6 +1,6 @@
 "use client";
 
-import type { AdminCatalogDepartment } from "@/lib/catalog/inferSubcategoryFromTitle";
+import type { AdminCatalogDepartment } from "@/components/products/utils/inferSubcategoryFromTitle";
 import axios from "axios";
 import { useEffect, useState } from "react";
 

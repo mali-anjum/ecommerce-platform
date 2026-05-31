@@ -10,9 +10,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useAuthStore } from "@/store/useAuthStore";
-import { useOrderStore } from "@/store/useOrderStore";
-import type { SellerOrderLine } from "@/types/order/orderTypes";
+import { useAuthStore } from "@/components/auth/state/useAuthStore";
+import { useOrderStore } from "@/components/storefront/orders/state/useOrderStore";
+import type { SellerOrderLine } from "@/components/storefront/orders/types/orderTypes";
 
 export default function SellerSalesPage() {
   const user = useAuthStore((s) => s.user);

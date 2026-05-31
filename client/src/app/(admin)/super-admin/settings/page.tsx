@@ -5,8 +5,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/hooks/use-toast";
-import { useProductStore } from "@/store/useProductStore";
-import { useSettingsStore } from "@/store/useSettingsStore";
+import { useProductStore } from "@/components/products/state/useProductStore";
+import { useSettingsStore } from "@/components/super-admin/state/useSettingsStore";
 import { 
   ImageIcon, 
   Upload, 

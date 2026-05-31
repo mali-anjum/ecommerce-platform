@@ -13,8 +13,8 @@ import {
   ShoppingBag,
   Sparkles,
 } from "lucide-react";
-import { useAuthStore } from "@/store/useAuthStore";
-import { useWishlistStore } from "@/store/useWishlistStore";
+import { useAuthStore } from "@/components/auth/state/useAuthStore";
+import { useWishlistStore } from "@/components/storefront/wishlist/state/useWishlistStore";
 import { WishlistItemCard } from "@/components/storefront/wishlist/molecules/WishlistItemCard";
 import { WishlistSummary } from "@/components/storefront/wishlist/molecules/WishlistSummary";
 import { WishlistLoadingSkeleton } from "@/components/storefront/wishlist/atoms/WishlistLoadingSkeleton";

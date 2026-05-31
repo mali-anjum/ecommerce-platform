@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { extractSetCookieHeaders } from "@/lib/api/extractSetCookieHeaders";
 import { getServerBackendUrl } from "@/lib/api/getServerBackendUrl";
-import { proxyLogger } from "@/utils/Logger";
+import { proxyLogger } from "@/lib/logger";
 
 const ERROR_MESSAGES = {
   BACKEND_NOT_CONFIGURED: "Backend URL not configured",

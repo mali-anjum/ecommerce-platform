@@ -4,7 +4,7 @@ import { User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import ThemeToggle from "@/components/common/organisms/theme/ThemeToggler";
 import { Button } from "@/components/ui/button";
-import type { User as AuthUser } from "@/types/auth/User";
+import type { User as AuthUser } from "@/components/auth/types/User";
 import { SITE_HEADER_ACCOUNT_LINKS } from "@/components/layout/site-header/config/site-header-account-menu";
 import { MobileSheetBackHeader } from "@/components/layout/site-header/atoms/MobileSheetBackHeader";
 

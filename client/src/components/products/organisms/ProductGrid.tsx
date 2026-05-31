@@ -1,6 +1,6 @@
 "use client";
 
-import { Product } from "@/types/product";
+import { Product } from "@/components/products/types/product";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { ProductTableSkeleton } from "@/components/products/atoms/ProductTableSkeleton";

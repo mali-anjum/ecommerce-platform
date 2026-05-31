@@ -2,7 +2,7 @@
 
 import { Monitor, Moon, Sparkles, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { ThemePreference } from "@/lib/theme/types";
+import type { ThemePreference } from "@/components/common/utils/theme/types";
 
 const THEME_ICONS = {
   light: Sun,

@@ -11,7 +11,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import type { Order } from "@/types/order/orderTypes";
+import type { Order } from "@/components/storefront/orders/types/orderTypes";
 import {
   getOrderDisplayStatus,
   getOrderStatusBadgeClassName,

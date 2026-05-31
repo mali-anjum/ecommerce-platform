@@ -1,8 +1,8 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import type { ThemePreference } from "@/lib/theme/types";
-import { THEME_PREFERENCES } from "@/lib/theme/types";
+import type { ThemePreference } from "@/components/common/utils/theme/types";
+import { THEME_PREFERENCES } from "@/components/common/utils/theme/types";
 
 const SEGMENT_LABELS: Record<ThemePreference, string> = {
   light: "Light",

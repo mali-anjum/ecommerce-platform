@@ -1,8 +1,8 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useAnalyticsStore } from "@/store/useAnalyticsStore";
-import type { AnalyticsDashboard, AnalyticsPeriod } from "@/types/analytics";
+import { useAnalyticsStore } from "@/components/super-admin/analytics/state/useAnalyticsStore";
+import type { AnalyticsDashboard, AnalyticsPeriod } from "@/components/super-admin/analytics/types/analytics";
 import { AlertCircle } from "lucide-react";
 import { useEffect } from "react";
 import { AnalyticsShell } from "../molecules/AnalyticsShell";

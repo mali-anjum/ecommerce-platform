@@ -12,8 +12,8 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import type { User as AuthUser } from "@/types/auth/User";
-import type { ProductCategory } from "@/types/category";
+import type { User as AuthUser } from "@/components/auth/types/User";
+import type { ProductCategory } from "@/components/products/types/category";
 import type { MobileSheetView } from "@/components/layout/site-header/types/site-header.types";
 import { MobileSheetAccountPanel } from "./MobileSheetAccountPanel";
 import { MobileSheetCategoriesPanel } from "./MobileSheetCategoriesPanel";

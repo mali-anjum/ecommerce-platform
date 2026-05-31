@@ -1,8 +1,8 @@
 "use client";
 
-import { useAuthStore } from "@/store/useAuthStore";
-import { useCartStore } from "@/store/useCartStore";
-import { useWishlistStore } from "@/store/useWishlistStore";
+import { useAuthStore } from "@/components/auth/state/useAuthStore";
+import { useCartStore } from "@/components/storefront/cart/state/useCartStore";
+import { useWishlistStore } from "@/components/storefront/wishlist/state/useWishlistStore";
 import { useEffect } from "react";
 
 /** Loads cart and wishlist counts when the user is signed in. */

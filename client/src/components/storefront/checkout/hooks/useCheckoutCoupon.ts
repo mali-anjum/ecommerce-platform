@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useToast } from '@/components/ui/hooks/use-toast';
-import type { Coupon } from '@/types/checkout/Coupon';
+import type { Coupon } from '@/components/storefront/checkout/types/Coupon';
 
 export const useCheckoutCoupon = (couponList: Coupon[]) => {
   const { toast } = useToast();

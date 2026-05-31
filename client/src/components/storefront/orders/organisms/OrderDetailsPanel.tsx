@@ -1,13 +1,13 @@
 "use client";
 
-import type { Order } from "@/types/order/orderTypes";
+import type { Order } from "@/components/storefront/orders/types/orderTypes";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { OrderHorizontalStepper } from "@/components/storefront/orders/molecules/OrderHorizontalStepper";
 import { OrderEventTimeline } from "@/components/storefront/orders/molecules/OrderEventTimeline";
 import { OrderStatusBadge } from "@/components/storefront/orders/atoms/OrderStatusBadge";
-import { formatCurrency, formatDate } from "@/types/formatCurrency";
+import { formatCurrency, formatDate } from "@/components/common/utils/formatCurrency";
 import {
   getOrderDisplayStatus,
   isOrderTerminalFailure,

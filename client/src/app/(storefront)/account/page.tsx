@@ -17,10 +17,10 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/hooks/use-toast";
-import { useAddressStore } from "@/store/useAddressStore";
-import type { Address } from "@/types/address/Address";
-import type { Order } from "@/types/order/orderTypes";
-import { useOrderStore } from "@/store/useOrderStore";
+import { useAddressStore } from "@/components/storefront/checkout/state/useAddressStore";
+import type { Address } from "@/components/storefront/checkout/types/Address";
+import type { Order } from "@/components/storefront/orders/types/orderTypes";
+import { useOrderStore } from "@/components/storefront/orders/state/useOrderStore";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { 

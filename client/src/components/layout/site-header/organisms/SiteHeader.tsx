@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import ThemeToggle from "@/components/common/organisms/theme/ThemeToggler";
-import { useAuthStore } from "@/store/useAuthStore";
+import { useAuthStore } from "@/components/auth/state/useAuthStore";
 import { HeaderAccountDropdown } from "@/components/layout/site-header/organisms/HeaderAccountDropdown";
 import { HeaderBrandLogo } from "@/components/layout/site-header/atoms/HeaderBrandLogo";
 import { HeaderDesktopNavBar } from "@/components/layout/site-header/organisms/HeaderDesktopNavBar";

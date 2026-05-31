@@ -6,7 +6,7 @@ import {
   SHIPPING_PROGRESS_LABELS,
   getShippingStepIndex,
 } from "@/components/storefront/orders/utils/orderFilters";
-import type { Order } from "@/types/order/orderTypes";
+import type { Order } from "@/components/storefront/orders/types/orderTypes";
 
 export function OrderHorizontalStepper({ status }: { status: Order["status"] }) {
   const activeIndex = getShippingStepIndex(status);

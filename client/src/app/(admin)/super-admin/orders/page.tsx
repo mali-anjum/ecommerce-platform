@@ -17,8 +17,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/components/ui/hooks/use-toast";
-import { useOrderStore } from "@/store/useOrderStore";
-import type { Order } from "@/types/order/orderTypes";
+import { useOrderStore } from "@/components/storefront/orders/state/useOrderStore";
+import type { Order } from "@/components/storefront/orders/types/orderTypes";
 import { useEffect, useState } from "react";
 import { 
   Package, 

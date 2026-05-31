@@ -2,12 +2,12 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useSettingsStore } from "@/store/useSettingsStore";
+import { useSettingsStore } from "@/components/super-admin/state/useSettingsStore";
 import { useEffect, useState, useCallback, memo } from "react";
 import Link from "next/link";
 import axios from "axios";
-import { API_ROUTES } from "@/utils/routes/api";
-import type { Product } from "@/types/product";
+import { API_ROUTES } from "@/lib/routes/api";
+import type { Product } from "@/components/products/types/product";
 import { WishlistHeartButton } from "@/components/storefront/wishlist/atoms/WishlistHeartButton";
 import { buildWishlistSnapshot } from "@/components/storefront/wishlist/utils/wishlistSnapshot";
 

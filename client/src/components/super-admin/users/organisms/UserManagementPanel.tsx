@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useAdminUsersStore } from "@/store/useAdminUsersStore";
-import { useAuthStore } from "@/store/useAuthStore";
-import type { AdminUserRole } from "@/types/admin/userAdminTypes";
+import { useAdminUsersStore } from "@/components/super-admin/users/state/useAdminUsersStore";
+import { useAuthStore } from "@/components/auth/state/useAuthStore";
+import type { AdminUserRole } from "@/components/super-admin/users/types/userAdminTypes";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

@@ -1,13 +1,13 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import type { Order } from "@/types/order/orderTypes";
+import type { Order } from "@/components/storefront/orders/types/orderTypes";
 import {
   getOrderProgressIndex,
   ORDER_STATUS_STEPS,
   ORDER_TERMINAL_STATUS,
-} from "@/types/order/orderTracking";
-import { formatDate } from "@/types/formatCurrency";
+} from "@/components/storefront/orders/types/orderTracking";
+import { formatDate } from "@/components/common/utils/formatCurrency";
 
 export default function OrderTimeline({
   status,

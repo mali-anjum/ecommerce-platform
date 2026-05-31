@@ -37,7 +37,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
-import { useAuthStore } from "@/store/useAuthStore";
+import { useAuthStore } from "@/components/auth/state/useAuthStore";
 import { useEffect, useState } from "react";
 
 interface SidebarProps {

@@ -2,7 +2,7 @@
 
 import { ChevronDown, HelpCircle } from "lucide-react";
 import Link from "next/link";
-import type { ProductCategory } from "@/types/category";
+import type { ProductCategory } from "@/components/products/types/category";
 import { SITE_HEADER_MAIN_NAV } from "@/components/layout/site-header/config/site-header-main-nav";
 
 type HeaderDesktopNavBarProps = {

@@ -17,8 +17,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/components/ui/hooks/use-toast";
-import { useAuthStore } from "@/store/useAuthStore";
-import { useProductStore } from "@/store/useProductStore";
+import { useAuthStore } from "@/components/auth/state/useAuthStore";
+import { useProductStore } from "@/components/products/state/useProductStore";
 
 type AllowedRole = "SUPER_ADMIN" | "SELLER";
 

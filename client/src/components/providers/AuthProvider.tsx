@@ -2,10 +2,10 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useAuthStore } from "@/store/useAuthStore";
+import { useAuthStore } from "@/components/auth/state/useAuthStore";
 import useSilentAuth from "@/components/providers/hooks/useSilentAuth";
 import { usePathname } from "next/navigation";
-import { authLogger } from "@/utils/Logger";
+import { authLogger } from "@/lib/logger";
 
 export default function AuthProvider({
   children,

@@ -19,8 +19,8 @@ import { useToast } from "@/components/ui/hooks/use-toast";
 import { useProductCatalog } from "@/components/products/hooks/useProductCatalog";
 import {
   inferSubcategoryFromTitle,
-} from "@/lib/catalog/inferSubcategoryFromTitle";
-import { useProductStore } from "@/store/useProductStore";
+} from "@/components/products/utils/inferSubcategoryFromTitle";
+import { useProductStore } from "@/components/products/state/useProductStore";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
 import { useRouter, useSearchParams } from "next/navigation";

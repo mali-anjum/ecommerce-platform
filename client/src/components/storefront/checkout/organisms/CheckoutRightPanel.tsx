@@ -1,6 +1,6 @@
 import { OrderSummary } from "@/components/storefront/checkout/molecules/CheckoutOrderSummary";
-import { CartItemWithProduct } from "@/types/cart/cartItemStore";
-import type { Coupon } from "@/types/checkout/Coupon";
+import { CartItemWithProduct } from "@/components/storefront/cart/types/cartItemStore";
+import type { Coupon } from "@/components/storefront/checkout/types/Coupon";
 
 interface CheckoutRightPanelProps {
   cartItems: CartItemWithProduct[];

@@ -4,10 +4,10 @@ import { useCallback } from "react";
 import { Heart, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { useAuthStore } from "@/store/useAuthStore";
-import { useWishlistStore } from "@/store/useWishlistStore";
+import { useAuthStore } from "@/components/auth/state/useAuthStore";
+import { useWishlistStore } from "@/components/storefront/wishlist/state/useWishlistStore";
 import { useToast } from "@/components/ui/hooks/use-toast";
-import type { WishlistProductSnapshot } from "@/types/wishlist/wishlistTypes";
+import type { WishlistProductSnapshot } from "@/components/storefront/wishlist/types/wishlistTypes";
 import { cn } from "@/lib/utils";
 
 type WishlistCtaButtonProps = {

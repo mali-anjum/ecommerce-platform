@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import { useCartSelectionStore } from "@/store/useCartSelectionStore";
+import { useCartSelectionStore } from "@/components/storefront/cart/state/useCartSelectionStore";
 
 type CartLine = {
   id: string;

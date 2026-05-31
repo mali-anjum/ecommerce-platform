@@ -4,8 +4,8 @@ import { CartCheckbox } from "@/components/storefront/cart/atoms/CartCheckbox";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Heart, Minus, Plus, Trash2 } from "lucide-react";
-import type { CartItemProps } from "@/types/cart/CartItemProps";
-import { useWishlistStore } from "@/store/useWishlistStore";
+import type { CartItemProps } from "@/components/storefront/cart/types/CartItemProps";
+import { useWishlistStore } from "@/components/storefront/wishlist/state/useWishlistStore";
 import { useToast } from "@/components/ui/hooks/use-toast";
 
 export function CartItem({

@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useOrderStore } from "@/store/useOrderStore";
+import { useOrderStore } from "@/components/storefront/orders/state/useOrderStore";
 import type {
   AdminTransaction,
   AdminTransactionsQuery
-} from "@/types/order/orderTypes";
+} from "@/components/storefront/orders/types/orderTypes";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
