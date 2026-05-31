@@ -1,4 +1,4 @@
-import type { AdminUserRole } from "@/types/admin/userAdminTypes";
+import type { AdminUserRole } from "@/components/super-admin/users/types/userAdminTypes";
 
 export const ROLE_LABELS: Record<AdminUserRole, string> = {
   USER: "Customer",

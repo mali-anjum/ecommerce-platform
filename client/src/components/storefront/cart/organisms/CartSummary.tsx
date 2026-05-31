@@ -11,7 +11,7 @@ import {
   ShoppingCart,
   Truck
 } from "lucide-react";
-import type { CartSummaryProps } from "@/types/cart/CartSummaryProps";
+import type { CartSummaryProps } from "@/components/storefront/cart/types/CartSummaryProps";
 import { CART_FREE_SHIPPING_THRESHOLD } from "@/components/storefront/cart/utils/cartTotals";
 
 export function CartSummary({

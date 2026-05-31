@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useThemeStore } from "@/store/useThemeStore";
+import { useThemeStore } from "@/components/common/state/useThemeStore";
 
 /** Applies saved theme before paint and wires system preference listener. */
 export default function ThemeInitializer() {

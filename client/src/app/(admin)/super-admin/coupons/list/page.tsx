@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useCouponStore } from "@/store/useCouponStore";
+import { useCouponStore } from "@/components/storefront/checkout/state/useCouponStore";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { format, differenceInDays, isAfter, isBefore } from "date-fns";

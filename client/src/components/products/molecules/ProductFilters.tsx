@@ -5,8 +5,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { brands, categories as defaultCategories, sizes } from "@/utils/config";
-import { useCategoryStore } from "@/store/useCategoryStore";
+import { brands, categories as defaultCategories, sizes } from "@/components/products/config/catalogDefaults";
+import { useCategoryStore } from "@/components/products/state/useCategoryStore";
 
 const colors = [
   { name: "Navy", class: "bg-[#0F172A]" },

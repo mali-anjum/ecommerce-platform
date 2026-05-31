@@ -15,7 +15,7 @@ import {
   ShoppingCart,
   BadgeCheck,
 } from "lucide-react";
-import { useAuthStore } from "@/store/useAuthStore";
+import { useAuthStore } from "@/components/auth/state/useAuthStore";
 import { cn } from "@/lib/utils";
 
 type NavItem = {

@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/hooks/use-toast";
-import { useAuthStore } from "@/store/useAuthStore";
+import { useAuthStore } from "@/components/auth/state/useAuthStore";
 import { useRouter } from "next/navigation";
-import { ROUTES } from "@/utils/routes/api"
+import { ROUTES } from "@/lib/routes/api"
 import { LoginFormData } from "@/components/schemas/loginSchema";
 
 export const useLogin = () => {

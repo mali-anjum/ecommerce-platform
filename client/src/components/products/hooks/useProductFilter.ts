@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { ProductFilters } from "@/types/product";
+import { ProductFilters } from "@/components/products/types/product";
 
 export const useProductFilters = () => {
   const [priceRange, setPriceRange] = useState([0, 100000]);

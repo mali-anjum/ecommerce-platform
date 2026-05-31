@@ -2,7 +2,7 @@
 
 import { ProductGrid } from "@/components/products/organisms/ProductGrid";
 import { Pagination } from "@/components/products/molecules/ProductPagination";
-import type { Product } from "@/types/product";
+import type { Product } from "@/components/products/types/product";
 import { ProductsEmptyState } from "@/components/products/listing/molecules/ProductsEmptyState";
 import { ProductsFetchErrorState } from "@/components/products/listing/molecules/ProductsFetchErrorState";
 import { ProductsLoadMoreButton } from "@/components/products/listing/molecules/ProductsLoadMoreButton";

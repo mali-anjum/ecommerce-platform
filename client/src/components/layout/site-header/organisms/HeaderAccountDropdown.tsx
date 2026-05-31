@@ -16,7 +16,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { User as AuthUser } from "@/types/auth/User";
+import type { User as AuthUser } from "@/components/auth/types/User";
 import {
   SITE_HEADER_ACCOUNT_LINKS,
   getAccountMenuHelper,

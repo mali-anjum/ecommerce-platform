@@ -3,7 +3,7 @@
 import { ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import type { ProductCategory } from "@/types/category";
+import type { ProductCategory } from "@/components/products/types/category";
 import { MobileSheetBackHeader } from "@/components/layout/site-header/atoms/MobileSheetBackHeader";
 
 type MobileSheetCategoriesPanelProps = {

@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { CartItem, CartItemWithProduct } from '@/types/cart/cartItemStore';
-import { useCartSelectionStore } from '@/store/useCartSelectionStore';
+import { CartItem, CartItemWithProduct } from '@/components/storefront/cart/types/cartItemStore';
+import { useCartSelectionStore } from '@/components/storefront/cart/state/useCartSelectionStore';
 
 export const useCheckoutCart = (items: CartItem[]) => {
   const [cartItemsWithDetails, setCartItemsWithDetails] = useState<CartItemWithProduct[]>([]);

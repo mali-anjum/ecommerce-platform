@@ -1,8 +1,8 @@
 "use client";
 
-import { useProductStore } from "@/store/useProductStore";
+import { useProductStore } from "@/components/products/state/useProductStore";
 import { useProductFilters } from "@/components/products/hooks/useProductFilter";
-import { handleApiError } from "@/utils/errHandler";
+import { handleApiError } from "@/components/products/listing/utils/handleApiError";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toApiCollection } from "@/components/products/listing/utils/products-listing.utils";

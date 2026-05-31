@@ -2,11 +2,11 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 
 // Store hooks
-import { useAddressStore } from "@/store/useAddressStore";
-import { useAuthStore } from "@/store/useAuthStore";
-import { useCartStore } from "@/store/useCartStore";
-import { useCouponStore } from "@/store/useCouponStore";
-import { useOrderStore } from "@/store/useOrderStore";
+import { useAddressStore } from "@/components/storefront/checkout/state/useAddressStore";
+import { useAuthStore } from "@/components/auth/state/useAuthStore";
+import { useCartStore } from "@/components/storefront/cart/state/useCartStore";
+import { useCouponStore } from "@/components/storefront/checkout/state/useCouponStore";
+import { useOrderStore } from "@/components/storefront/orders/state/useOrderStore";
 
 // Custom hooks
 import { useCheckoutData } from '@/components/storefront/checkout/hooks/useCheckoutData';

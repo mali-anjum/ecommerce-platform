@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useToast } from "@/components/ui/hooks/use-toast";
-import { useAuthStore } from "@/store/useAuthStore";
+import { useAuthStore } from "@/components/auth/state/useAuthStore";
 import { useRouter } from "next/navigation";
 import { RegisterFormData } from "@/components/schemas/registerSchema";
 import { protectSignUpAction } from "@/actions/auth";

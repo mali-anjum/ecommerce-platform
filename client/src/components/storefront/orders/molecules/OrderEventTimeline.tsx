@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import type { OrderTrackingEvent } from "@/types/order/orderTypes";
+import type { OrderTrackingEvent } from "@/components/storefront/orders/types/orderTypes";
 
 function formatTimelineDate(value: string) {
   const date = new Date(value);

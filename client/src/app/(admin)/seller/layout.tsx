@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useAuthStore } from "@/store/useAuthStore";
+import { useAuthStore } from "@/components/auth/state/useAuthStore";
 import { cn } from "@/lib/utils";
 import { LayoutDashboard, Package, Receipt } from "lucide-react";
 

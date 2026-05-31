@@ -1,6 +1,6 @@
 "use client";
 
-import { useCategoryStore } from "@/store/useCategoryStore";
+import { useCategoryStore } from "@/components/products/state/useCategoryStore";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type { DepartmentOptionGroup } from "@/components/layout/site-header/types/site-header.types";

@@ -1,9 +1,9 @@
 // hooks/useSilentAuth.tsx - WITH LOGGER
 "use client";
 import { useEffect, useRef, useCallback } from "react";
-import { useAuthStore } from "@/store/useAuthStore";
-import { authLogger } from "@/utils/Logger";
-import { getSafeISOString } from "@/utils/getSafeISOString";
+import { useAuthStore } from "@/components/auth/state/useAuthStore";
+import { authLogger } from "@/lib/logger";
+import { getSafeISOString } from "@/components/auth/utils/getSafeISOString";
 
 export const REFRESH_FAILURE_COOLDOWN_MS = 2 * 60 * 1000;
 

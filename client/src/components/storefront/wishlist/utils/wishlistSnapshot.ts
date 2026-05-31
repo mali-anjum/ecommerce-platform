@@ -1,8 +1,8 @@
-import type { Product } from "@/types/product";
+import type { Product } from "@/components/products/types/product";
 import type {
   WishlistAvailability,
   WishlistProductSnapshot,
-} from "@/types/wishlist/wishlistTypes";
+} from "@/components/storefront/wishlist/types/wishlistTypes";
 import { computeProductPricing } from "@/components/products/utils/productPricing";
 
 export function getProductAvailability(product: Product): WishlistAvailability {

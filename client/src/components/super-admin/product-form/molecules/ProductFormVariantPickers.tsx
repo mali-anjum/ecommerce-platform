@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { colors, sizes } from "@/utils/config";
+import { colors, sizes } from "@/components/products/config/catalogDefaults";
 import { Palette, Ruler } from "lucide-react";
 
 interface ProductFormSizePickerProps {

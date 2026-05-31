@@ -1,6 +1,6 @@
 // components/user/checkout/OrderSummary.tsx
-import { Coupon } from "@/types/checkout/Coupon";
-import { CartItemWithProduct } from "@/types/checkout";
+import { Coupon } from "@/components/storefront/checkout/types/Coupon";
+import { CartItemWithProduct } from "@/components/storefront/checkout/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

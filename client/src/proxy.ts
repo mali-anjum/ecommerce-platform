@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
-import { proxyLogger } from "@/utils/Logger";
+import { proxyLogger } from "@/lib/logger";
 
 const publicRoutes = ["/auth/register", "/auth/login", "/help"];
 const authRoutes = ["/auth/register", "/auth/login"];

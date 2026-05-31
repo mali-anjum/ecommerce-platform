@@ -8,7 +8,7 @@ import type {
   PaymentBreakdown,
   StatusBreakdown,
   TrendPoint,
-} from "@/types/analytics";
+} from "@/components/super-admin/analytics/types/analytics";
 import {
   Area,
   AreaChart,

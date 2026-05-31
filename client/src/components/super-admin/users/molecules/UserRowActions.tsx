@@ -1,6 +1,6 @@
 "use client";
 
-import type { AdminUserListItem, AdminUserRole } from "@/types/admin/userAdminTypes";
+import type { AdminUserListItem, AdminUserRole } from "@/components/super-admin/users/types/userAdminTypes";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,

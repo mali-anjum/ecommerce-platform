@@ -1,4 +1,4 @@
-import { API_ROUTES } from "@/utils/routes/api";
+import { API_ROUTES } from "@/lib/routes/api";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(

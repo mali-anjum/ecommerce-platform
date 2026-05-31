@@ -1,4 +1,4 @@
-import type { Order } from "@/types/order/orderTypes";
+import type { Order } from "@/components/storefront/orders/types/orderTypes";
 
 export type OrderListTab =
   | "all"

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/hooks/use-toast";
-import { useCouponStore } from "@/store/useCouponStore";
+import { useCouponStore } from "@/components/storefront/checkout/state/useCouponStore";
 import {
   Tag,
   Percent,
@@ -30,7 +30,7 @@ import { DateValidation } from "@/components/super-admin/coupon/molecules/Coupon
 import {
   generateCouponCode,
   validateGeneratedCode,
-} from "@/utils/coupon/couponGenerator";
+} from "@/components/super-admin/coupon/utils/couponGenerator";
 
 function SuperAdminManageCouponsPage() {
   const [formData, setFormData] = useState({

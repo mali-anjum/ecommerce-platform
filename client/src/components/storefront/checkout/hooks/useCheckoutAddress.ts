@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import type { Address } from '@/types/checkout';
+import type { Address } from '@/components/storefront/checkout/types';
 
 export const useCheckoutAddress = (addresses: Address[]) => {
   const [selectedAddress, setSelectedAddress] = useState<string>("");

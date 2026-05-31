@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import {
   ANALYTICS_PERIOD_OPTIONS,
   type AnalyticsPeriod,
-} from "@/types/analytics";
+} from "@/components/super-admin/analytics/types/analytics";
 import {
   BarChart3,
   Globe2,

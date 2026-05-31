@@ -2,8 +2,8 @@
 
 import { Button } from "@/components/ui/button";
 import { CartCheckbox } from "@/components/storefront/cart/atoms/CartCheckbox";
-import { useAuthStore } from "@/store/useAuthStore";
-import { useCartStore } from "@/store/useCartStore";
+import { useAuthStore } from "@/components/auth/state/useAuthStore";
+import { useCartStore } from "@/components/storefront/cart/state/useCartStore";
 import {
   Plus,
   ShoppingCart,

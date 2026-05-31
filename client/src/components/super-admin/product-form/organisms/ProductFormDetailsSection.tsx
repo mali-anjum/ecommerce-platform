@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { brands } from "@/utils/config";
+import { brands } from "@/components/products/config/catalogDefaults";
 import { List, Package, Tag, Users } from "lucide-react";
 import type { Control, FieldErrors, UseFormRegisterReturn } from "react-hook-form";
 import { Controller } from "react-hook-form";

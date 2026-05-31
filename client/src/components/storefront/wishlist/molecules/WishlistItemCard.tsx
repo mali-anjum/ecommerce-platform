@@ -12,10 +12,10 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useCartStore } from "@/store/useCartStore";
-import { useWishlistStore } from "@/store/useWishlistStore";
+import { useCartStore } from "@/components/storefront/cart/state/useCartStore";
+import { useWishlistStore } from "@/components/storefront/wishlist/state/useWishlistStore";
 import { useToast } from "@/components/ui/hooks/use-toast";
-import type { WishlistItem } from "@/types/wishlist/wishlistTypes";
+import type { WishlistItem } from "@/components/storefront/wishlist/types/wishlistTypes";
 import { getDisplayPrice } from "@/components/products/utils/productPricing";
 import { cn } from "@/lib/utils";
 
