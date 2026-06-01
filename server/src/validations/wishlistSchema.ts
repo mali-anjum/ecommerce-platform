@@ -6,7 +6,7 @@ export const toggleWishlistSchema = z.object({
 });
 
 export const wishlistItemParamsSchema = z.object({
-  id: z.string().uuid("Invalid wishlist item id"),
+  id: z.uuid("Invalid wishlist item id"),
 });
 
 export type ToggleWishlistInput = z.infer<typeof toggleWishlistSchema>;
