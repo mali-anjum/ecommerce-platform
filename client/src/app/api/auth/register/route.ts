@@ -45,16 +45,15 @@ export async function POST(req: NextRequest) {
 
     // Handle backend errors gracefully
     if (!backendRes.ok) {
-      const errorData = await backendRes.json().catch(() => ({
-        error: `Backend responded with ${backendRes.status}`
-      }));
-      
+      const errorData = await backendRes.json().catch(() => ({}));
+      const message =
+        (typeof errorData.error === "string" && errorData.error) ||
+        (typeof errorData.message === "string" && errorData.message) ||
+        `Registration failed with status ${backendRes.status}`;
+
       return NextResponse.json(
-        { 
-          success: false, 
-          error: errorData.error || `Registration failed with status ${backendRes.status}` 
-        },
-        { status: backendRes.status }
+        { success: false, error: message },
+        { status: backendRes.status },
       );
     }
 
@@ -68,23 +67,42 @@ export async function POST(req: NextRequest) {
 
     return response;
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Register proxy error:", error);
-    
-    // Differentiate error types
-    if (error.name === 'AbortError') {
+
+    const cause = error instanceof Error && "cause" in error ? error.cause : null;
+    const causeCode =
+      cause &&
+      typeof cause === "object" &&
+      "code" in cause &&
+      typeof cause.code === "string"
+        ? cause.code
+        : null;
+
+    if (error instanceof Error && error.name === "AbortError") {
       return NextResponse.json(
-        { success: false, error: "Registration timeout - please try again" },
-        { status: 504 }
+        { success: false, error: "Registration timed out. Please try again." },
+        { status: 504 },
+      );
+    }
+
+    if (causeCode === "ECONNREFUSED") {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Cannot reach the authentication server. Make sure the backend is running.",
+        },
+        { status: 503 },
       );
     }
 
     return NextResponse.json(
-      { 
-        success: false, 
-        error: "Registration service temporarily unavailable" 
+      {
+        success: false,
+        error: "Registration service is temporarily unavailable.",
       },
-      { status: 503 }
+      { status: 503 },
     );
   }
 }

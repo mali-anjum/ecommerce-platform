@@ -22,6 +22,7 @@ import {
   parseAdminProductPagination,
   parseProductConditionValue,
 } from "../services/product";
+import { scheduleProductIndexSync } from "../services/ai/productIndex";
 
 // TODO: Consider cleaning up uploaded Cloudinary images if DB insert failed (use public_id to delete).
 // Use Promise.allSettled and handle partial failures gracefully.
@@ -244,6 +245,7 @@ const createProduct = asyncHandler(
         productId: newlyCreatedProduct.id,
         productName: name,
       });
+      scheduleProductIndexSync(newlyCreatedProduct.id);
       return res
         .status(201)
         .json(
@@ -484,6 +486,8 @@ const updateProduct = asyncHandler(
       },
     });
 
+    scheduleProductIndexSync(product.id);
+
     return res
       .status(200)
       .json(new ApiResponse(200, product, "Product updated successfully"));
@@ -511,6 +515,7 @@ const deleteProduct = asyncHandler(
     }
 
     await prisma.product.delete({ where: { id } });
+    scheduleProductIndexSync(id);
 
     return res
       .status(200)

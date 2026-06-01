@@ -12,8 +12,7 @@ import { InputField } from "@/components/auth/atoms/FormInput";
 import { LoadingButton } from "@/components/auth/atoms/LoadingButton";
 import { PasswordStrengthIndicator } from "@/components/auth/molecules/PasswordStrengthIndicator";
 import { BenefitsGrid } from "@/components/auth/molecules/BenefitsGrid";
-import logo from "../../../../public/images/logo.webp"
-
+import { GoogleOAuthButton } from "@/components/auth/molecules/GoogleOAuthButton";
 export const RegisterForm = () => {
   const { isLoading, onSubmit } = useRegister();
 
@@ -54,7 +53,7 @@ export const RegisterForm = () => {
           <div className="relative">
             <div className="absolute -inset-4 rounded-full bg-gradient-to-r from-primary via-secondary to-accent opacity-20 blur-xl group-hover:opacity-30 transition-opacity duration-500" />
             <Image 
-              src={logo} 
+              src="/images/logo.webp"
               width={180} 
               height={45} 
               alt="Company Logo" 
@@ -125,6 +124,8 @@ export const RegisterForm = () => {
 
           
           <LoadingButton isLoading={isLoading} variant="register" />
+
+          <GoogleOAuthButton disabled={isLoading} />
           
           <div className="text-center pt-4 border-t border-border/50">
             <p className="text-muted-foreground">

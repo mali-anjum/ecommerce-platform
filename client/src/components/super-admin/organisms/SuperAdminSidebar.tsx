@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import {
   ChevronLeft,
   ChevronRight,
-  FileText,
   ListOrdered,
   LogOut,
   Package,
@@ -15,7 +14,6 @@ import {
   Settings,
   LayoutDashboard,
   Users,
-  BarChart3,
   Shield,
   Zap,
   Sparkles,
@@ -35,6 +33,13 @@ import {
   Globe as GlobeIcon,
   Zap as ZapIcon,
   TrendingUp,
+  Bot,
+  HelpCircle,
+  BookOpen,
+  UserPlus,
+  FileText,
+  BarChart3,
+  Headphones,
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/components/auth/state/useAuthStore";
@@ -289,9 +294,40 @@ const menuSections = [
         href: "/super-admin/users",
       },
       {
+        name: "Leads",
+        icon: UserPlus,
+        href: "/super-admin/leads",
+      },
+      {
         name: "Admins",
         icon: Shield,
         href: "/super-admin/admins",
+      },
+    ],
+  },
+  {
+    title: "AI Operations",
+    icon: Bot,
+    items: [
+      {
+        name: "FAQ",
+        icon: HelpCircle,
+        href: "/super-admin/ai/faq",
+      },
+      {
+        name: "Documents",
+        icon: FileText,
+        href: "/super-admin/ai/knowledge-base",
+      },
+      {
+        name: "Analytics",
+        icon: BarChart3,
+        href: "/super-admin/ai/analytics",
+      },
+      {
+        name: "Support tickets",
+        icon: Headphones,
+        href: "/super-admin/ai/support-tickets",
       },
     ],
   },
@@ -303,6 +339,11 @@ const menuSections = [
         name: "Settings",
         icon: Settings,
         href: "/super-admin/settings",
+      },
+      {
+        name: "Store policies",
+        icon: BookOpen,
+        href: "/super-admin/knowledge",
       },
       {
         name: "Themes",

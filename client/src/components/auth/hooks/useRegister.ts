@@ -13,44 +13,47 @@ export const useRegister = () => {
 
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true);
-    
+
     try {
-      // First level validation - check if email exists
       const checkFirstLevelOfValidation = await protectSignUpAction(data.email);
-      
+
       if (!checkFirstLevelOfValidation.success) {
         toast({
-          title: "⚠️ Registration Error",
+          title: "Registration error",
           description: checkFirstLevelOfValidation.error,
           variant: "destructive",
         });
         return { success: false, error: checkFirstLevelOfValidation.error };
       }
 
-      // Register the user
       const userId = await register(data.name, data.email, data.password);
-      
-      if (userId) {
-        toast({
-          title: "🎉 Account Created!",
-          description: "Your futuristic account is ready. Redirecting to login...",
-          className: "bg-primary/10 border-primary/20",
-        });
-        
-        // Add a celebratory effect and redirect
-        setTimeout(() => {
-          router.push("/auth/login");
-        }, 1500);
-        
-        return { success: true, userId };
+
+      if (!userId) {
+        throw new Error("Registration failed");
       }
+
+      toast({
+        title: "Account created",
+        description: "Your account is ready. Redirecting to login...",
+        className: "bg-primary/10 border-primary/20",
+      });
+
+      setTimeout(() => {
+        router.push("/auth/login");
+      }, 1500);
+
+      return { success: true, userId };
     } catch (error) {
       toast({
-        title: "🚨 Registration Failed",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        title: "Registration failed",
+        description:
+          error instanceof Error ? error.message : "An unexpected error occurred",
         variant: "destructive",
       });
-      return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
     } finally {
       setIsLoading(false);
     }

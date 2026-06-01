@@ -3,4 +3,5 @@ export interface User {
   name: string | null;
   email: string;
   role: "USER" | "SELLER" | "SUPER_ADMIN";
+  profileComplete?: boolean;
 }

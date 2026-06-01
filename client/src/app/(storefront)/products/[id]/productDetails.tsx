@@ -208,6 +208,7 @@ import { Star, Truck, Shield, RefreshCw } from "lucide-react";
 import { WishlistHeartButton } from "@/components/storefront/wishlist/atoms/WishlistHeartButton";
 import { WishlistCtaButton } from "@/components/storefront/wishlist/atoms/WishlistCtaButton";
 import { buildWishlistSnapshot } from "@/components/storefront/wishlist/utils/wishlistSnapshot";
+import { trackProductView } from "@/lib/analytics/trackEvent";
 
 // Modular Components
 const ProductImageGallery = memo(({ 
@@ -597,6 +598,10 @@ function ProductDetailsContent({ id }: { id: string }) {
 
     fetchProduct();
   }, [id, getProductById, router]);
+
+  useEffect(() => {
+    trackProductView(id);
+  }, [id]);
 
   const hasSizeOptions = Array.isArray(product?.sizes) && product.sizes.length > 0;
   const hasColorOptions = Array.isArray(product?.colors) && product.colors.length > 0;

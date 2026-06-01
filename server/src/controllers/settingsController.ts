@@ -3,6 +3,7 @@ import { AuthenticatedRequest } from "../types/express";
 import cloudinary from "../config/cloudinary";
 import { prisma } from "../lib/prisma";
 import fs from "fs";
+import { scheduleProductIndexRebuild } from "../services/ai/productIndex";
 
 const addFeatureBanners = async (
   req: AuthenticatedRequest,
@@ -98,6 +99,8 @@ const updateFeaturedProducts = async (
       where: { id: { in: productIds } },
       data: { isFeatured: true },
     });
+
+    scheduleProductIndexRebuild();
 
     res.status(200).json({
       success: true,

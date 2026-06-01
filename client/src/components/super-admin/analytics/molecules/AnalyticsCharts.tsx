@@ -29,6 +29,13 @@ import {
 import { CHART_COLORS, CHART_PALETTE, chartTooltipStyle } from "../utils/chartTheme";
 import { formatCurrency, formatStatusLabel } from "../utils/formatters";
 
+function formatIntentLabel(intent: string): string {
+  return intent
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
 /** SVG gradient — defined outside AreaChart to avoid TS generic/JSX ambiguity on `<defs>`. */
 const revenueAreaGradient = (
   <defs>
@@ -330,6 +337,145 @@ export function InventoryHealthPanel({
                 style={{
                   width: `${(row.value / total) * 100}%`,
                   backgroundColor: row.color,
+                }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function AiMetricsPanel({
+  metrics,
+}: {
+  metrics: AnalyticsDashboard["aiMetrics"];
+}) {
+  const totalIntents =
+    metrics.topIntents.reduce((sum, row) => sum + row.count, 0) || 1;
+
+  return (
+    <div className="glass-effect border border-glass-border rounded-2xl p-5 space-y-4">
+      <div>
+        <h3 className="text-lg font-semibold">AI assistant metrics</h3>
+        <p className="text-sm text-muted-foreground">
+          Shopping assistant usage and chat-to-order conversion for this period.
+        </p>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="rounded-xl border border-glass-border p-4">
+          <p className="text-xs uppercase tracking-wider text-muted-foreground">
+            Chat usage
+          </p>
+          <p className="text-2xl font-bold mt-1">
+            {metrics.chatUsageCount.toLocaleString()}
+          </p>
+        </div>
+        <div className="rounded-xl border border-glass-border p-4">
+          <p className="text-xs uppercase tracking-wider text-muted-foreground">
+            AI conversion rate
+          </p>
+          <p className="text-2xl font-bold mt-1">{metrics.conversionRate}%</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {metrics.convertedChats} chats led to orders
+          </p>
+        </div>
+      </div>
+      <div className="space-y-3">
+        <p className="text-sm font-medium">Top intents</p>
+        {metrics.topIntents.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No AI chats logged yet.</p>
+        ) : (
+          metrics.topIntents.map((row, index) => (
+            <div key={row.intent}>
+              <div className="flex justify-between text-sm mb-1">
+                <span>{formatIntentLabel(row.intent)}</span>
+                <span className="text-muted-foreground">
+                  {row.count} ({Math.round((row.count / totalIntents) * 100)}%)
+                </span>
+              </div>
+              <div className="h-2 rounded-full bg-muted overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-primary to-secondary transition-all"
+                  style={{
+                    width: `${Math.max(8, (row.count / totalIntents) * 100)}%`,
+                    opacity: 1 - index * 0.12,
+                  }}
+                />
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+export function FunnelTrackingPanel({
+  funnel,
+}: {
+  funnel: AnalyticsDashboard["funnelTracking"];
+}) {
+  const stages = [
+    {
+      label: "Chat",
+      count: funnel.sessionCounts.startedChat,
+      events: funnel.chat,
+    },
+    {
+      label: "Product view",
+      count: funnel.sessionCounts.reachedProductView,
+      events: funnel.productView,
+      rate: funnel.chatToProductViewRate,
+    },
+    {
+      label: "Cart add",
+      count: funnel.sessionCounts.reachedCart,
+      events: funnel.cartAdd,
+      rate: funnel.productViewToCartRate,
+    },
+    {
+      label: "Order complete",
+      count: funnel.sessionCounts.completedOrder,
+      events: funnel.orderComplete,
+      rate: funnel.cartToOrderRate,
+    },
+  ];
+
+  return (
+    <div className="glass-effect border border-glass-border rounded-2xl p-5 space-y-4">
+      <div>
+        <h3 className="text-lg font-semibold">AI commerce funnel</h3>
+        <p className="text-sm text-muted-foreground">
+          Chat → product view → cart → order, correlated by session or user.
+        </p>
+      </div>
+      <div className="rounded-xl border border-glass-border p-4">
+        <p className="text-xs uppercase tracking-wider text-muted-foreground">
+          Overall chat-to-order conversion
+        </p>
+        <p className="text-2xl font-bold mt-1">{funnel.overallConversionRate}%</p>
+      </div>
+      <div className="space-y-4">
+        {stages.map((stage, index) => (
+          <div key={stage.label}>
+            <div className="flex justify-between text-sm mb-1">
+              <span>{stage.label}</span>
+              <span className="text-muted-foreground">
+                {stage.count} sessions · {stage.events} events
+                {stage.rate !== undefined ? ` · ${stage.rate}% step rate` : ""}
+              </span>
+            </div>
+            <div className="h-2 rounded-full bg-muted overflow-hidden">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-primary to-accent transition-all"
+                style={{
+                  width: `${Math.max(
+                    8,
+                    (stage.count / Math.max(stages[0].count, 1)) * 100,
+                  )}%`,
+                  opacity: 1 - index * 0.1,
                 }}
               />
             </div>

@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Header from "@/components/layout/site-header";
+import { ShoppingAssistantWidget } from "@/components/assistant/ShoppingAssistantWidget";
 import { useEffect, useState } from "react";
 
 // Modular Components
@@ -117,6 +118,8 @@ function CommonLayout({ children }: { children: React.ReactNode }) {
     <>
       <RouteTransitionIndicator pathname={pathname || ""} />
       <LayoutContent showHeader={showHeader}>{children}</LayoutContent>
+
+      {showHeader && <ShoppingAssistantWidget />}
 
       {/* Floating Navigation Helper */}
       {showHeader && (

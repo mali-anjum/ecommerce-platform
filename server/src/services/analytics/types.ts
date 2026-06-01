@@ -123,6 +123,31 @@ export interface SellerPerformanceRow {
   productCount: number;
 }
 
+export interface AiMetricsSummary {
+  chatUsageCount: number;
+  chatUsageChangePercent: number;
+  conversionRate: number;
+  convertedChats: number;
+  topIntents: Array<{ intent: string; count: number }>;
+}
+
+export interface FunnelTrackingSummary {
+  chat: number;
+  productView: number;
+  cartAdd: number;
+  orderComplete: number;
+  chatToProductViewRate: number;
+  productViewToCartRate: number;
+  cartToOrderRate: number;
+  overallConversionRate: number;
+  sessionCounts: {
+    startedChat: number;
+    reachedProductView: number;
+    reachedCart: number;
+    completedOrder: number;
+  };
+}
+
 export interface AnalyticsDashboard {
   period: AnalyticsPeriod;
   generatedAt: string;
@@ -140,4 +165,6 @@ export interface AnalyticsDashboard {
   couponPerformance: CouponPerformanceRow[];
   recentOrders: RecentOrderRow[];
   sellerPerformance: SellerPerformanceRow[];
+  aiMetrics: AiMetricsSummary;
+  funnelTracking: FunnelTrackingSummary;
 }

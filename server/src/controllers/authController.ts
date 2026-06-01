@@ -3,57 +3,19 @@ import { prisma } from "../lib/prisma";
 import { Request, Response } from "express";
 import { AuthenticatedRequest } from "../types/express";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import { v4 as uuidv4 } from "uuid";
-import crypto from "crypto";
 import { buildTokenInfo } from "../utils/auth/tokenInfo";
 import { requireUserId } from "../utils/requireUserId";
 import { UnauthorizedError } from "../utils/ApiError";
-
-function signAccessToken(userId: string, email: string, role: string) {
-  return jwt.sign({ userId, email, role }, process.env.JWT_SECRET!, {
-    expiresIn: "15m",
-  });
-}
-
-// hash refresh token before storing (so DB safe)
-function hashToken(token: string) {
-  return crypto.createHash("sha256").update(token).digest("hex");
-}
-
-const isProd = process.env.NODE_ENV === "production";
-const cookieOptions = {
-  httpOnly: true,
-  secure: isProd,
-  sameSite: isProd ? "none" : "lax",
-  path: "/",
-} as const;
-
-async function setTokens(
-  res: Response,
-  accessToken: string,
-  refreshToken: string,
-) {
-  const ACCESS_TOKEN_MAX_AGE = 15 * 60 * 1000; // ✅ 15 minutes (matches JWT)
-  const REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days
-
-  // Access Token Cookie (15 minutes)
-  res.cookie("accessToken", accessToken, {
-    ...cookieOptions,
-    maxAge: ACCESS_TOKEN_MAX_AGE,
-  });
-
-  // Refresh Token Cookie (7 days)
-  res.cookie("refreshToken", refreshToken, {
-    ...cookieOptions,
-    maxAge: REFRESH_TOKEN_MAX_AGE,
-  });
-
-  return {
-    accessTokenExpiresIn: 15 * 60, // 15 minutes in seconds
-    refreshTokenExpiresIn: 7 * 24 * 60 * 60, // 7 days in seconds
-  };
-}
+import {
+  cookieOptions,
+  createSessionForUser,
+  hashToken,
+  setTokens,
+  signAccessToken,
+} from "../services/auth/sessionTokens";
+import { v4 as uuidv4 } from "uuid";
+import jwt from "jsonwebtoken";
+import { mapAuthErrorResponse } from "../utils/auth/authErrors";
 
 const register = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -98,8 +60,9 @@ const register = async (req: Request, res: Response): Promise<void> => {
       userId: user.id,
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Registration failed" });
+    console.error("Registration error:", error);
+    const { status, error: message } = mapAuthErrorResponse(error);
+    res.status(status).json({ success: false, error: message });
   }
 };
 
@@ -150,6 +113,16 @@ const login = async (req: Request, res: Response): Promise<void> => {
       res.status(401).json({
         success: false,
         error: "Invalid credentials",
+      });
+      return;
+    }
+
+    if (!user.password) {
+      console.warn(`❌ OAuth-only account attempted password login: ${email}`);
+      res.status(401).json({
+        success: false,
+        error:
+          "This account uses social sign-in. Please continue with Google, GitHub, or your linked provider.",
       });
       return;
     }
@@ -227,6 +200,8 @@ const getCurrentUser = async (req: Request, res: Response) => {
         name: true,
         email: true,
         role: true,
+        image: true,
+        profileComplete: true,
         createdAt: true,
       },
     });
@@ -364,22 +339,34 @@ export const issueSessionForUser = async (
   email: string;
   role: string;
 }> => {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { id: true, name: true, email: true, role: true },
-  });
-  if (!user) {
-    throw new Error("User not found");
+  const session = await createSessionForUser(res, userId);
+  return {
+    id: session.user.id,
+    name: session.user.name,
+    email: session.user.email,
+    role: session.user.role,
+  };
+};
+
+const markProfileComplete = async (
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const userId = requireUserId(req, "Authentication required");
+    await prisma.user.update({
+      where: { id: userId },
+      data: { profileComplete: true },
+    });
+    res.status(200).json({ success: true, message: "Profile marked complete" });
+  } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      res.status(401).json({ success: false, error: error.message });
+      return;
+    }
+    console.error("markProfileComplete error:", error);
+    res.status(500).json({ success: false, error: "Failed to update profile" });
   }
-  const newAccessToken = signAccessToken(user.id, user.email, user.role);
-  const newRefreshToken = uuidv4();
-  const newHashedRefreshToken = hashToken(newRefreshToken);
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { refreshToken: newHashedRefreshToken, lastLogin: new Date() },
-  });
-  await setTokens(res, newAccessToken, newRefreshToken);
-  return user;
 };
 
 export {
@@ -389,4 +376,5 @@ export {
   refreshAccessToken,
   heartbeat,
   logout,
+  markProfileComplete,
 };

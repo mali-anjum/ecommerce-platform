@@ -7,25 +7,24 @@ import { Mail, Lock } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
-import logo from "../../../../public/images/logo.webp"
 import { loginSchema, LoginFormData } from "@/components/schemas/loginSchema";
 import { ROUTES } from "@/lib/routes/api";
 import { InputField } from "@/components/auth/atoms/FormInput";
 import { LoadingButton } from "@/components/auth/atoms/LoadingButton";
 import { SecurityBadge } from "@/components/auth/atoms/SecurityBadge";
-import { WarmupStatus } from "@/components/auth/atoms/WarmupStatus";
 import { FeaturesGrid } from "@/components/auth/molecules/FeaturesGrid";
 import { ThemeTogglePlaceholder } from "@/components/auth/atoms/ThemeTogglerPlaceHolder";
 import { useLogin } from "@/components/auth/hooks/useLogin";
+import { GoogleOAuthButton } from "@/components/auth/molecules/GoogleOAuthButton";
 
 export const LoginForm = () => {
-  const { isWarming, isLoading, isSubmitDisabled, onSubmit } = useLogin();
+  const { isLoading, isSubmitDisabled, onSubmit } = useLogin();
 
   const methods = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "",
-      password: "",
+      email: "ali@gmail.com",
+      password: "123456",
     },
   });
 
@@ -42,14 +41,13 @@ export const LoginForm = () => {
         <ThemeTogglePlaceholder />
         
         <div className="max-w-md w-full mx-auto">
-          <WarmupStatus isWarming={isWarming} />
           
           {/* Logo Section */}
           <div className="flex justify-center mb-8 group">
             <div className="relative">
               <div className="absolute -inset-4 rounded-full bg-gradient-to-r from-primary via-secondary to-accent opacity-20 blur-xl group-hover:opacity-30 transition-opacity duration-500" />
               <Image 
-                src={logo}
+                src="/images/logo.webp"
                 width={180} 
                 height={45} 
                 alt="Company Logo" 
@@ -103,7 +101,9 @@ export const LoginForm = () => {
               </div>
             </div>
             
-            <LoadingButton isLoading={isLoading} isWarming={isWarming} />
+            <LoadingButton isLoading={isLoading} />
+
+            <GoogleOAuthButton disabled={isSubmitDisabled} />
             
             <div className="text-center">
               <p className="text-muted-foreground">

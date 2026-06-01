@@ -33,6 +33,8 @@ export const API_ROUTES = {
   USERS: `${API_BASE_URL}/users`,
   CATALOG: `${API_BASE_URL}/catalog`,
   ANALYTICS: `${API_BASE_URL}/analytics`,
+  AI: `${API_BASE_URL}/ai`,
+  LEADS: `${API_BASE_URL}/leads`,
 };
 
 export const ROUTES = {

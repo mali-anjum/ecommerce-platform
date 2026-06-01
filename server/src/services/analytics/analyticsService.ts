@@ -12,6 +12,8 @@ import type {
   FunnelStage,
   TrendPoint,
 } from "./types";
+import { fetchAiMetricsSummary } from "../ai/aiAnalyticsService";
+import { fetchFunnelTrackingSummary } from "./funnelAnalyticsService";
 
 const COMPLETED_ORDER_WHERE: Prisma.OrderWhereInput = {
   paymentStatus: "COMPLETED",
@@ -91,6 +93,8 @@ export async function fetchAnalyticsDashboard(
     coupons,
     cartsWithItems,
     totalOrdersAllStatuses,
+    aiMetrics,
+    funnelTracking,
   ] = await Promise.all([
     prisma.order.findMany({
       where: currentOrderWhere,
@@ -209,6 +213,8 @@ export async function fetchAnalyticsDashboard(
     }),
     prisma.cart.count({ where: { items: { some: {} } } }),
     prisma.order.count({ where: { createdAt: { gte: start, lte: end } } }),
+    fetchAiMetricsSummary(start, end, previousStart, previousEnd),
+    fetchFunnelTrackingSummary(start, end),
   ]);
 
   const currentRevenue = currentOrders.reduce((sum, o) => sum + o.total, 0);
@@ -541,6 +547,8 @@ export async function fetchAnalyticsDashboard(
       unitsSold: row.units,
       productCount: sellerProductCountById.get(row.sellerId) ?? 0,
     })),
+    aiMetrics,
+    funnelTracking,
   };
 }
 

@@ -14,10 +14,13 @@ import catalogRoutes from "./routes/catalogRoutes";
 import sellerRoutes from "./routes/sellerRoutes";
 import userRoutes from "./routes/userRoutes";
 import analyticsRoutes from "./routes/analyticsRoutes";
+import aiRoutes from "./routes/aiRoutes";
+import leadRoutes from "./routes/leadRoutes";
 import warmRoutes from "./routes/warm"
 import { ApiError } from "./utils/ApiError";
 import { errorHandler } from "./middleware/errHandler";
 import prisma from "./lib/prisma";
+import { warmProductIndex } from "./services/ai/productIndex";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -82,6 +85,8 @@ app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/address", addressRoutes);
 app.use("/api/order", orderRoutes);
 app.use("/api/analytics", analyticsRoutes);
+app.use("/api/ai", aiRoutes);
+app.use("/api/leads", leadRoutes);
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Hello from E-Commerce backend");
@@ -97,6 +102,13 @@ app.use("*", (req: Request, res: Response) => {
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
+  void warmProductIndex()
+    .then((count) => {
+      console.log(`📦 AI product index warmed with ${count} products`);
+    })
+    .catch((error) => {
+      console.error("Failed to warm AI product index", error);
+    });
 });
 
 // Graceful shutdown

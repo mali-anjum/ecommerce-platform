@@ -3,6 +3,7 @@ import debounce from "lodash/debounce";
 import { create } from "zustand";
 import { CartItem } from "@/components/storefront/cart/types/cartItemStore";
 import { useCartSelectionStore } from "./useCartSelectionStore";
+import { getAnalyticsSessionId } from "@/lib/analytics/sessionId";
 
 interface CartStore {
   items: CartItem[];
@@ -93,7 +94,13 @@ export const useCartStore = create<CartStore>((set, get) => {
     addToCart: async (item) => {
       set({ isLoading: true, error: null });
       try {
-        const response = await axios.post("/api/cart/add-to-cart", item, {
+        const response = await axios.post(
+          "/api/cart/add-to-cart",
+          {
+            ...item,
+            sessionId: getAnalyticsSessionId(),
+          },
+          {
           headers: {
             "Content-Type": "application/json",
           },

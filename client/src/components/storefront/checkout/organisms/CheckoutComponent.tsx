@@ -88,6 +88,12 @@ export function CheckoutContent() {
     fetchCheckoutData(fetchAddresses, fetchCart, fetchCoupons);
   }, [fetchCheckoutData, fetchAddresses, fetchCart, fetchCoupons]);
 
+  useEffect(() => {
+    if (user && user.profileComplete === false) {
+      router.replace("/complete-profile");
+    }
+  }, [user, router]);
+
   // Handle payment return
   useEffect(() => {
     handlePaymentReturn();

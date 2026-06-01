@@ -30,6 +30,29 @@ describe("useAnalyticsStore", () => {
       couponPerformance: [],
       recentOrders: [],
       sellerPerformance: [],
+      aiMetrics: {
+        chatUsageCount: 0,
+        chatUsageChangePercent: 0,
+        conversionRate: 0,
+        convertedChats: 0,
+        topIntents: [],
+      },
+      funnelTracking: {
+        chat: 0,
+        productView: 0,
+        cartAdd: 0,
+        orderComplete: 0,
+        chatToProductViewRate: 0,
+        productViewToCartRate: 0,
+        cartToOrderRate: 0,
+        overallConversionRate: 0,
+        sessionCounts: {
+          startedChat: 0,
+          reachedProductView: 0,
+          reachedCart: 0,
+          completedOrder: 0,
+        },
+      },
     };
 
     useAnalyticsStore.setState({

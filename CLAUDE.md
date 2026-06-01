@@ -43,6 +43,7 @@ This file defines the project laws for AI agents working in this repository.
   - Keep this pattern to avoid multiple clients/pools during hot reload.
 - `client/src/middleware.ts` handles auth and role redirects at the edge.
   - Keep logic explicit, deterministic, and defensive on invalid/expired tokens.
+- AI commerce module docs: `docs/ai/` (feature tracker, architecture, API map).
 
 ## Writing Style to Follow
 

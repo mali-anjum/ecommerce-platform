@@ -1,26 +1,24 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useToast } from "@/components/ui/hooks/use-toast";
 import { useAuthStore } from "@/components/auth/state/useAuthStore";
 import { useRouter } from "next/navigation";
-import { ROUTES } from "@/lib/routes/api"
+import { ROUTES } from "@/lib/routes/api";
 import { LoginFormData } from "@/components/schemas/loginSchema";
 
 export const useLogin = () => {
-  const [isWarming, setIsWarming] = useState(false);
   const { toast } = useToast();
   const { login, isLoading, user, error } = useAuthStore();
   const router = useRouter();
 
   useEffect(() => {
     if (user) {
-      console.log("🎯 User authenticated, redirecting...");
       const targetPath =
         user.role === "SUPER_ADMIN"
           ? ROUTES.SUPER_ADMIN
           : user.role === "SELLER"
             ? ROUTES.SELLER
             : ROUTES.HOME;
-      
+
       setTimeout(() => {
         router.push(targetPath);
       }, 500);
@@ -33,8 +31,8 @@ export const useLogin = () => {
 
       if (success) {
         toast({
-          title: "🔐 Access Granted",
-          description: "Welcome back! Redirecting to dashboard...",
+          title: "Access granted",
+          description: "Welcome back! Redirecting to your dashboard...",
           className: "bg-primary/10 border-primary/20",
         });
       } else {
@@ -42,7 +40,7 @@ export const useLogin = () => {
       }
     } catch (err) {
       toast({
-        title: "⚠️ Authentication Error",
+        title: "Authentication error",
         description: err instanceof Error ? err.message : "Invalid credentials",
         variant: "destructive",
       });
@@ -50,9 +48,8 @@ export const useLogin = () => {
   };
 
   return {
-    isWarming,
     isLoading,
-    isSubmitDisabled: isLoading || isWarming,
+    isSubmitDisabled: isLoading,
     onSubmit,
   };
 };

@@ -1,6 +1,5 @@
 import Image from "next/image";
 import { useState } from "react";
-import leftbanner from "../../../../public/images/banner.webp"
 interface LoginBannerProps {
   title?: string;
   description?: string;
@@ -19,7 +18,7 @@ export const LoginBanner = ({
       <div className="absolute inset-0">
         {!imageError ? (
           <Image
-            src={leftbanner}
+            src="/images/banner.webp"
             alt="Login Banner"
             fill
             sizes="(max-width: 1023px) 100vw, 50vw"

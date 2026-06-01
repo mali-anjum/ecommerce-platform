@@ -31,3 +31,6 @@ Thumbs.db
 .cache/
 .next/cache/
 **/.turbo
+
+# Local knowledge-base document fallback storage
+uploads/

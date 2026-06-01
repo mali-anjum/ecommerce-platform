@@ -7,6 +7,7 @@ A production-oriented, full-stack marketplace: a **Next.js** storefront and admi
 ## Table of contents
 
 - [Features](#features)
+- [AI commerce module](#ai-commerce-module)
 - [Architecture](#architecture)
 - [Tech stack](#tech-stack)
 - [Repository layout](#repository-layout)
@@ -82,6 +83,19 @@ Running `npm run prisma:seed` in `server/` creates demo catalog data, banners, a
 
 ---
 
+## AI commerce module
+
+The platform includes an **AI Sales + Support Automation** layer (assistant widget, recommendations, order support, leads, admin ops, analytics, human handoff).
+
+**Documentation:** [`docs/ai/README.md`](docs/ai/README.md)
+
+| Doc | Contents |
+|-----|----------|
+| [Feature tracker](docs/ai/FEATURE-TRACKER.md) | All AI tickets, APIs, models, file map |
+| [Architecture](docs/ai/ARCHITECTURE.md) | Request flow, intent routing, analytics |
+
+---
+
 ## Architecture
 
 ```text
@@ -143,6 +157,8 @@ ecommerce-platform/
 │   │   └── seed.ts              # Demo data
 │   ├── docker-compose.yml       # Local Postgres on port 5436
 │   └── .env.local               # Not committed
+├── docs/
+│   └── ai/                      # AI module docs (feature tracker, architecture)
 ├── CLAUDE.md                    # Agent/contributor conventions
 └── README.md                    # This file
 ```

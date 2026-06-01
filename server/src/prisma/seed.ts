@@ -502,10 +502,72 @@ async function pinFeaturedProducts() {
   console.log(`Marked ${top.length} products as featured`);
 }
 
+async function seedKnowledgeDefaults() {
+  const faqCount = await prisma.faqItem.count();
+  if (faqCount === 0) {
+    await prisma.faqItem.createMany({
+      data: [
+        {
+          question: "How do I track my order?",
+          answer:
+            "Use the Track Order page and enter your order ID to see delivery status and updates.",
+          href: "/track-order",
+          sortOrder: 0,
+        },
+        {
+          question: "How can I request a refund?",
+          answer:
+            "Open your account orders, select the item, and submit a return or refund request from the order details.",
+          href: "/orders",
+          sortOrder: 1,
+        },
+        {
+          question: "How do I change my address?",
+          answer:
+            "Go to Addresses in your account menu to add or update shipping addresses.",
+          href: "/addresses",
+          sortOrder: 2,
+        },
+        {
+          question: "What is your return policy?",
+          answer:
+            "Most items can be returned within 30 days of delivery in original condition. Refunds are issued to the original payment method after inspection.",
+          sortOrder: 3,
+        },
+        {
+          question: "Do you ship internationally?",
+          answer:
+            "We ship to select countries. Duties and taxes may apply at delivery depending on your region.",
+          sortOrder: 4,
+        },
+      ],
+    });
+    console.log("Default FAQ items seeded");
+  }
+
+  await prisma.storePolicySettings.upsert({
+    where: { id: "default" },
+    create: {
+      id: "default",
+      returnPolicy:
+        "Returns are accepted within 30 days of delivery for unused items in original packaging. Refunds are processed within 5–10 business days after we receive and inspect the return.",
+      shippingPolicy:
+        "Standard domestic shipping takes 3–7 business days. Express shipping (1–2 business days) is available at checkout where offered.",
+      shipsInternationally: true,
+      internationalShippingDetails:
+        "International orders ship to select regions. Delivery typically takes 7–14 business days. Import duties and taxes may be charged by your local carrier.",
+      supportEmail: "support@example.com",
+    },
+    update: {},
+  });
+  console.log("Store policy settings ensured");
+}
+
 async function main() {
   await ensureSuperAdmin();
   await ensureDemoSeller();
   await seedBannersIfEmpty();
+  await seedKnowledgeDefaults();
   await seedCatalogProducts();
   await pinFeaturedProducts();
 

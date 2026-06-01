@@ -57,6 +57,14 @@ declare global {
       EMAIL_FROM: string;
       LOG_ENABLED: string;
       LOG_LEVEL: string;
+      OPENAI_API_KEY?: string;
+      OPENAI_MODEL?: string;
+      GOOGLE_CLIENT_ID?: string;
+      GOOGLE_CLIENT_SECRET?: string;
+      GOOGLE_REDIRECT_URI?: string;
+      BACKEND_PUBLIC_URL?: string;
+      API_PUBLIC_URL?: string;
+      COOKIE_DOMAIN?: string;
     }
   }
 }

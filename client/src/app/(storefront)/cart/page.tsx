@@ -126,6 +126,10 @@ function UserCartPage() {
       });
       return;
     }
+    if (user?.profileComplete === false) {
+      router.push("/complete-profile");
+      return;
+    }
     router.push("/checkout");
   };
 

@@ -1,5 +1,6 @@
 // src/store/useAuthStore.ts - CORRECTED VERSION
 import axios from "axios";
+import { extractAuthErrorMessage } from "@/lib/auth/extractAuthError";
 import type { AxiosError } from "axios";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
@@ -233,12 +234,15 @@ export const useAuthStore = create<AuthStore>()(
 
           set({ isLoading: false });
           return response.data.userId;
-        } catch (error: any) {
+        } catch (error: unknown) {
           const errorMessage = axios.isAxiosError(error)
-            ? error.response?.data?.error || "Registration failed"
+            ? extractAuthErrorMessage(
+                error.response?.data,
+                "Registration failed",
+              )
             : "Registration failed";
           set({ isLoading: false, error: errorMessage });
-          return null;
+          throw new Error(errorMessage);
         }
       },
 
@@ -302,10 +306,12 @@ export const useAuthStore = create<AuthStore>()(
             const errorMessage = response.data.error || "Login failed";
             throw new Error(errorMessage);
           }
-        } catch (error: any) {
+        } catch (error: unknown) {
           const errorMessage = axios.isAxiosError(error)
-            ? error.response?.data?.error || error.message || "Login failed"
-            : error.message || "Login failed";
+            ? extractAuthErrorMessage(error.response?.data, "Login failed")
+            : error instanceof Error
+              ? error.message
+              : "Login failed";
 
           console.error("❌ AuthStore: Login failed:", errorMessage);
           set({ isLoading: false, error: errorMessage });

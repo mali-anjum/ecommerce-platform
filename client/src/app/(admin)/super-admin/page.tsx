@@ -5,6 +5,8 @@ import {
   FunnelPanel,
   GeographicChart,
   InventoryHealthPanel,
+  AiMetricsPanel,
+  FunnelTrackingPanel,
   OrderStatusChart,
   RevenueTrendChart,
 } from "@/components/super-admin/analytics/molecules/AnalyticsCharts";
@@ -12,8 +14,11 @@ import { AnalyticsPageBase } from "@/components/super-admin/analytics/organisms/
 import { KpiCard } from "@/components/super-admin/analytics/atoms/KpiCard";
 import { formatCurrency, formatNumber } from "@/components/super-admin/analytics/utils/formatters";
 import {
+  Bot,
   DollarSign,
+  MessageSquare,
   Package,
+  Percent,
   ShoppingCart,
   TrendingUp,
   Users,
@@ -86,6 +91,44 @@ export default function SuperAdminAnalyticsOverviewPage() {
             />
           </div>
 
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <KpiCard
+              title="AI chat usage"
+              value={formatNumber(data.aiMetrics.chatUsageCount)}
+              changePercent={data.aiMetrics.chatUsageChangePercent}
+              icon={MessageSquare}
+              accent="primary"
+            />
+            <KpiCard
+              title="AI conversion rate"
+              value={`${data.aiMetrics.conversionRate}%`}
+              hint={`${data.aiMetrics.convertedChats} chats converted to orders`}
+              icon={Percent}
+              accent="success"
+            />
+            <KpiCard
+              title="Top AI intent"
+              value={
+                data.aiMetrics.topIntents[0]
+                  ? data.aiMetrics.topIntents[0].intent
+                      .split("_")
+                      .map(
+                        (part) =>
+                          part.charAt(0).toUpperCase() + part.slice(1),
+                      )
+                      .join(" ")
+                  : "—"
+              }
+              hint={
+                data.aiMetrics.topIntents[0]
+                  ? `${data.aiMetrics.topIntents[0].count} conversations`
+                  : "No AI data yet"
+              }
+              icon={Bot}
+              accent="accent"
+            />
+          </div>
+
           <RevenueTrendChart data={data.revenueTrend} />
 
           <div className="grid gap-6 xl:grid-cols-2">
@@ -99,6 +142,10 @@ export default function SuperAdminAnalyticsOverviewPage() {
             </div>
             <FunnelPanel stages={data.conversionFunnel} />
           </div>
+
+          <AiMetricsPanel metrics={data.aiMetrics} />
+
+          <FunnelTrackingPanel funnel={data.funnelTracking} />
 
           <InventoryHealthPanel health={data.inventoryHealth} />
         </div>

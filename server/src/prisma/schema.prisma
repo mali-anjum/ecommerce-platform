@@ -7,23 +7,47 @@ datasource db {
 }
 
 model User {
-  id           String    @id @default(uuid()) 
-  name         String?
-  email        String    @unique
-  password     String
-  role         Role      @default(USER)
-  emailVerified Boolean  @default(false)
-  isActive      Boolean  @default(true)
+  id            String         @id @default(uuid())
+  name          String?
+  email         String         @unique
+  password      String?
+  image         String?
+  role          Role           @default(USER)
+  emailVerified Boolean        @default(false)
+  profileComplete Boolean      @default(true)
+  isActive      Boolean        @default(true)
   lastLogin     DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  refreshToken String?   @unique
-  addresses    Address[]
-  cart         Cart?
-  wishlist     Wishlist?
-  orders       Order[]
-  userCoupons  UserCoupon[]
-  seller       Seller?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  refreshToken  String?        @unique
+  addresses     Address[]
+  cart          Cart?
+  wishlist      Wishlist?
+  orders        Order[]
+  userCoupons   UserCoupon[]
+  seller        Seller?
+  oauthAccounts OAuthAccount[]
+}
+
+model OAuthAccount {
+  id             String        @id @default(uuid())
+  userId         String
+  provider       OAuthProvider
+  providerUserId String
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerUserId])
+  @@index([userId])
+}
+
+enum OAuthProvider {
+  GOOGLE
+  FACEBOOK
+  APPLE
+  GITHUB
+  MICROSOFT
 }
 
 model Department {
@@ -386,4 +410,140 @@ enum ProductCondition {
   NEW
   REFURBISHED
   USED
+}
+
+/// Admin-editable FAQ entries for help center and AI assistant context.
+model FaqItem {
+  id        String   @id @default(uuid())
+  question  String
+  answer    String
+  href      String?
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
+/// Singleton store policies (shipping, returns) for storefront and AI assistant.
+model StorePolicySettings {
+  id                           String   @id @default("default")
+  returnPolicy                 String   @default("")
+  shippingPolicy               String   @default("")
+  shipsInternationally         Boolean  @default(false)
+  internationalShippingDetails String   @default("")
+  supportEmail                 String?
+  updatedAt                    DateTime @updatedAt
+}
+
+enum LeadSource {
+  AI
+  MANUAL
+}
+
+enum KnowledgeSourceType {
+  PDF
+  MANUAL
+}
+
+enum AnalyticsEventType {
+  CHAT
+  PRODUCT_VIEW
+  CART_ADD
+  ORDER_COMPLETE
+}
+
+/// Funnel and behavioral event log for analytics.
+model AnalyticsEvent {
+  id        String             @id @default(uuid())
+  type      AnalyticsEventType
+  userId    String?
+  sessionId String?
+  metadata  Json?
+  createdAt DateTime           @default(now())
+
+  @@index([type, createdAt])
+  @@index([sessionId, createdAt])
+  @@index([userId, createdAt])
+  @@index([createdAt])
+}
+
+/// Server-side AI chat session memory (DB fallback when Redis is unavailable).
+model AiChatSession {
+  id           String   @id
+  userId       String?
+  messages     Json     @default("[]")
+  failureCount Int      @default(0)
+  openTicketId String?
+  updatedAt    DateTime @updatedAt
+  createdAt    DateTime @default(now())
+
+  @@index([userId, updatedAt])
+  @@index([openTicketId])
+}
+
+enum SupportTicketStatus {
+  OPEN
+  CLOSED
+}
+
+/// Human support escalation ticket from the AI assistant.
+model SupportTicket {
+  id        String              @id @default(uuid())
+  userId    String?
+  sessionId String?
+  status    SupportTicketStatus @default(OPEN)
+  messages  Json                @default("[]")
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  @@index([userId, status])
+  @@index([sessionId, status])
+  @@index([status, updatedAt])
+}
+
+/// AI assistant conversation log for analytics and conversion tracking.
+model AiConversationLog {
+  id               String   @id @default(uuid())
+  userId           String?
+  query            String
+  intent           String
+  convertedToOrder Boolean  @default(false)
+  createdAt        DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([intent, createdAt])
+  @@index([convertedToOrder, createdAt])
+  @@index([createdAt])
+}
+
+/// Admin-uploaded documents and manual entries for AI assistant context.
+model KnowledgeBase {
+  id         String               @id @default(uuid())
+  title      String
+  content    String               @db.Text
+  sourceType KnowledgeSourceType
+  fileUrl    String?
+  fileName   String?
+  isActive   Boolean              @default(true)
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @updatedAt
+
+  @@index([isActive, createdAt])
+  @@index([sourceType])
+}
+
+/// Sales / CRM lead captured from AI assistant or manual admin entry.
+model Lead {
+  id        String     @id @default(uuid())
+  email     String
+  phone     String?
+  message   String
+  source    LeadSource @default(AI)
+  createdAt DateTime   @default(now())
+
+  @@index([source, createdAt])
+  @@index([email])
+  @@index([createdAt])
 }

@@ -6,13 +6,15 @@ import { ApiError } from "../utils/ApiError";
 import { ApiResponse } from "../utils/ApiResponse";
 import { requireUserId } from "../utils/requireUserId";
 import { CartService } from "../services/cart/get-cart-item";
+import { scheduleAnalyticsEvent } from "../services/analytics/analyticsEventService";
+import { AnalyticsEventType } from "@prisma/client";
 
 const addToCart = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     console.log("Entered successfully.");
     const userId = requireUserId(req);
 
-    const { productId, quantity, size, color } = req.body;
+    const { productId, quantity, size, color, sessionId } = req.body;
     if (!productId || !quantity) {
       return res
         .status(400)
@@ -135,6 +137,18 @@ const addToCart = asyncHandler(
       size: cartItem.size,
       quantity: cartItem.quantity,
     };
+
+    scheduleAnalyticsEvent({
+      type: AnalyticsEventType.CART_ADD,
+      userId,
+      sessionId: typeof sessionId === "string" ? sessionId : undefined,
+      metadata: {
+        productId,
+        quantity,
+        size: cartSizeValue,
+        color: cartColorValue,
+      },
+    });
 
     return res
       .status(201)
