@@ -1,4 +1,4 @@
-const STATE_MAX_AGE_MS = 10 * 60 * 1000;
+export const OAUTH_STATE_MAX_AGE_MS = 10 * 60 * 1000;
 
 export function getFrontendUrl(): string {
   return (process.env.FRONTEND_URL ?? "http://localhost:3012").replace(/\/+$/, "");
@@ -12,8 +12,13 @@ export function getBackendPublicUrl(): string {
   ).replace(/\/+$/, "");
 }
 
+/** Env key pattern: `GOOGLE_REDIRECT_URI`, `FACEBOOK_REDIRECT_URI`, etc. */
+export function getProviderRedirectUriEnvKey(routeSlug: string): string {
+  return `${routeSlug.trim().toUpperCase()}_REDIRECT_URI`;
+}
+
 export function buildOAuthCallbackUrl(routeSlug: string): string {
-  const override = process.env[`${routeSlug.toUpperCase()}_REDIRECT_URI`]?.trim();
+  const override = process.env[getProviderRedirectUriEnvKey(routeSlug)]?.trim();
   if (override) return override;
   return `${getBackendPublicUrl()}/api/auth/${routeSlug}/callback`;
 }
@@ -25,7 +30,7 @@ export function oauthStateCookieOptions() {
     secure: isProd,
     sameSite: isProd ? ("none" as const) : ("lax" as const),
     path: "/",
-    maxAge: STATE_MAX_AGE_MS,
+    maxAge: OAUTH_STATE_MAX_AGE_MS,
   };
 }
 

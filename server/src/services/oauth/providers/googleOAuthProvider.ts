@@ -28,12 +28,10 @@ export class GoogleOAuthProvider extends BaseOAuthProvider {
     if (!this.isConfigured()) {
       throw new Error("Google OAuth is not configured");
     }
-    const redirectUri =
-      process.env.GOOGLE_REDIRECT_URI?.trim() || this.getRedirectUri();
     return new Google(
       process.env.GOOGLE_CLIENT_ID!,
       process.env.GOOGLE_CLIENT_SECRET!,
-      redirectUri,
+      this.getRedirectUri(),
     );
   }
 
