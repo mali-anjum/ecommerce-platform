@@ -1,13 +1,32 @@
-export { OAuthAccountService, mapProviderId, oauthAccountService } from "./oauthAccountService";
-export { BaseOAuthProvider } from "./baseOAuthProvider";
-export { OAuthExchangeStore, oauthExchangeStore, createOAuthExchange, consumeOAuthExchange } from "./oauthExchangeStore";
-export { OAuthFactory, OAuthService, oauthService } from "./oauthService";
+/**
+ * OAuth module public API.
+ * Import from `@/services/oauth` or `../services/oauth` — avoid deep paths into `internal/`.
+ */
+
+export { OAuthService, oauthService } from "./oauthService";
+export { OAuthFactory } from "./oauthFactory";
+
+export {
+  OAuthAccountService,
+  mapProviderId,
+  oauthAccountService,
+} from "./internal/oauthAccountService";
+
+export {
+  OAuthExchangeStore,
+  oauthExchangeStore,
+  createOAuthExchange,
+  consumeOAuthExchange,
+} from "./internal/oauthExchangeStore";
+
+export { BaseOAuthProvider } from "./internal/baseOAuthProvider";
+
 export type {
   NormalizedOAuthProfile,
   OAuthCallbackRequest,
   OAuthProfileInput,
   PendingOAuthState,
-} from "./types";
+} from "./internal/types";
 
 export {
   GoogleOAuthProvider,

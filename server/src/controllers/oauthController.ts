@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { setSessionCookies } from "../services/auth/tokenService";
-import { oauthExchangeStore } from "../services/oauth/oauthExchangeStore";
+import { oauthExchangeStore } from "../services/oauth";
 
 /**
  * One-time exchange after Google OAuth callback.

@@ -13,7 +13,7 @@ jest.mock("arctic", () => ({
 }));
 
 import { GoogleOAuthProvider } from "../providers/googleOAuthProvider";
-import { buildOAuthCallbackUrl } from "../oauthConfig";
+import { buildOAuthCallbackUrl } from "../internal/oauthConfig";
 
 describe("GoogleOAuthProvider", () => {
   const originalId = process.env.GOOGLE_CLIENT_ID;

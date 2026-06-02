@@ -9,7 +9,7 @@ jest.mock("arctic", () => ({
   generateCodeVerifier: jest.fn(() => "verifier"),
 }));
 
-import { OAuthFactory } from "../oauthService";
+import { OAuthFactory } from "../oauthFactory";
 import { GoogleOAuthProvider } from "../providers/googleOAuthProvider";
 
 describe("OAuthFactory", () => {

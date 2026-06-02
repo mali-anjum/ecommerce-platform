@@ -1,7 +1,7 @@
 import { generateCodeVerifier, generateState, OAuth2RequestError } from "arctic";
 import type { OAuthProvider } from "@prisma/client";
 import type { Response } from "express";
-import { tokenService } from "../auth/tokenService";
+import { tokenService } from "../../auth/tokenService";
 import { oauthAccountService } from "./oauthAccountService";
 import { oauthExchangeStore } from "./oauthExchangeStore";
 import {

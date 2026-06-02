@@ -1,7 +1,7 @@
 import { Google } from "arctic";
-import { BaseOAuthProvider } from "../baseOAuthProvider";
-import { buildOAuthCallbackUrl } from "../oauthConfig";
-import type { NormalizedOAuthProfile } from "../types";
+import { BaseOAuthProvider } from "../internal/baseOAuthProvider";
+import { buildOAuthCallbackUrl } from "../internal/oauthConfig";
+import type { NormalizedOAuthProfile } from "../internal/types";
 
 type GoogleProfile = {
   sub: string;

@@ -1,65 +1,28 @@
-import type { OAuthProvider } from "@prisma/client";
-import { BaseOAuthProvider } from "./baseOAuthProvider";
-import { mapProviderId } from "./oauthAccountService";
-import { AppleOAuthProvider } from "./providers/appleOAuthProvider";
-import { FacebookOAuthProvider } from "./providers/facebookOAuthProvider";
-import { GitHubOAuthProvider } from "./providers/githubOAuthProvider";
-import { GoogleOAuthProvider } from "./providers/googleOAuthProvider";
-import { MicrosoftOAuthProvider } from "./providers/microsoftOAuthProvider";
+import type { BaseOAuthProvider } from "./internal/baseOAuthProvider";
+import type { OAuthCallbackRequest } from "./internal/types";
+import { OAuthFactory } from "./oauthFactory";
+import type { Response } from "express";
 
-export class OAuthFactory {
-  static createProvider(providerSlug: string): BaseOAuthProvider {
-    const provider = mapProviderId(providerSlug);
-    if (!provider) {
-      throw new Error(`Unsupported OAuth provider: ${providerSlug}`);
-    }
-
-    switch (provider) {
-      case "GOOGLE":
-        return new GoogleOAuthProvider();
-      case "FACEBOOK":
-        return new FacebookOAuthProvider();
-      case "GITHUB":
-        return new GitHubOAuthProvider();
-      case "MICROSOFT":
-        return new MicrosoftOAuthProvider();
-      case "APPLE":
-        return new AppleOAuthProvider();
-      default:
-        throw new Error(`Unsupported OAuth provider: ${providerSlug}`);
-    }
-  }
-
-  static getConfiguredProviders(): OAuthProvider[] {
-    const providers: BaseOAuthProvider[] = [
-      new GoogleOAuthProvider(),
-      new FacebookOAuthProvider(),
-      new GitHubOAuthProvider(),
-      new MicrosoftOAuthProvider(),
-      new AppleOAuthProvider(),
-    ];
-    return providers.filter((p) => p.isConfigured()).map((p) => p.provider);
-  }
-}
-
-/** Facade for OAuth provider selection and configuration checks. */
+/**
+ * Public facade for OAuth sign-in. Controllers should use `oauthService` only.
+ */
 export class OAuthService {
   getProvider(providerSlug: string): BaseOAuthProvider {
     return OAuthFactory.createProvider(providerSlug);
   }
 
-  getConfiguredProviders(): OAuthProvider[] {
+  getConfiguredProviders() {
     return OAuthFactory.getConfiguredProviders();
   }
 
-  start(providerSlug: string, res: Parameters<BaseOAuthProvider["start"]>[0]): void {
+  start(providerSlug: string, res: Response): void {
     this.getProvider(providerSlug).start(res);
   }
 
   async handleCallback(
     providerSlug: string,
-    req: Parameters<BaseOAuthProvider["handleCallback"]>[0],
-    res: Parameters<BaseOAuthProvider["handleCallback"]>[1],
+    req: OAuthCallbackRequest,
+    res: Response,
   ): Promise<void> {
     await this.getProvider(providerSlug).handleCallback(req, res);
   }

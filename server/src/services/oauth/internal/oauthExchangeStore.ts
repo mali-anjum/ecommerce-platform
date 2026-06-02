@@ -1,5 +1,5 @@
 import { randomBytes } from "crypto";
-import type { SessionUser } from "../auth/tokenService";
+import type { SessionUser } from "../../auth/tokenService";
 
 type ExchangeEntry = {
   accessToken: string;

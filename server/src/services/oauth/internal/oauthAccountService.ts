@@ -1,5 +1,5 @@
 import type { OAuthProvider } from "@prisma/client";
-import { prisma } from "../../lib/prisma";
+import { prisma } from "../../../lib/prisma";
 import type { OAuthProfileInput } from "./types";
 
 function normalizeEmail(email: string): string {

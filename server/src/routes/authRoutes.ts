@@ -11,7 +11,7 @@ import {
 import {
   googleOAuthCallbackHandler,
   startGoogleOAuthHandler,
-} from "../controllers/googleOAuthController";
+} from "../controllers/oauthProviderController";
 import { exchangeOAuthCode } from "../controllers/oauthController";
 import { authenticateJwt } from "../middleware/authMiddleware";
 import {

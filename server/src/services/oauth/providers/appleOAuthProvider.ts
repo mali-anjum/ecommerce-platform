@@ -1,6 +1,6 @@
 import { Apple } from "arctic";
-import { BaseOAuthProvider } from "../baseOAuthProvider";
-import type { NormalizedOAuthProfile } from "../types";
+import { BaseOAuthProvider } from "../internal/baseOAuthProvider";
+import type { NormalizedOAuthProfile } from "../internal/types";
 
 /**
  * Apple Sign In requires a PKCS8 private key (.p8) in addition to client credentials.

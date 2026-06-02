@@ -1,6 +1,6 @@
 import { MicrosoftEntraId } from "arctic";
-import { BaseOAuthProvider } from "../baseOAuthProvider";
-import type { NormalizedOAuthProfile } from "../types";
+import { BaseOAuthProvider } from "../internal/baseOAuthProvider";
+import type { NormalizedOAuthProfile } from "../internal/types";
 
 type MicrosoftProfile = {
   sub: string;

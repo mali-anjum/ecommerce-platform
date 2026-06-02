@@ -7,7 +7,7 @@ import {
   oauthErrorRedirect,
   oauthStateCookieOptions,
   resolvePostLoginRedirect,
-} from "../oauthConfig";
+} from "../internal/oauthConfig";
 
 describe("oauthConfig", () => {
   const envBackup: Record<string, string | undefined> = {};

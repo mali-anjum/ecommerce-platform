@@ -1,7 +1,7 @@
 import type { Response } from "express";
 import { OAuth2RequestError } from "arctic";
-import { BaseOAuthProvider } from "../baseOAuthProvider";
-import type { NormalizedOAuthProfile } from "../types";
+import { BaseOAuthProvider } from "../internal/baseOAuthProvider";
+import type { NormalizedOAuthProfile } from "../internal/types";
 
 jest.mock("arctic", () => ({
   OAuth2RequestError: class OAuth2RequestError extends Error {},
@@ -9,7 +9,7 @@ jest.mock("arctic", () => ({
   generateCodeVerifier: jest.fn(() => "generated-verifier"),
 }));
 
-jest.mock("../oauthAccountService", () => ({
+jest.mock("../internal/oauthAccountService", () => ({
   oauthAccountService: {
     findOrCreateUserFromOAuth: jest.fn().mockResolvedValue({
       userId: "user-1",
@@ -28,7 +28,7 @@ jest.mock("../../auth/tokenService", () => ({
   },
 }));
 
-jest.mock("../oauthExchangeStore", () => ({
+jest.mock("../internal/oauthExchangeStore", () => ({
   oauthExchangeStore: {
     create: jest.fn(() => "exchange-code-abc"),
   },

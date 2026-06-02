@@ -1,4 +1,4 @@
-import { OAuthExchangeStore } from "../oauthExchangeStore";
+import { OAuthExchangeStore } from "../internal/oauthExchangeStore";
 
 describe("OAuthExchangeStore", () => {
   it("creates a one-time code and returns stored session payload", () => {

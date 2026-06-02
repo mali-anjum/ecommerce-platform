@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { oauthService } from "../services/oauth/oauthService";
+import { oauthService } from "../services/oauth";
 
 function startOAuthForProvider(
   providerSlug: string,
@@ -59,12 +59,14 @@ async function handleOAuthCallbackForProvider(
   }
 }
 
+/** Generic handler: `/api/auth/:provider` when routes are wired with a `provider` param. */
 export function startOAuthHandler(req: Request, res: Response): void {
   const providerSlug =
     typeof req.params.provider === "string" ? req.params.provider : "google";
   startOAuthForProvider(providerSlug, req, res);
 }
 
+/** Generic handler: `/api/auth/:provider/callback`. */
 export async function oauthCallbackHandler(
   req: Request,
   res: Response,
@@ -74,6 +76,7 @@ export async function oauthCallbackHandler(
   await handleOAuthCallbackForProvider(providerSlug, req, res);
 }
 
+/** Legacy Google-specific routes (`/api/auth/google`). */
 export function startGoogleOAuthHandler(req: Request, res: Response): void {
   startOAuthForProvider("google", req, res);
 }
