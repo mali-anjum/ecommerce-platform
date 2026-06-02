@@ -157,5 +157,12 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    /*
+     * Skip API routes, Next internals, and public/static assets (e.g. /images/logo.webp).
+     * Without excluding /images/, unauthenticated requests get redirected to login and
+     * next/image receives HTML instead of image bytes.
+     */
+    "/((?!api|_next/static|_next/image|favicon.ico|images/|.*\\..*).*)",
+  ],
 };
