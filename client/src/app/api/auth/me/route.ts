@@ -1,7 +1,7 @@
 // app/api/auth/me/route.ts - OPTIMIZED VERSION
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { extractSetCookieHeaders } from "@/lib/api/extractSetCookieHeaders";
+import { applyProxyCookies } from "@/lib/api/applyProxyCookies";
 import { getServerBackendUrl } from "@/lib/api/getServerBackendUrl";
 
 export async function GET(req: NextRequest) {
@@ -48,10 +48,7 @@ export async function GET(req: NextRequest) {
     const responseData = await backendRes.json();
     const response = NextResponse.json(responseData, { status: backendRes.status });
 
-    const setCookieHeaders = extractSetCookieHeaders(backendRes);
-    for (const cookie of setCookieHeaders) {
-      response.headers.append("Set-Cookie", cookie);
-    }
+    applyProxyCookies(response, backendRes);
 
     return response;
 

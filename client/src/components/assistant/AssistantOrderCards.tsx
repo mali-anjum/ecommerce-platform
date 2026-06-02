@@ -4,33 +4,12 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import {
+  formatEstimatedDeliveryDate,
+  formatOrderStatus,
+  formatTimelineDate,
+} from "@/components/common/utils/formatDates";
 import type { AssistantOrderSummary } from "@/lib/assistant/types";
-
-function formatStatus(status: string): string {
-  return status.replace(/_/g, " ");
-}
-
-function formatDate(value: string | null): string | null {
-  if (!value) return null;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  return date.toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  });
-}
-
-function formatTimelineDate(value: string): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 type AssistantOrderCardsProps = {
   orders: AssistantOrderSummary[];
@@ -44,7 +23,7 @@ export function AssistantOrderCards({ orders }: AssistantOrderCardsProps) {
   return (
     <div className="mt-3 space-y-3">
       {orders.map((order) => {
-        const eta = formatDate(order.estimatedDeliveryAt);
+        const eta = formatEstimatedDeliveryDate(order.estimatedDeliveryAt);
         const timeline = order.timeline.slice(0, 4);
 
         return (
@@ -57,7 +36,7 @@ export function AssistantOrderCards({ orders }: AssistantOrderCardsProps) {
                 Order {order.id.slice(0, 8)}…
               </span>
               <Badge variant="outline" className="text-[10px]">
-                {formatStatus(order.status)}
+                {formatOrderStatus(order.status)}
               </Badge>
               {order.canRequestCancel && (
                 <Badge variant="secondary" className="text-[10px]">
@@ -96,7 +75,7 @@ export function AssistantOrderCards({ orders }: AssistantOrderCardsProps) {
                     <div className="min-w-0">
                       <p className="text-xs font-medium text-foreground">
                         {event.status
-                          ? formatStatus(event.status)
+                          ? formatOrderStatus(event.status)
                           : "Update"}
                       </p>
                       <p className="text-xs text-muted-foreground">

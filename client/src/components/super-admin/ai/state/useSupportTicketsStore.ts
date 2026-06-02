@@ -1,5 +1,8 @@
-import { API_ROUTES } from "@/lib/routes/api";
-import axios from "axios";
+import {
+  adminApi,
+  AI_ADMIN_ROUTES,
+  unwrapData,
+} from "@/lib/api/adminApiClient";
 import { create } from "zustand";
 
 export type SupportTicketMessage = {
@@ -29,12 +32,6 @@ interface SupportTicketsState {
   replyToTicket: (id: string, message: string) => Promise<boolean>;
 }
 
-const authConfig = { withCredentials: true as const };
-
-function unwrapData<T>(response: { data: { data?: T } }): T {
-  return response.data.data as T;
-}
-
 export const useSupportTicketsStore = create<SupportTicketsState>((set, get) => ({
   tickets: [],
   isLoading: false,
@@ -44,9 +41,8 @@ export const useSupportTicketsStore = create<SupportTicketsState>((set, get) => 
     set({ isLoading: true, error: null });
     try {
       const query = status === "all" ? "" : `?status=${status}`;
-      const response = await axios.get(
-        `${API_ROUTES.AI}/admin/support-tickets${query}`,
-        authConfig,
+      const response = await adminApi.get(
+        `${AI_ADMIN_ROUTES.supportTickets}${query}`,
       );
       const data = unwrapData<{ tickets: SupportTicketRecord[] }>(response);
       set({ tickets: data.tickets, isLoading: false });
@@ -58,10 +54,9 @@ export const useSupportTicketsStore = create<SupportTicketsState>((set, get) => 
   closeTicket: async (id) => {
     set({ isLoading: true, error: null });
     try {
-      await axios.patch(
-        `${API_ROUTES.AI}/admin/support-tickets/${id}/close`,
+      await adminApi.patch(
+        `${AI_ADMIN_ROUTES.supportTickets}/${id}/close`,
         {},
-        authConfig,
       );
       await get().fetchTickets("all");
       set({ isLoading: false });
@@ -75,10 +70,9 @@ export const useSupportTicketsStore = create<SupportTicketsState>((set, get) => 
   replyToTicket: async (id, message) => {
     set({ isLoading: true, error: null });
     try {
-      await axios.post(
-        `${API_ROUTES.AI}/admin/support-tickets/${id}/reply`,
+      await adminApi.post(
+        `${AI_ADMIN_ROUTES.supportTickets}/${id}/reply`,
         { message },
-        authConfig,
       );
       await get().fetchTickets("all");
       set({ isLoading: false });

@@ -3,14 +3,15 @@
  * Import from `@/services/oauth` or `../services/oauth` — avoid deep paths into `internal/`.
  */
 
-export { OAuthService, oauthService } from "./oauthService";
+export { OAuthService, oauthService } from "./OAuthService";
 export { OAuthFactory } from "./oauthFactory";
 
 export {
   OAuthAccountService,
-  mapProviderId,
   oauthAccountService,
-} from "./internal/oauthAccountService";
+} from "./internal/OAuthAccountService";
+
+export { mapProviderId } from "./internal/helpers/providerId";
 
 export {
   OAuthExchangeStore,

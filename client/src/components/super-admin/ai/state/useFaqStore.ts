@@ -1,5 +1,8 @@
-import { API_ROUTES } from "@/lib/routes/api";
-import axios from "axios";
+import {
+  adminApi,
+  AI_ADMIN_ROUTES,
+  unwrapData,
+} from "@/lib/api/adminApiClient";
 import { create } from "zustand";
 
 export type FaqRecord = {
@@ -29,12 +32,6 @@ interface FaqState {
   deleteFaq: (id: string) => Promise<boolean>;
 }
 
-const authConfig = { withCredentials: true as const };
-
-function unwrapData<T>(response: { data: { data?: T } }): T {
-  return response.data.data as T;
-}
-
 export const useFaqStore = create<FaqState>((set, get) => ({
   faqs: [],
   isLoading: false,
@@ -43,7 +40,7 @@ export const useFaqStore = create<FaqState>((set, get) => ({
   fetchFaqs: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get(`${API_ROUTES.AI}/admin/faq`, authConfig);
+      const response = await adminApi.get(AI_ADMIN_ROUTES.faq);
       const data = unwrapData<{ faqs: FaqRecord[] }>(response);
       set({ faqs: data.faqs, isLoading: false });
     } catch {
@@ -56,9 +53,9 @@ export const useFaqStore = create<FaqState>((set, get) => ({
     try {
       if (payload.id) {
         const { id, ...body } = payload;
-        await axios.patch(`${API_ROUTES.AI}/admin/faq/${id}`, body, authConfig);
+        await adminApi.patch(`${AI_ADMIN_ROUTES.faq}/${id}`, body);
       } else {
-        await axios.post(`${API_ROUTES.AI}/admin/faq`, payload, authConfig);
+        await adminApi.post(AI_ADMIN_ROUTES.faq, payload);
       }
       await get().fetchFaqs();
       set({ isLoading: false });
@@ -72,7 +69,7 @@ export const useFaqStore = create<FaqState>((set, get) => ({
   deleteFaq: async (id) => {
     set({ isLoading: true, error: null });
     try {
-      await axios.delete(`${API_ROUTES.AI}/admin/faq/${id}`, authConfig);
+      await adminApi.delete(`${AI_ADMIN_ROUTES.faq}/${id}`);
       await get().fetchFaqs();
       set({ isLoading: false });
       return true;

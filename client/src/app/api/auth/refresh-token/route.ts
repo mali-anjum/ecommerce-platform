@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { extractSetCookieHeaders } from "@/lib/api/extractSetCookieHeaders";
+import { applyProxyCookies } from "@/lib/api/applyProxyCookies";
 import { getServerBackendUrl } from "@/lib/api/getServerBackendUrl";
 import { proxyLogger } from "@/lib/logger";
 
@@ -109,27 +110,7 @@ export async function POST(req: NextRequest) {
         },
       );
 
-      const setCookieHeaders = extractSetCookieHeaders(backendRes);
-      for (const cookie of setCookieHeaders) {
-        response.headers.append("Set-Cookie", cookie);
-      }
-
-      if (!backendRes.ok) {
-        proxyLogger.warn("refresh-token:backend-rejected", {
-          traceId,
-          status: backendRes.status,
-          backendPayload,
-          setCookieCount: setCookieHeaders.length,
-        });
-      }
-
-      if (backendRes.ok) {
-        proxyLogger.info("refresh-token:backend-success", {
-          traceId,
-          status: backendRes.status,
-          setCookieCount: setCookieHeaders.length,
-        });
-      }
+      applyProxyCookies(response, backendRes);
 
       return response;
     } finally {

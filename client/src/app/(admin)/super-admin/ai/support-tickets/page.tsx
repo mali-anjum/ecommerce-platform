@@ -14,16 +14,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/hooks/use-toast";
+import { formatTimelineDate } from "@/components/common/utils/formatDates";
 import { useSupportTicketsStore } from "@/components/super-admin/ai/state/useSupportTicketsStore";
-
-function formatDate(value: string): string {
-  return new Date(value).toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 export default function SuperAdminSupportTicketsPage() {
   const { toast } = useToast();
@@ -97,7 +89,7 @@ export default function SuperAdminSupportTicketsPage() {
                     Ticket {ticket.id.slice(0, 8)}
                   </CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    Updated {formatDate(ticket.updatedAt)}
+                    Updated {formatTimelineDate(ticket.updatedAt)}
                   </p>
                 </div>
                 <Badge variant={ticket.status === "OPEN" ? "default" : "outline"}>

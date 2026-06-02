@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { extractSetCookieHeaders } from "@/lib/api/extractSetCookieHeaders";
+import { applyProxyCookies } from "@/lib/api/applyProxyCookies";
 import { getServerBackendUrl } from "@/lib/api/getServerBackendUrl";
 
 // Constants for better maintainability
@@ -122,18 +123,15 @@ export async function POST(req: NextRequest) {
       status: backendRes.status,
     });
 
-    const setCookieHeaders = extractSetCookieHeaders(backendRes);
+    const applied = applyProxyCookies(response, backendRes);
 
-    if (setCookieHeaders.length > 0) {
-      console.log(
-        `🍪 Forwarding ${setCookieHeaders.length} cookies from backend`
-      );
-      for (const cookie of setCookieHeaders) {
-        response.headers.append("Set-Cookie", cookie);
-      }
+    if (applied > 0) {
+      console.log(`🍪 Applied ${applied} auth cookies on frontend origin`);
     } else {
+      const rawCount = extractSetCookieHeaders(backendRes).length;
       console.warn(
-        "[CLIENT_LOGIN_PROXY] No Set-Cookie headers from backend — tokens will not persist in browser. Check Express login + Node fetch getSetCookie."
+        "[CLIENT_LOGIN_PROXY] No auth cookies applied",
+        { rawSetCookieCount: rawCount },
       );
     }
 

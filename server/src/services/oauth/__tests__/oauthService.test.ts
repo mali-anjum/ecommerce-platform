@@ -9,8 +9,8 @@ jest.mock("arctic", () => ({
   generateCodeVerifier: jest.fn(() => "verifier"),
 }));
 
-import { mapProviderId } from "../internal/oauthAccountService";
-import { OAuthService } from "../oauthService";
+import { mapProviderId } from "../internal/helpers/providerId";
+import { OAuthService } from "../OAuthService";
 import { GoogleOAuthProvider } from "../providers/googleOAuthProvider";
 
 describe("OAuthService", () => {

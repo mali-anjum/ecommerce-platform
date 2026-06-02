@@ -4,31 +4,21 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { InputField } from "@/components/auth/atoms/FormInput";
 import { Button } from "@/components/ui/button";
 import { useAddressStore } from "@/components/storefront/checkout/state/useAddressStore";
 import { useAuthStore } from "@/components/auth/state/useAuthStore";
 import { useToast } from "@/components/ui/hooks/use-toast";
 import { MapPin, Phone, User } from "lucide-react";
-import { API_ROUTES } from "@/lib/routes/api";
-import { http } from "@/lib/http";
-
-const completeProfileSchema = z.object({
-  name: z.string().min(2, "Name is required"),
-  phone: z.string().min(6, "Phone number is required"),
-  country: z.string().min(2, "Country is required"),
-  city: z.string().min(2, "City is required"),
-  postalCode: z.string().min(3, "Postal code is required"),
-  address: z.string().min(5, "Street address is required"),
-});
-
-type CompleteProfileForm = z.infer<typeof completeProfileSchema>;
+import {
+  completeProfileSchema,
+  type CompleteProfileForm,
+} from "@/lib/validation/completeProfileSchema";
 
 export default function CompleteProfilePage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { user, fetchMe } = useAuthStore();
+  const { user, fetchMe, completeProfile } = useAuthStore();
   const { createAddress } = useAddressStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -83,8 +73,10 @@ export default function CompleteProfilePage() {
         throw new Error("Could not save your address");
       }
 
-      await http.patch(`${API_ROUTES.AUTH}/profile/complete`);
-      await fetchMe();
+      const ok = await completeProfile();
+      if (!ok) {
+        throw new Error("Could not mark your profile as complete");
+      }
 
       toast({
         title: "Profile complete",

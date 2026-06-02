@@ -1,29 +1,30 @@
 import { useEffect } from "react";
 import { useToast } from "@/components/ui/hooks/use-toast";
 import { useAuthStore } from "@/components/auth/state/useAuthStore";
-import { useRouter } from "next/navigation";
 import { ROUTES } from "@/lib/routes/api";
 import { LoginFormData } from "@/components/schemas/loginSchema";
 
 export const useLogin = () => {
   const { toast } = useToast();
   const { login, isLoading, user, error } = useAuthStore();
-  const router = useRouter();
 
   useEffect(() => {
-    if (user) {
-      const targetPath =
-        user.role === "SUPER_ADMIN"
-          ? ROUTES.SUPER_ADMIN
-          : user.role === "SELLER"
-            ? ROUTES.SELLER
-            : ROUTES.HOME;
+    if (!user) return;
 
-      setTimeout(() => {
-        router.push(targetPath);
-      }, 500);
-    }
-  }, [user, router]);
+    const targetPath =
+      user.role === "SUPER_ADMIN"
+        ? ROUTES.SUPER_ADMIN
+        : user.role === "SELLER"
+          ? ROUTES.SELLER
+          : ROUTES.HOME;
+
+    // Full navigation so middleware receives cookies set by /api/auth/login
+    const timer = setTimeout(() => {
+      window.location.assign(targetPath);
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [user]);
 
   const onSubmit = async (data: LoginFormData) => {
     try {

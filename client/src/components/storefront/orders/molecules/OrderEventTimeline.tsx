@@ -1,18 +1,11 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import {
+  formatOrderStatus,
+  formatTimelineDate,
+} from "@/components/common/utils/formatDates";
 import type { OrderTrackingEvent } from "@/components/storefront/orders/types/orderTypes";
-
-function formatTimelineDate(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleString("en-US", {
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 export function OrderEventTimeline({
   events,
@@ -68,7 +61,7 @@ export function OrderEventTimeline({
                   isLatest ? "text-primary" : "text-foreground"
                 )}
               >
-                {event.status?.replace(/_/g, " ") ?? "Update"}
+                {event.status ? formatOrderStatus(event.status) : "Update"}
               </p>
               <p className="mt-0.5 text-sm text-muted-foreground">
                 {event.message}

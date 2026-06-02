@@ -92,7 +92,10 @@ describe("GoogleOAuthProvider", () => {
     );
     expect(global.fetch).toHaveBeenCalledWith(
       "https://openidconnect.googleapis.com/v1/userinfo",
-      { headers: { Authorization: "Bearer google-access-token" } },
+      expect.objectContaining({
+        headers: { Authorization: "Bearer google-access-token" },
+        signal: expect.any(AbortSignal),
+      }),
     );
     expect(profile).toEqual({
       providerUserId: "google-sub-1",

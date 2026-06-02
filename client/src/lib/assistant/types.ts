@@ -1,5 +1,6 @@
 export type AssistantMessageRole = "user" | "assistant";
 
+/** @deprecated Use ClassifiedIntent in UI; kept for message display compatibility. */
 export type AssistantChatIntent =
   | "general"
   | "product_recommendation"
@@ -77,7 +78,6 @@ export type AssistantMessage = {
   id: string;
   role: AssistantMessageRole;
   content: string;
-  intent?: AssistantChatIntent;
   classifiedIntent?: ClassifiedIntent;
   products?: RecommendedProduct[];
   orders?: AssistantOrderSummary[];
@@ -94,8 +94,7 @@ export type AssistantChatResponse = {
   success: boolean;
   statusCode: number;
   data: {
-    intent: AssistantChatIntent;
-    classifiedIntent?: ClassifiedIntent;
+    classifiedIntent: ClassifiedIntent;
     reply: string;
     products: RecommendedProduct[];
     productIdsReferenced: string[];

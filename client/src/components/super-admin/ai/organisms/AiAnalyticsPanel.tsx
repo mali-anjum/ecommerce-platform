@@ -31,6 +31,7 @@ import { KpiCard } from "@/components/super-admin/analytics/atoms/KpiCard";
 import {
   formatNumber,
 } from "@/components/super-admin/analytics/utils/formatters";
+import { formatOrderStatus, formatTimelineDate } from "@/components/common/utils/formatDates";
 import {
   useAiAnalyticsStore,
   type AiAnalyticsPeriod,
@@ -43,19 +44,7 @@ const PERIOD_OPTIONS: Array<{ value: AiAnalyticsPeriod; label: string }> = [
 ];
 
 function formatIntent(intent: string): string {
-  return intent
-    .split("_")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-}
-
-function formatDate(value: string): string {
-  return new Date(value).toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return formatOrderStatus(intent);
 }
 
 function QueryList({
@@ -278,7 +267,7 @@ export function AiAnalyticsPanel() {
                               <span className="text-muted-foreground">—</span>
                             )}
                           </TableCell>
-                          <TableCell>{formatDate(log.createdAt)}</TableCell>
+                          <TableCell>{formatTimelineDate(log.createdAt)}</TableCell>
                         </TableRow>
                       ))
                     )}

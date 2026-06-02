@@ -1,5 +1,5 @@
-import { KnowledgeBasePanel } from "@/components/super-admin/ai/organisms/KnowledgeBasePanel";
+import { redirect } from "next/navigation";
 
-export default function SuperAdminKnowledgeBasePage() {
-  return <KnowledgeBasePanel />;
+export default function LegacyKnowledgeBasePage() {
+  redirect("/super-admin/ai/knowledge?tab=documents");
 }

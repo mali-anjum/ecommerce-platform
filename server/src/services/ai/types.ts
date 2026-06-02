@@ -67,6 +67,9 @@ export type ClassifiedIntent =
   | "GENERAL_CHAT"
   | "HUMAN_HANDOFF";
 
+/** @internal Legacy handler routing; not sent in public API responses. */
+export type AssistantHandlerIntent = AssistantChatIntent;
+
 export type LeadCaptureStep = "email" | "phone" | "message" | "complete";
 
 export type LeadSession = {

@@ -310,14 +310,9 @@ const menuSections = [
     icon: Bot,
     items: [
       {
-        name: "FAQ",
-        icon: HelpCircle,
-        href: "/super-admin/ai/faq",
-      },
-      {
-        name: "Documents",
-        icon: FileText,
-        href: "/super-admin/ai/knowledge-base",
+        name: "Knowledge",
+        icon: BookOpen,
+        href: "/super-admin/ai/knowledge",
       },
       {
         name: "Analytics",
@@ -339,11 +334,6 @@ const menuSections = [
         name: "Settings",
         icon: Settings,
         href: "/super-admin/settings",
-      },
-      {
-        name: "Store policies",
-        icon: BookOpen,
-        href: "/super-admin/knowledge",
       },
       {
         name: "Themes",

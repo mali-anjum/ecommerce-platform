@@ -1,5 +1,5 @@
-import { FaqManagementPanel } from "@/components/super-admin/ai/organisms/FaqManagementPanel";
+import { redirect } from "next/navigation";
 
-export default function SuperAdminAiFaqPage() {
-  return <FaqManagementPanel />;
+export default function LegacyFaqPage() {
+  redirect("/super-admin/ai/knowledge?tab=faq");
 }

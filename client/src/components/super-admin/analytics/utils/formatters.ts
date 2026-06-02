@@ -15,10 +15,4 @@ export function formatPercent(value: number): string {
   return `${sign}${value}%`;
 }
 
-export function formatStatusLabel(status: string): string {
-  return status
-    .toLowerCase()
-    .split("_")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-}
+export { formatOrderStatus as formatStatusLabel } from "@/components/common/utils/formatDates";

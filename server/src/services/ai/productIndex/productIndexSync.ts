@@ -3,6 +3,12 @@ import {
   isSellableIndexEntry,
   mapProductToIndexEntry,
 } from "./productIndexMapper";
+import {
+  loadPersistedProductIndex,
+  persistProductIndexEntries,
+  persistProductIndexEntry,
+  removePersistedProductIndexEntry,
+} from "./productIndexPersistence";
 import { productIndexStore } from "./productIndexStore";
 import type { AiProductIndexEntry, ProductIndexStats } from "./types";
 
@@ -14,10 +20,35 @@ export function getProductIndexStats(): ProductIndexStats {
   return productIndexStore.stats();
 }
 
+async function hydrateFromDatabase(): Promise<number> {
+  const persisted = await loadPersistedProductIndex();
+  if (persisted.length === 0) {
+    return 0;
+  }
+  productIndexStore.replaceAll(persisted);
+  return persisted.length;
+}
+
 export async function warmProductIndex(): Promise<number> {
+  try {
+    const hydrated = await hydrateFromDatabase();
+    if (hydrated > 0) {
+      return hydrated;
+    }
+  } catch (error) {
+    console.error("[product-index] Failed to load persisted index", error);
+  }
+
   const products = await prisma.product.findMany();
   const entries = products.map(mapProductToIndexEntry);
   productIndexStore.replaceAll(entries);
+
+  try {
+    await persistProductIndexEntries(entries);
+  } catch (error) {
+    console.error("[product-index] Failed to persist rebuilt index", error);
+  }
+
   return entries.length;
 }
 
@@ -30,15 +61,39 @@ export async function syncProductIndexEntry(productId: string): Promise<void> {
   if (!product || !product.isActive || product.isArchived) {
     productIndexStore.remove(productId);
     productIndexStore.markReady();
+    try {
+      await removePersistedProductIndexEntry(productId);
+    } catch (error) {
+      console.error(
+        `[product-index] Failed to remove persisted entry ${productId}`,
+        error,
+      );
+    }
     return;
   }
 
-  productIndexStore.upsert(mapProductToIndexEntry(product));
+  const entry = mapProductToIndexEntry(product);
+  productIndexStore.upsert(entry);
   productIndexStore.markReady();
+
+  try {
+    await persistProductIndexEntry(entry);
+  } catch (error) {
+    console.error(
+      `[product-index] Failed to persist entry ${productId}`,
+      error,
+    );
+  }
 }
 
 export function removeProductIndexEntry(productId: string): void {
   productIndexStore.remove(productId);
+  void removePersistedProductIndexEntry(productId).catch((error) => {
+    console.error(
+      `[product-index] Failed to remove persisted entry ${productId}`,
+      error,
+    );
+  });
 }
 
 export function scheduleProductIndexSync(productId: string): void {

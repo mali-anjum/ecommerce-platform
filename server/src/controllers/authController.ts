@@ -6,8 +6,8 @@ import bcrypt from "bcryptjs";
 import { buildTokenInfo } from "../utils/auth/tokenInfo";
 import { requireUserId } from "../utils/requireUserId";
 import { UnauthorizedError } from "../utils/ApiError";
+import { getClearSessionCookieOptions } from "../config/cookies";
 import {
-  cookieOptions,
   createSessionForUser,
   hashToken,
   setTokens,
@@ -242,8 +242,8 @@ const refreshAccessToken = async (
     });
 
     if (!user) {
-      res.clearCookie("accessToken", { ...cookieOptions });
-      res.clearCookie("refreshToken", { ...cookieOptions });
+      res.clearCookie("accessToken", getClearSessionCookieOptions());
+      res.clearCookie("refreshToken", getClearSessionCookieOptions());
       res.status(401).json({ success: false, error: "Invalid refresh token" });
       return;
     }
@@ -317,8 +317,8 @@ const logout = async (req: Request, res: Response): Promise<void> => {
     });
   }
 
-  res.clearCookie("accessToken", { ...cookieOptions });
-  res.clearCookie("refreshToken", { ...cookieOptions });
+  res.clearCookie("accessToken", getClearSessionCookieOptions());
+  res.clearCookie("refreshToken", getClearSessionCookieOptions());
 
   res.status(200).json({
     success: true,

@@ -24,20 +24,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/hooks/use-toast";
+import { formatDateTime } from "@/components/common/utils/formatDates";
 import {
   useLeadsStore,
   type LeadSourceFilter,
 } from "@/components/super-admin/leads/state/useLeadsStore";
-
-function formatDate(value: string): string {
-  return new Date(value).toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 export default function SuperAdminLeadsPage() {
   const { toast } = useToast();
@@ -217,7 +208,7 @@ export default function SuperAdminLeadsPage() {
                     <TableCell>
                       <Badge variant="outline">{lead.source}</Badge>
                     </TableCell>
-                    <TableCell>{formatDate(lead.createdAt)}</TableCell>
+                    <TableCell>{formatDateTime(lead.createdAt)}</TableCell>
                   </TableRow>
                 ))
               )}

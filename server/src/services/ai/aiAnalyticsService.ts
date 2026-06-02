@@ -6,6 +6,7 @@ import {
   resolveAnalyticsDateRange,
 } from "../analytics/period";
 import { groupTopQueries } from "./aiAnalyticsUtils";
+import { isProductSearchIntent } from "./chatResponse";
 
 export type AiMetricsSummary = {
   chatUsageCount: number;
@@ -155,8 +156,8 @@ export async function fetchAiAnalyticsDashboard(
       ? 0
       : Number(((currentConvertedCount / totalConversations) * 100).toFixed(1));
 
-  const productQueries = currentLogs.filter(
-    (log) => log.intent === "product_recommendation",
+  const productQueries = currentLogs.filter((log) =>
+    isProductSearchIntent(log.intent),
   );
 
   return {

@@ -1,5 +1,8 @@
-import { API_ROUTES } from "@/lib/routes/api";
-import axios from "axios";
+import {
+  adminApi,
+  AI_ADMIN_ROUTES,
+  unwrapData,
+} from "@/lib/api/adminApiClient";
 import { create } from "zustand";
 
 export type AiAnalyticsPeriod = "7d" | "30d" | "90d";
@@ -37,12 +40,6 @@ interface AiAnalyticsState {
   fetchDashboard: (period?: AiAnalyticsPeriod) => Promise<void>;
 }
 
-const authConfig = { withCredentials: true as const };
-
-function unwrapData<T>(response: { data: { data?: T } }): T {
-  return response.data.data as T;
-}
-
 export const useAiAnalyticsStore = create<AiAnalyticsState>((set, get) => ({
   period: "30d",
   dashboard: null,
@@ -54,9 +51,8 @@ export const useAiAnalyticsStore = create<AiAnalyticsState>((set, get) => ({
   fetchDashboard: async (period = get().period) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get(
-        `${API_ROUTES.AI}/admin/analytics?period=${period}`,
-        authConfig,
+      const response = await adminApi.get(
+        `${AI_ADMIN_ROUTES.analytics}?period=${period}`,
       );
       const dashboard = unwrapData<AiAnalyticsDashboard>(response);
       set({ dashboard, period, isLoading: false });

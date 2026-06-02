@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { extractSetCookieHeaders } from "@/lib/api/extractSetCookieHeaders";
+import { applyProxyCookies } from "@/lib/api/applyProxyCookies";
 import { getServerBackendUrl } from "@/lib/api/getServerBackendUrl";
 
 /**
@@ -43,9 +43,7 @@ export async function GET(req: NextRequest) {
 
     const response = NextResponse.redirect(new URL(redirectPath, req.url));
 
-    for (const cookie of extractSetCookieHeaders(backendRes)) {
-      response.headers.append("Set-Cookie", cookie);
-    }
+    applyProxyCookies(response, backendRes);
 
     return response;
   } catch (error) {

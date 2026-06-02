@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { extractSetCookieHeaders } from "@/lib/api/extractSetCookieHeaders";
+import { applyProxyCookies } from "@/lib/api/applyProxyCookies";
 import { getServerBackendUrl } from "@/lib/api/getServerBackendUrl";
 
 const ERROR_MESSAGES = {
@@ -57,11 +57,7 @@ export async function POST(req: NextRequest) {
       status: backendRes.status,
     });
 
-    const setCookieHeaders = extractSetCookieHeaders(backendRes);
-
-    for (const cookie of setCookieHeaders) {
-      response.headers.append("Set-Cookie", cookie);
-    }
+    applyProxyCookies(response, backendRes);
 
     return response;
   } catch (error: any) {

@@ -2,15 +2,15 @@ import { generateCodeVerifier, generateState, OAuth2RequestError } from "arctic"
 import type { OAuthProvider } from "@prisma/client";
 import type { Response } from "express";
 import { tokenService } from "../../auth/tokenService";
-import { oauthAccountService } from "./oauthAccountService";
+import { oauthAccountService } from "./OAuthAccountService";
 import { oauthExchangeStore } from "./oauthExchangeStore";
 import {
   buildOAuthCallbackUrl,
   getFrontendUrl,
   oauthErrorRedirect,
-  oauthStateCookieOptions,
   resolvePostLoginRedirect,
 } from "./oauthConfig";
+import { getOAuthStateCookieOptions } from "../../../config/cookies";
 import type {
   NormalizedOAuthProfile,
   OAuthCallbackRequest,
@@ -56,7 +56,7 @@ export abstract class BaseOAuthProvider {
     res.cookie(
       this.getStateCookieName(),
       JSON.stringify(payload),
-      oauthStateCookieOptions(),
+      getOAuthStateCookieOptions(),
     );
     res.redirect(url.toString());
   }

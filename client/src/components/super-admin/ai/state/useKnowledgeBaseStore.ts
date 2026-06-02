@@ -1,5 +1,8 @@
-import { API_ROUTES } from "@/lib/routes/api";
-import axios from "axios";
+import {
+  adminApi,
+  AI_ADMIN_ROUTES,
+  unwrapData,
+} from "@/lib/api/adminApiClient";
 import { create } from "zustand";
 
 export type KnowledgeBaseRecord = {
@@ -32,12 +35,6 @@ interface KnowledgeBaseState {
   deleteDocument: (id: string) => Promise<boolean>;
 }
 
-const authConfig = { withCredentials: true as const };
-
-function unwrapData<T>(response: { data: { data?: T } }): T {
-  return response.data.data as T;
-}
-
 export const useKnowledgeBaseStore = create<KnowledgeBaseState>((set, get) => ({
   documents: [],
   isLoading: false,
@@ -46,10 +43,7 @@ export const useKnowledgeBaseStore = create<KnowledgeBaseState>((set, get) => ({
   fetchDocuments: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get(
-        `${API_ROUTES.AI}/admin/knowledge-base`,
-        authConfig,
-      );
+      const response = await adminApi.get(AI_ADMIN_ROUTES.knowledgeBase);
       const data = unwrapData<{ documents: KnowledgeBaseRecord[] }>(response);
       set({ documents: data.documents, isLoading: false });
     } catch {
@@ -65,14 +59,9 @@ export const useKnowledgeBaseStore = create<KnowledgeBaseState>((set, get) => ({
       if (title?.trim()) {
         formData.append("title", title.trim());
       }
-      await axios.post(
-        `${API_ROUTES.AI}/admin/knowledge-base/upload`,
-        formData,
-        {
-          ...authConfig,
-          headers: { "Content-Type": "multipart/form-data" },
-        },
-      );
+      await adminApi.post(AI_ADMIN_ROUTES.knowledgeBaseUpload, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
       await get().fetchDocuments();
       set({ isLoading: false });
       return true;
@@ -85,7 +74,7 @@ export const useKnowledgeBaseStore = create<KnowledgeBaseState>((set, get) => ({
   createManual: async (payload) => {
     set({ isLoading: true, error: null });
     try {
-      await axios.post(`${API_ROUTES.AI}/admin/knowledge-base`, payload, authConfig);
+      await adminApi.post(AI_ADMIN_ROUTES.knowledgeBase, payload);
       await get().fetchDocuments();
       set({ isLoading: false });
       return true;
@@ -98,11 +87,7 @@ export const useKnowledgeBaseStore = create<KnowledgeBaseState>((set, get) => ({
   updateDocument: async (id, payload) => {
     set({ isLoading: true, error: null });
     try {
-      await axios.patch(
-        `${API_ROUTES.AI}/admin/knowledge-base/${id}`,
-        payload,
-        authConfig,
-      );
+      await adminApi.patch(`${AI_ADMIN_ROUTES.knowledgeBase}/${id}`, payload);
       await get().fetchDocuments();
       set({ isLoading: false });
       return true;
@@ -115,10 +100,7 @@ export const useKnowledgeBaseStore = create<KnowledgeBaseState>((set, get) => ({
   deleteDocument: async (id) => {
     set({ isLoading: true, error: null });
     try {
-      await axios.delete(
-        `${API_ROUTES.AI}/admin/knowledge-base/${id}`,
-        authConfig,
-      );
+      await adminApi.delete(`${AI_ADMIN_ROUTES.knowledgeBase}/${id}`);
       await get().fetchDocuments();
       set({ isLoading: false });
       return true;

@@ -534,6 +534,23 @@ model KnowledgeBase {
   @@index([sourceType])
 }
 
+/// Denormalized product search payloads for the AI assistant (survives process restarts).
+model AiProductSearchIndex {
+  productId String   @id
+  payload   Json
+  updatedAt DateTime @updatedAt
+
+  @@map("ai_product_search_index")
+}
+
+model AiProductSearchIndexMeta {
+  id           String    @id @default("default")
+  lastSyncedAt DateTime?
+  entryCount   Int       @default(0)
+
+  @@map("ai_product_search_index_meta")
+}
+
 /// Sales / CRM lead captured from AI assistant or manual admin entry.
 model Lead {
   id        String     @id @default(uuid())

@@ -233,7 +233,7 @@ export async function runAssistantChat(
 
   if (isAssistantFailureReply(result.reply)) {
     await incrementSessionFailureCount(input.sessionId);
-  } else if (result.intent !== "human_handoff") {
+  } else if (result.classifiedIntent !== "HUMAN_HANDOFF") {
     await resetSessionFailureCount(input.sessionId);
   }
 

@@ -1,14 +1,14 @@
 import { Router } from "express";
+import { postAiChat } from "../controllers/aiController";
 import {
   createAdminFaq,
   deleteAdminFaq,
   getAdminFaqs,
   getPublicFaqs,
   getStorePoliciesHandler,
-  postAiChat,
   updateAdminFaq,
   updateStorePoliciesHandler,
-} from "../controllers/aiController";
+} from "../controllers/faqController";
 import {
   createManualKnowledgeBase,
   deleteAdminKnowledgeBase,

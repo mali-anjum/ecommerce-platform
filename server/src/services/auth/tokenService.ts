@@ -4,18 +4,11 @@ import { v4 as uuidv4 } from "uuid";
 import type { Response } from "express";
 import { prisma } from "../../lib/prisma";
 import { buildTokenInfo } from "../../utils/auth/tokenInfo";
-
-const isProd = process.env.NODE_ENV === "production";
-
-export const cookieOptions = {
-  httpOnly: true,
-  secure: isProd,
-  sameSite: isProd ? ("none" as const) : ("lax" as const),
-  path: "/",
-  ...(process.env.COOKIE_DOMAIN?.trim()
-    ? { domain: process.env.COOKIE_DOMAIN.trim() }
-    : {}),
-};
+import {
+  SESSION_ACCESS_MAX_AGE_MS,
+  SESSION_REFRESH_MAX_AGE_MS,
+  getSessionCookieOptions,
+} from "../../config/cookies";
 
 export type SessionUser = {
   id: string;
@@ -53,22 +46,21 @@ export class TokenService {
     accessToken: string,
     refreshToken: string,
   ) {
-    const ACCESS_TOKEN_MAX_AGE = 15 * 60 * 1000;
-    const REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
+    res.cookie(
+      "accessToken",
+      accessToken,
+      getSessionCookieOptions(SESSION_ACCESS_MAX_AGE_MS),
+    );
 
-    res.cookie("accessToken", accessToken, {
-      ...cookieOptions,
-      maxAge: ACCESS_TOKEN_MAX_AGE,
-    });
-
-    res.cookie("refreshToken", refreshToken, {
-      ...cookieOptions,
-      maxAge: REFRESH_TOKEN_MAX_AGE,
-    });
+    res.cookie(
+      "refreshToken",
+      refreshToken,
+      getSessionCookieOptions(SESSION_REFRESH_MAX_AGE_MS),
+    );
 
     return {
-      accessTokenExpiresIn: 15 * 60,
-      refreshTokenExpiresIn: 7 * 24 * 60 * 60,
+      accessTokenExpiresIn: SESSION_ACCESS_MAX_AGE_MS / 1000,
+      refreshTokenExpiresIn: SESSION_REFRESH_MAX_AGE_MS / 1000,
     };
   }
 

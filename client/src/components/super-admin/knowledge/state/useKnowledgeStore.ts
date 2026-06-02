@@ -1,5 +1,8 @@
-import { API_ROUTES } from "@/lib/routes/api";
-import axios from "axios";
+import {
+  adminApi,
+  AI_ADMIN_ROUTES,
+  unwrapData,
+} from "@/lib/api/adminApiClient";
 import { create } from "zustand";
 
 export type StorePolicies = {
@@ -19,12 +22,6 @@ interface KnowledgeState {
   savePolicies: (payload: Partial<StorePolicies>) => Promise<boolean>;
 }
 
-const authConfig = { withCredentials: true as const };
-
-function unwrapData<T>(response: { data: { data?: T } }): T {
-  return response.data.data as T;
-}
-
 export const useKnowledgeStore = create<KnowledgeState>((set) => ({
   policies: null,
   isLoading: false,
@@ -33,7 +30,7 @@ export const useKnowledgeStore = create<KnowledgeState>((set) => ({
   fetchPolicies: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get(`${API_ROUTES.AI}/policies`, authConfig);
+      const response = await adminApi.get(AI_ADMIN_ROUTES.policies);
       const data = unwrapData<{ policies: StorePolicies }>(response);
       set({ policies: data.policies, isLoading: false });
     } catch {
@@ -44,11 +41,7 @@ export const useKnowledgeStore = create<KnowledgeState>((set) => ({
   savePolicies: async (payload) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.put(
-        `${API_ROUTES.AI}/admin/policies`,
-        payload,
-        authConfig,
-      );
+      const response = await adminApi.put(AI_ADMIN_ROUTES.policies, payload);
       const data = unwrapData<{ policies: StorePolicies }>(response);
       set({ policies: data.policies, isLoading: false });
       return true;

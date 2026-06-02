@@ -33,7 +33,12 @@ const emptyDraft = (): Partial<FaqRecord> => ({
   isActive: true,
 });
 
-export function FaqManagementPanel() {
+type FaqManagementPanelProps = {
+  /** When true, omits page title (used inside AI Knowledge hub tabs). */
+  embedded?: boolean;
+};
+
+export function FaqManagementPanel({ embedded = false }: FaqManagementPanelProps) {
   const { toast } = useToast();
   const { faqs, isLoading, error, fetchFaqs, saveFaq, deleteFaq } = useFaqStore();
   const [draft, setDraft] = useState<Partial<FaqRecord> | null>(null);
@@ -96,22 +101,31 @@ export function FaqManagementPanel() {
   };
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <HelpCircle className="h-8 w-8 text-primary" />
-          <div>
-            <h1 className="text-2xl font-bold">FAQ management</h1>
-            <p className="text-muted-foreground">
-              Manage questions and answers used by the AI assistant and Help Center.
-            </p>
+    <div className={embedded ? "space-y-6" : "space-y-6 p-6"}>
+      {!embedded ? (
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <HelpCircle className="h-8 w-8 text-primary" />
+            <div>
+              <h1 className="text-2xl font-bold">FAQ management</h1>
+              <p className="text-muted-foreground">
+                Manage questions and answers used by the AI assistant and Help Center.
+              </p>
+            </div>
           </div>
+          <Button onClick={openCreate} disabled={isLoading}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add FAQ
+          </Button>
         </div>
-        <Button onClick={openCreate} disabled={isLoading}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add FAQ
-        </Button>
-      </div>
+      ) : (
+        <div className="flex justify-end">
+          <Button onClick={openCreate} disabled={isLoading}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add FAQ
+          </Button>
+        </div>
+      )}
 
       {draft && (
         <Card>

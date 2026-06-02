@@ -2,14 +2,19 @@ import { Google } from "arctic";
 import { BaseOAuthProvider } from "../internal/baseOAuthProvider";
 import { buildOAuthCallbackUrl } from "../internal/oauthConfig";
 import type { NormalizedOAuthProfile } from "../internal/types";
+import { z } from "zod";
 
-type GoogleProfile = {
-  sub: string;
-  email?: string;
-  name?: string;
-  picture?: string;
-  email_verified?: boolean;
-};
+const googleUserInfoSchema = z.object({
+  sub: z.string().min(1),
+  email: z.string().email().optional(),
+  name: z.string().optional(),
+  picture: z.string().url().optional(),
+  email_verified: z.boolean().optional(),
+});
+
+type GoogleProfile = z.infer<typeof googleUserInfoSchema>;
+
+const GOOGLE_USERINFO_TIMEOUT_MS = 8000;
 
 export class GoogleOAuthProvider extends BaseOAuthProvider {
   readonly provider = "GOOGLE" as const;
@@ -61,9 +66,14 @@ export class GoogleOAuthProvider extends BaseOAuthProvider {
     const tokens = await google.validateAuthorizationCode(code, codeVerifier);
     const profile = await this.fetchGoogleUserInfo(tokens.accessToken());
 
+    if (!profile.email) {
+      // Do not default missing emails — it can corrupt user data and break linking.
+      throw new Error("Google did not return an email address");
+    }
+
     return {
       providerUserId: profile.sub,
-      email: profile.email ?? "",
+      email: profile.email,
       name: profile.name ?? null,
       image: profile.picture ?? null,
       emailVerified: Boolean(profile.email_verified),
@@ -71,14 +81,28 @@ export class GoogleOAuthProvider extends BaseOAuthProvider {
   }
 
   private async fetchGoogleUserInfo(accessToken: string): Promise<GoogleProfile> {
-    const response = await fetch(
-      "https://openidconnect.googleapis.com/v1/userinfo",
-      { headers: { Authorization: `Bearer ${accessToken}` } },
+    const controller = new AbortController();
+    const timeoutId = setTimeout(
+      () => controller.abort(),
+      GOOGLE_USERINFO_TIMEOUT_MS,
     );
+
+    const response = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
     if (!response.ok) {
       throw new Error(`Google profile request failed (${response.status})`);
     }
-    return response.json() as Promise<GoogleProfile>;
+
+    const json: unknown = await response.json();
+    const parsed = googleUserInfoSchema.safeParse(json);
+    if (!parsed.success) {
+      throw new Error("Google profile response was invalid");
+    }
+    return parsed.data;
   }
 }
 

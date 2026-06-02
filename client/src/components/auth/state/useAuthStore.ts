@@ -52,6 +52,7 @@ interface AuthStore {
   updateTokenExpiry: (tokenInfo: any) => void;
   clearTokenExpiry: () => void;
   fetchMe: () => Promise<User | null>;
+  completeProfile: () => Promise<boolean>;
   checkSession: () => Promise<Session>;
 }
 
@@ -614,6 +615,17 @@ export const useAuthStore = create<AuthStore>()(
           }
           console.error("AuthStore: fetchMe failed:", error);
           return null;
+        }
+      },
+
+      completeProfile: async () => {
+        try {
+          await axiosInstance.patch("/profile/complete");
+          await get().fetchMe();
+          return true;
+        } catch (error) {
+          console.error("AuthStore: completeProfile failed:", error);
+          return false;
         }
       },
     }),

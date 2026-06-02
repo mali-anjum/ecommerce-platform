@@ -1,6 +1,6 @@
 import type { OAuthProvider } from "@prisma/client";
 import type { BaseOAuthProvider } from "./internal/baseOAuthProvider";
-import { mapProviderId } from "./internal/oauthAccountService";
+import { mapProviderId } from "./internal/helpers/providerId";
 import { AppleOAuthProvider } from "./providers/appleOAuthProvider";
 import { FacebookOAuthProvider } from "./providers/facebookOAuthProvider";
 import { GitHubOAuthProvider } from "./providers/githubOAuthProvider";

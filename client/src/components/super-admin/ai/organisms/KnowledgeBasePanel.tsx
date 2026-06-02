@@ -18,22 +18,17 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/components/ui/hooks/use-toast";
+import { formatDateTime } from "@/components/common/utils/formatDates";
 import {
   useKnowledgeBaseStore,
   type KnowledgeBaseRecord,
 } from "@/components/super-admin/ai/state/useKnowledgeBaseStore";
 
-function formatDate(value: string): string {
-  return new Date(value).toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+type KnowledgeBasePanelProps = {
+  embedded?: boolean;
+};
 
-export function KnowledgeBasePanel() {
+export function KnowledgeBasePanel({ embedded = false }: KnowledgeBasePanelProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const {
@@ -115,16 +110,18 @@ export function KnowledgeBasePanel() {
   };
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center gap-3">
-        <FileText className="h-8 w-8 text-primary" />
-        <div>
-          <h1 className="text-2xl font-bold">Knowledge base documents</h1>
-          <p className="text-muted-foreground">
-            Upload PDFs or text files — extracted content trains the AI assistant.
-          </p>
+    <div className={embedded ? "space-y-6" : "space-y-6 p-6"}>
+      {!embedded && (
+        <div className="flex items-center gap-3">
+          <FileText className="h-8 w-8 text-primary" />
+          <div>
+            <h1 className="text-2xl font-bold">Knowledge base documents</h1>
+            <p className="text-muted-foreground">
+              Upload PDFs or text files — extracted content trains the AI assistant.
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
       <Card>
         <CardHeader>
@@ -303,7 +300,7 @@ export function KnowledgeBasePanel() {
           {documents.length > 0 && (
             <p className="mt-3 text-xs text-muted-foreground">
               Last updated entries shown with created date:{" "}
-              {formatDate(documents[0].updatedAt)}
+              {formatDateTime(documents[0].updatedAt)}
             </p>
           )}
         </CardContent>

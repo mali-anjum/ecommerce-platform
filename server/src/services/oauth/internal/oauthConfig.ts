@@ -1,4 +1,6 @@
-export const OAUTH_STATE_MAX_AGE_MS = 10 * 60 * 1000;
+import { getOAuthStateCookieOptions, OAUTH_STATE_MAX_AGE_MS } from "../../../config/cookies";
+
+export { OAUTH_STATE_MAX_AGE_MS };
 
 export function getFrontendUrl(): string {
   return (process.env.FRONTEND_URL ?? "http://localhost:3012").replace(/\/+$/, "");
@@ -23,15 +25,9 @@ export function buildOAuthCallbackUrl(routeSlug: string): string {
   return `${getBackendPublicUrl()}/api/auth/${routeSlug}/callback`;
 }
 
+/** @deprecated Use getOAuthStateCookieOptions from config/cookies */
 export function oauthStateCookieOptions() {
-  const isProd = process.env.NODE_ENV === "production";
-  return {
-    httpOnly: true,
-    secure: isProd,
-    sameSite: isProd ? ("none" as const) : ("lax" as const),
-    path: "/",
-    maxAge: OAUTH_STATE_MAX_AGE_MS,
-  };
+  return getOAuthStateCookieOptions();
 }
 
 export function oauthErrorRedirect(message: string): string {

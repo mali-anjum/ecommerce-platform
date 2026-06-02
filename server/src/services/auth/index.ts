@@ -1,7 +1,11 @@
 export {
+  getClearSessionCookieOptions,
+  getSessionCookieOptions,
+} from "../../config/cookies";
+
+export {
   TokenService,
   tokenService,
-  cookieOptions,
   signAccessToken,
   hashToken,
   setSessionCookies,
