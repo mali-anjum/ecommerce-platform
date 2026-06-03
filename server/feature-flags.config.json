@@ -1,5 +1,5 @@
 {
-  "$comment": "Add {module}.enabled + children (e.g. payments.paypal). Server syncs copy for API guards. Child keys auto-gate under module.enabled.",
+  "$comment": "Edit flags here. Server guide: server/src/config/featureFlags/README.md. Then: cd server && npm run sync:feature-flags. UI-only keys: client only. API keys: also add to SERVER_FLAG_DEFAULTS.",
   "flags": {
     "payments.enabled": true,
     "payments.paypal": true,
