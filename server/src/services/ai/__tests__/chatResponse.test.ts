@@ -1,4 +1,4 @@
-import { isProductSearchIntent, toPublicChatPayload } from "../chatResponse";
+import { isProductSearchIntent, toPublicChatPayload } from "../chat/ChatResponse";
 import type { AssistantChatResult } from "../types";
 
 describe("chatResponse", () => {

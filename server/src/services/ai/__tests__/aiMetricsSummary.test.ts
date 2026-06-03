@@ -8,7 +8,7 @@ jest.mock("../../../lib/prisma", () => ({
 }));
 
 import { prisma } from "../../../lib/prisma";
-import { fetchAiMetricsSummary } from "../aiAnalyticsService";
+import { fetchAiMetricsSummary } from "../analytics/AiAnalyticsService";
 
 const mockCount = prisma.aiConversationLog.count as jest.Mock;
 const mockGroupBy = prisma.aiConversationLog.groupBy as jest.Mock;

@@ -12,7 +12,7 @@ import {
   appendSessionMessages,
   clearSessionMemoryCacheForTests,
 } from "../sessionMemoryStore";
-import { mergeSessionHistory } from "../sessionMemoryService";
+import { mergeSessionHistory } from "../SessionMemoryService";
 
 const mockFindUnique = prisma.aiChatSession.findUnique as jest.Mock;
 const mockUpsert = prisma.aiChatSession.upsert as jest.Mock;

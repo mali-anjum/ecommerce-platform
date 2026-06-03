@@ -12,6 +12,7 @@ import {
   isProductSearchIntent,
 } from "@/lib/assistant/intent";
 import { getAnalyticsSessionId } from "@/lib/analytics/sessionId";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 
 const WELCOME_MESSAGE =
   "Hi! I can help with products, shipping, returns, and FAQs. What would you like to know?";
@@ -66,6 +67,11 @@ export function useAssistantChat({
   const sendMessage = useCallback(async () => {
     const trimmed = input.trim();
     if (!trimmed || isLoading) return;
+
+    if (!isFeatureEnabled("ai.chat")) {
+      setError("AI chat is disabled in feature-flags.config.json");
+      return;
+    }
 
     const userMessage = createAssistantMessage("user", trimmed);
     const nextMessages = [...messages, userMessage];
@@ -144,11 +150,12 @@ export function useAssistantChat({
     }
   }, [input, isLoading, messages, productId, leadSession, sessionId]);
 
-  const placeholder = leadSession.active
-    ? "Continue lead form…"
-    : failureCount >= 2
-      ? "Having trouble? Try “talk to agent” for human support."
-      : "Try: return policy, best laptops, or talk to agent…";
+  const placeholder =
+    leadSession.active
+      ? "Continue lead form…"
+      : failureCount >= 2
+        ? "Having trouble? Try “talk to agent” for human support."
+        : "Try: return policy, best laptops, or talk to agent…";
 
   return {
     input,

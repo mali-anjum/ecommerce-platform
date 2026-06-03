@@ -20,6 +20,7 @@ import warmRoutes from "./routes/warm"
 import { ApiError } from "./utils/ApiError";
 import { errorHandler } from "./middleware/errHandler";
 import prisma from "./lib/prisma";
+import { registerFeatureModuleRoutes } from "./config/featureFlags";
 import { warmProductIndex } from "./services/ai/productIndex";
 
 const app = express();
@@ -85,8 +86,19 @@ app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/address", addressRoutes);
 app.use("/api/order", orderRoutes);
 app.use("/api/analytics", analyticsRoutes);
-app.use("/api/ai", aiRoutes);
 app.use("/api/leads", leadRoutes);
+
+const moduleBootstraps = registerFeatureModuleRoutes(app, [
+  {
+    module: "ai",
+    path: "/api/ai",
+    router: aiRoutes,
+    onListen: () =>
+      warmProductIndex().then((count) => {
+        console.log(`📦 AI product index warmed with ${count} products`);
+      }),
+  },
+]);
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Hello from E-Commerce backend");
@@ -102,13 +114,11 @@ app.use("*", (req: Request, res: Response) => {
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  void warmProductIndex()
-    .then((count) => {
-      console.log(`📦 AI product index warmed with ${count} products`);
-    })
-    .catch((error) => {
-      console.error("Failed to warm AI product index", error);
+  for (const bootstrap of moduleBootstraps) {
+    void Promise.resolve(bootstrap()).catch((error) => {
+      console.error("Feature module bootstrap failed", error);
     });
+  }
 });
 
 // Graceful shutdown

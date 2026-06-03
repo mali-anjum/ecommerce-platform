@@ -2,7 +2,7 @@ import {
   isAssistantFailureReply,
   isHumanHandoffTrigger,
   REPEATED_FAILURE_THRESHOLD,
-} from "../handoffParser";
+} from "../classification/parsers/HandoffParser";
 
 describe("handoffParser", () => {
   it("detects human handoff triggers", () => {

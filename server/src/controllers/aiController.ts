@@ -2,14 +2,15 @@ import { Response, NextFunction } from "express";
 import { AuthenticatedRequest } from "../types/express";
 import { asyncHandler } from "../utils/asyncHandler";
 import { ApiResponse } from "../utils/ApiResponse";
-import { runAssistantChat } from "../services/ai/assistant.service";
-import { toPublicChatPayload } from "../services/ai/chatResponse";
+import {
+  runAssistantChat,
+  toPublicChatPayload,
+  scheduleAiConversationLog,
+  persistSessionTurn,
+} from "../services/ai";
 import type { AiChatBody } from "../validations/aiChatSchema";
-import { scheduleAiConversationLog } from "../services/ai/conversationLogService";
 import { scheduleAnalyticsEvent } from "../services/analytics/analyticsEventService";
-import { persistSessionTurn } from "../services/ai/sessionMemory/sessionMemoryService";
 import { AnalyticsEventType } from "@prisma/client";
-
 export const postAiChat = asyncHandler(
   async (req: AuthenticatedRequest, res: Response, _next: NextFunction) => {
     const body = req.validatedData as AiChatBody;

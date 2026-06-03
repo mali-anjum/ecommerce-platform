@@ -7,7 +7,7 @@ jest.mock("../../../lib/prisma", () => ({
 }));
 
 import { prisma } from "../../../lib/prisma";
-import { getProductRecommendations } from "../productRecommendations";
+import { getProductRecommendations } from "../recommendations/ProductRecommendationService";
 
 const mockFindMany = prisma.product.findMany as jest.Mock;
 

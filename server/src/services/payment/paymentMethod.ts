@@ -1,6 +1,19 @@
 import type { PaymentMethod as PrismaPaymentMethod } from "@prisma/client";
+import { isFeatureEnabled } from "../../config/featureFlags";
 
 export type CheckoutPaymentMethod = "PAYPAL" | "STRIPE";
+
+const PAYMENT_FLAG_KEY: Record<CheckoutPaymentMethod, string> = {
+  PAYPAL: "payments.paypal",
+  STRIPE: "payments.stripe",
+};
+
+function isPaymentMethodEnabled(method: CheckoutPaymentMethod): boolean {
+  if (!isFeatureEnabled("payments.enabled")) {
+    return false;
+  }
+  return isFeatureEnabled(PAYMENT_FLAG_KEY[method]);
+}
 
 export function isPayPalConfigured(): boolean {
   return Boolean(
@@ -18,10 +31,10 @@ export function isStripeConfigured(): boolean {
 /** Methods exposed to checkout after env validation. */
 export function getAvailablePaymentMethods(): CheckoutPaymentMethod[] {
   const methods: CheckoutPaymentMethod[] = [];
-  if (isPayPalConfigured()) {
+  if (isPayPalConfigured() && isPaymentMethodEnabled("PAYPAL")) {
     methods.push("PAYPAL");
   }
-  if (isStripeConfigured()) {
+  if (isStripeConfigured() && isPaymentMethodEnabled("STRIPE")) {
     methods.push("STRIPE");
   }
   return methods;

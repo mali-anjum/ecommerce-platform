@@ -412,6 +412,27 @@ enum ProductCondition {
   USED
 }
 
+enum FeatureFlagValueType {
+  BOOLEAN
+  STRING
+  NUMBER
+  JSON
+}
+
+/// Per-client feature flag overrides (defaults live in code registry).
+model FeatureFlagOverride {
+  id        String               @id @default(uuid())
+  clientId  String               @default("default")
+  key       String
+  value     String
+  valueType FeatureFlagValueType
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+
+  @@unique([clientId, key])
+  @@index([clientId])
+}
+
 /// Admin-editable FAQ entries for help center and AI assistant context.
 model FaqItem {
   id        String   @id @default(uuid())

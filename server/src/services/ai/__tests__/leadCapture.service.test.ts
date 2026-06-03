@@ -3,7 +3,7 @@ jest.mock("../../lead/leadService", () => ({
 }));
 
 import { createLead } from "../../lead/leadService";
-import { runLeadCaptureChat } from "../leadCapture.service";
+import { runLeadCaptureChat } from "../leads/LeadCaptureService";
 
 const mockCreateLead = createLead as jest.Mock;
 

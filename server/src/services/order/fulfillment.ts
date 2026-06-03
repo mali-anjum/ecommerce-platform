@@ -1,6 +1,6 @@
 import { prisma } from "../../lib/prisma";
 import { scheduleProductIndexSync } from "../ai/productIndex";
-import { scheduleAiChatConversion } from "../ai/conversationLogService";
+import { scheduleAiChatConversion } from "../ai/analytics/ConversationLogService";
 import { scheduleAnalyticsEvent } from "../analytics/analyticsEventService";
 import { AnalyticsEventType } from "@prisma/client";
 

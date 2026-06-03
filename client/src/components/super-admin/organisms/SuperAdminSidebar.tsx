@@ -43,7 +43,8 @@ import {
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/components/auth/state/useAuthStore";
-import { useEffect, useState } from "react";
+import { isModuleEnabled } from "@/lib/feature-flags";
+import { useEffect, useMemo, useState } from "react";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -187,7 +188,21 @@ function Logo({ isOpen }: LogoProps) {
 
 // ==================== MAIN COMPONENT ====================
 
-const menuSections = [
+type MenuItemConfig = {
+  name: string;
+  icon: React.ElementType;
+  href: string;
+  badge?: string;
+};
+
+type MenuSectionConfig = {
+  title: string;
+  icon: React.ElementType;
+  items: MenuItemConfig[];
+  requiresAi?: boolean;
+};
+
+const menuSections: MenuSectionConfig[] = [
   {
     title: "Dashboard",
     icon: LayoutDashboard,
@@ -308,6 +323,7 @@ const menuSections = [
   {
     title: "AI Operations",
     icon: Bot,
+    requiresAi: true,
     items: [
       {
         name: "Knowledge",
@@ -359,10 +375,17 @@ function SuperAdminSidebar({ isOpen, toggle }: SidebarProps) {
   const pathname = usePathname();
   const { logout } = useAuthStore();
   const [activeSection, setActiveSection] = useState<string>("");
+  const aiEnabled = isModuleEnabled("ai");
+
+  const visibleSections = useMemo(() => {
+    return menuSections.filter(
+      (section) => !section.requiresAi || aiEnabled,
+    );
+  }, [aiEnabled]);
 
   // Determine active section based on pathname
   useEffect(() => {
-    const section = menuSections.find((sectionItem) =>
+    const section = visibleSections.find((sectionItem) =>
       sectionItem.items.some((item) =>
         item.href === "/super-admin"
           ? pathname === "/super-admin" ||
@@ -371,7 +394,7 @@ function SuperAdminSidebar({ isOpen, toggle }: SidebarProps) {
       ),
     );
     setActiveSection(section?.title || "");
-  }, [pathname]);
+  }, [pathname, visibleSections]);
 
   const handleItemClick = async (item: { name: string; href: string }) => {
     if (item.name === "Logout") {
@@ -429,7 +452,7 @@ function SuperAdminSidebar({ isOpen, toggle }: SidebarProps) {
             "[&::-webkit-scrollbar-track]:bg-transparent"
           )}
         >
-          {menuSections.map((section) => (
+          {visibleSections.map((section) => (
             <div key={section.title} className="mb-6">
               <SectionHeader 
                 title={section.title} 

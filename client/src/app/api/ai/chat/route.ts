@@ -1,7 +1,15 @@
 import { API_ROUTES } from "@/lib/routes/api";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
+  if (!isFeatureEnabled("ai.chat")) {
+    return NextResponse.json(
+      { success: false, message: "AI chat is disabled for this client" },
+      { status: 403 },
+    );
+  }
+
   try {
     const body = await request.json();
     const accessToken = request.cookies.get("accessToken")?.value;

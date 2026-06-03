@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import Header from "@/components/layout/site-header";
 import { ShoppingAssistantWidget } from "@/components/assistant/ShoppingAssistantWidget";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 import { useEffect, useState } from "react";
 
 // Modular Components
@@ -119,7 +120,9 @@ function CommonLayout({ children }: { children: React.ReactNode }) {
       <RouteTransitionIndicator pathname={pathname || ""} />
       <LayoutContent showHeader={showHeader}>{children}</LayoutContent>
 
-      {showHeader && <ShoppingAssistantWidget />}
+      {showHeader && isFeatureEnabled("ai.assistant.widget") && (
+        <ShoppingAssistantWidget />
+      )}
 
       {/* Floating Navigation Helper */}
       {showHeader && (

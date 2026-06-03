@@ -2,7 +2,7 @@ import {
   detectOrderSupportSubIntent,
   extractOrderId,
   isOrderSupportQuery,
-} from "../orderSupportParser";
+} from "../classification/parsers/OrderSupportParser";
 
 describe("orderSupportParser", () => {
   it("detects order support queries", () => {

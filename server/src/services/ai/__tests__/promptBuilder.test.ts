@@ -1,7 +1,7 @@
 import {
   buildAssistantSystemPrompt,
   buildChatMessages,
-} from "../promptBuilder";
+} from "../knowledge/PromptBuilder";
 import type { AssistantKnowledgeContext } from "../types";
 
 const baseContext: AssistantKnowledgeContext = {

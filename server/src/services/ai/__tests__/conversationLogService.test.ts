@@ -11,7 +11,7 @@ import { prisma } from "../../../lib/prisma";
 import {
   logAiConversation,
   markAiChatConversionsForUser,
-} from "../conversationLogService";
+} from "../analytics/ConversationLogService";
 
 const mockCreate = prisma.aiConversationLog.create as jest.Mock;
 const mockUpdateMany = prisma.aiConversationLog.updateMany as jest.Mock;

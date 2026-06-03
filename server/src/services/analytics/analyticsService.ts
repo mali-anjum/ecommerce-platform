@@ -12,7 +12,7 @@ import type {
   FunnelStage,
   TrendPoint,
 } from "./types";
-import { fetchAiMetricsSummary } from "../ai/aiAnalyticsService";
+import { fetchAiMetricsSummary } from "../ai/analytics/AiAnalyticsService";
 import { fetchFunnelTrackingSummary } from "./funnelAnalyticsService";
 
 const COMPLETED_ORDER_WHERE: Prisma.OrderWhereInput = {

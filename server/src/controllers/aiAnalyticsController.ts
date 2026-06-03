@@ -2,7 +2,7 @@ import { Response, NextFunction } from "express";
 import { AuthenticatedRequest } from "../types/express";
 import { asyncHandler } from "../utils/asyncHandler";
 import { ApiResponse } from "../utils/ApiResponse";
-import { fetchAiAnalyticsDashboard } from "../services/ai/aiAnalyticsService";
+import { fetchAiAnalyticsDashboard } from "../services/ai";
 
 export const getAiAnalyticsDashboard = asyncHandler(
   async (req: AuthenticatedRequest, res: Response, _next: NextFunction) => {

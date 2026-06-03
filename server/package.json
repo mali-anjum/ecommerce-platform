@@ -4,9 +4,10 @@
   "description": "Ecommerce backend using Express, Prisma, and TypeScript",
   "main": "src/server.ts",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
+    "dev": "npm run sync:feature-flags && tsx watch src/server.ts",
     "dev:ts": "tsx watch src/server.ts",
-    "build": "npx prisma generate --schema=src/prisma/schema.prisma && tsc --skipLibCheck",
+    "sync:feature-flags": "sh -c 'test -f ../client/feature-flags.config.json && cp ../client/feature-flags.config.json ./feature-flags.config.json || test -f ./feature-flags.config.json'",
+    "build": "npm run sync:feature-flags && npx prisma generate --schema=src/prisma/schema.prisma && tsc --skipLibCheck",
     "start": "node dist/server.js",
     "prisma:generate": "npx prisma generate --schema=src/prisma/schema.prisma",
     "prisma:migrate:dev": "npx prisma migrate dev --schema=src/prisma/schema.prisma",

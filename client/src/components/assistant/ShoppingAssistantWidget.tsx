@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/sheet";
 import { useAssistantChat } from "@/components/assistant/hooks/useAssistantChat";
 import { AssistantMessageList } from "@/components/assistant/AssistantMessageList";
-
 const HIDDEN_PREFIXES = ["/auth", "/super-admin", "/seller"];
 
 function extractProductIdFromPath(pathname: string | null): string | undefined {

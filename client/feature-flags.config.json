@@ -1,0 +1,15 @@
+{
+  "$comment": "Edit flags here. Server guide: server/src/config/featureFlags/README.md. Then: cd server && npm run sync:feature-flags. UI-only keys: client only. API keys: also add to SERVER_FLAG_DEFAULTS.",
+  "flags": {
+    "payments.enabled": true,
+    "payments.paypal": true,
+    "payments.stripe": true,
+    "ai.enabled": true,
+    "ai.assistant.widget": true,
+    "ai.chat": true,
+    "ai.productRecommendations": true,
+    "ai.orderSupport": true,
+    "ai.leadCapture": true,
+    "ai.humanHandoff": true
+  }
+}

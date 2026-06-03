@@ -1,4 +1,4 @@
-import { classifyIntent, mapClassifiedIntentToLegacy } from "../intentClassifier";
+import { classifyIntent, mapClassifiedIntentToLegacy } from "../classification/IntentClassifier";
 
 describe("classifyIntent", () => {
   it("classifies order support queries", () => {

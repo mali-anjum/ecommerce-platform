@@ -8,7 +8,7 @@ import {
   addAgentReply,
   closeSupportTicket,
   listSupportTickets,
-} from "../services/ai/supportTicket.service";
+} from "../services/ai/handoff/SupportTicketService";
 
 export const getAdminSupportTickets = asyncHandler(
   async (req: AuthenticatedRequest, res: Response, _next: NextFunction) => {

@@ -1,0 +1,15 @@
+{
+  "$comment": "Add {module}.enabled + children (e.g. payments.paypal). Server syncs copy for API guards. Child keys auto-gate under module.enabled.",
+  "flags": {
+    "payments.enabled": true,
+    "payments.paypal": true,
+    "payments.stripe": true,
+    "ai.enabled": true,
+    "ai.assistant.widget": true,
+    "ai.chat": true,
+    "ai.productRecommendations": true,
+    "ai.orderSupport": true,
+    "ai.leadCapture": true,
+    "ai.humanHandoff": true
+  }
+}

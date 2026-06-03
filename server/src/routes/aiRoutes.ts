@@ -25,6 +25,7 @@ import {
 import { uploadDocument } from "../middleware/documentUploadMiddleware";
 import { optionalAuthenticateJwt } from "../middleware/optionalAuthMiddleware";
 import { authenticateJwt, isSuperAdmin } from "../middleware/authMiddleware";
+import { requireFeatureFlag, requireModule } from "../middleware/requireFeatureFlag";
 import { validate } from "../middleware/validation";
 import { aiChatSchema } from "../validations/aiChatSchema";
 import {
@@ -39,11 +40,20 @@ import {
 
 const router = Router();
 
-router.post("/chat", optionalAuthenticateJwt, validate(aiChatSchema), postAiChat);
+router.use(requireModule("ai"));
+
+router.post(
+  "/chat",
+  requireFeatureFlag("ai.chat"),
+  optionalAuthenticateJwt,
+  validate(aiChatSchema),
+  postAiChat,
+);
 router.get("/faq", getPublicFaqs);
 router.get("/policies", getStorePoliciesHandler);
 
 router.use(authenticateJwt, isSuperAdmin);
+
 router.get("/admin/analytics", getAiAnalyticsDashboard);
 router.get("/admin/support-tickets", getAdminSupportTickets);
 router.patch("/admin/support-tickets/:id/close", closeAdminSupportTicket);

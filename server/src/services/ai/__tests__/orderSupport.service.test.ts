@@ -3,7 +3,7 @@ jest.mock("../../order/query", () => ({
 }));
 
 import { findOrdersForUser } from "../../order/query";
-import { runOrderSupportChat } from "../orderSupport.service";
+import { runOrderSupportChat } from "../orders/OrderSupportService";
 
 const mockFindOrders = findOrdersForUser as jest.Mock;
 

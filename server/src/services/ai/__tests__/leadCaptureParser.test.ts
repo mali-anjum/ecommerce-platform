@@ -3,7 +3,7 @@ import {
   extractPhone,
   isLeadCaptureTrigger,
   isSkipPhoneMessage,
-} from "../leadCaptureParser";
+} from "../classification/parsers/LeadCaptureParser";
 
 describe("leadCaptureParser", () => {
   it("detects buying-intent trigger phrases", () => {

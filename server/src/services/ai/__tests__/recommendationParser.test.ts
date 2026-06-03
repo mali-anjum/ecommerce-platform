@@ -1,7 +1,7 @@
 import {
   isProductRecommendationQuery,
   parseRecommendationFilters,
-} from "../recommendationParser";
+} from "../classification/parsers/RecommendationParser";
 
 describe("recommendationParser", () => {
   it("detects product recommendation queries", () => {

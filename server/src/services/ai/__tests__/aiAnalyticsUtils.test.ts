@@ -1,4 +1,4 @@
-import { groupTopQueries } from "../aiAnalyticsUtils";
+import { groupTopQueries } from "../analytics/AiAnalyticsUtils";
 
 describe("groupTopQueries", () => {
   it("groups case-insensitive duplicate queries", () => {
