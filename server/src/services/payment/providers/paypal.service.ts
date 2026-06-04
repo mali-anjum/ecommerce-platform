@@ -15,6 +15,7 @@ import axios, { AxiosResponse, AxiosError } from "axios";
 import { v4 as uuidv4 } from "uuid";
 import { getErrorMessage } from "../../../utils/catchError";
 import { BasePaymentService } from "../base.payment.service";
+import { sentryTracker } from "../../../lib/monitoring";
 
 export class PayPalService extends BasePaymentService {
   protected providerName = "PAYPAL";
@@ -79,6 +80,7 @@ export class PayPalService extends BasePaymentService {
       this.tokenExpiry = Date.now() + response.data.expires_in * 1000;
       return this.accessToken;
     } catch (error) {
+    sentryTracker(error, { source: "paypal.service" });
       this.accessToken = null;
       this.tokenExpiry = null;
       throw new Error(
@@ -119,6 +121,7 @@ export class PayPalService extends BasePaymentService {
 
       return response;
     } catch (error) {
+    sentryTracker(error, { source: "paypal.service" });
       const axiosError = error as AxiosError;
 
       console.error(`PayPal API Error ${method} ${url}:`, {
@@ -253,6 +256,7 @@ export class PayPalService extends BasePaymentService {
         approvalUrl,
       };
     } catch (error) {
+    sentryTracker(error, { source: "paypal.service" });
       // PayPal returns helpful details (debug_id, details[].issue). Surface those so
       // the API client can fix misconfiguration/payload issues quickly.
       return {
@@ -329,6 +333,7 @@ export class PayPalService extends BasePaymentService {
             : { error: `Capture status: ${response.data.status}` }),
         };
       } catch (error) {
+    sentryTracker(error, { source: "paypal.service" });
         const issues = this.parsePayPalIssueCodes(error);
         const alreadyCaptured =
           issues.includes("ORDER_ALREADY_CAPTURED") ||
@@ -361,6 +366,7 @@ export class PayPalService extends BasePaymentService {
         };
       }
     } catch (error) {
+    sentryTracker(error, { source: "paypal.service" });
       return {
         success: false,
         error: this.describePayPalError(error),
@@ -383,6 +389,7 @@ export class PayPalService extends BasePaymentService {
         data: response.data,
       };
     } catch (error) {
+    sentryTracker(error, { source: "paypal.service" });
       return {
         success: false,
         error: getErrorMessage(error),
@@ -445,6 +452,7 @@ export class PayPalService extends BasePaymentService {
 
       return response.data.verification_status === "SUCCESS";
     } catch (error) {
+    sentryTracker(error, { source: "paypal.service" });
       console.error("PayPal webhook verification failed:", {
         error: getErrorMessage(error),
         transmissionId,
@@ -487,6 +495,7 @@ export class PayPalService extends BasePaymentService {
           return { success: true, event: "unknown", data: event };
       }
     } catch (error) {
+    sentryTracker(error, { source: "paypal.service" });
       return { success: false, error: getErrorMessage(error) };
     }
   }

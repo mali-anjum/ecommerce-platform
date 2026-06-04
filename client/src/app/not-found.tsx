@@ -54,7 +54,7 @@ function Animated404Background() {
   return (
     <div className="fixed inset-0 overflow-hidden -z-10">
       {/* Space gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-background via-card/50 to-background" />
+      <div className="absolute inset-0 bg-linear-to-br from-background via-card/50 to-background" />
       
       {/* Animated nebula */}
       <div className="absolute top-1/4 left-1/4 h-96 w-96 rounded-full bg-primary/5 animate-pulse" />
@@ -90,7 +90,7 @@ function Animated404Background() {
       
       {/* Radar scan line */}
       <div className="absolute inset-0">
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary to-transparent animate-radar-scan" />
+        <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-transparent via-primary to-transparent animate-radar-scan" />
       </div>
     </div>
   );
@@ -114,12 +114,12 @@ function ErrorCodeDisplay() {
   return (
     <div className="relative">
       {/* Glowing effect */}
-      <div className="absolute -inset-8 bg-gradient-to-r from-primary/20 via-secondary/20 to-accent/20 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute -inset-8 bg-linear-to-r from-primary/20 via-secondary/20 to-accent/20 rounded-full blur-3xl animate-pulse" />
       
       {/* Error code display */}
       <div className="relative">
         <div className="text-[180px] md:text-[240px] font-black leading-none">
-          <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+          <span className="bg-linear-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
             {code.split("").map((digit, index) => (
               <span
                 key={index}
@@ -173,7 +173,7 @@ function SearchRecovery() {
     <Card className="glass-effect border border-glass-border">
       <CardContent className="p-6">
         <div className="flex items-center gap-3 mb-6">
-          <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+          <div className="h-10 w-10 rounded-lg bg-linear-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
             <Navigation className="h-5 w-5 text-primary" />
           </div>
           <div>
@@ -248,7 +248,7 @@ function SystemDiagnostics() {
     <Card className="glass-effect border border-glass-border">
       <CardContent className="p-6">
         <div className="flex items-center gap-3 mb-6">
-          <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-secondary/20 to-accent/20 flex items-center justify-center">
+          <div className="h-10 w-10 rounded-lg bg-linear-to-br from-secondary/20 to-accent/20 flex items-center justify-center">
             <Radar className="h-5 w-5 text-secondary" />
           </div>
           <div>
@@ -351,7 +351,7 @@ export default function GlobalNotFound() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
               <Button
                 onClick={() => router.push("/")}
-                className="bg-gradient-to-r from-primary to-secondary hover:from-primary-light hover:to-secondary-light text-primary-foreground"
+                className="bg-linear-to-r from-primary to-secondary hover:from-primary-light hover:to-secondary-light text-primary-foreground"
                 size="lg"
               >
                 <Home className="h-5 w-5 mr-2" />
@@ -387,7 +387,7 @@ export default function GlobalNotFound() {
             <Card className="glass-effect border border-glass-border">
               <CardContent className="p-6">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-accent/20 to-primary/20 flex items-center justify-center">
+                  <div className="h-10 w-10 rounded-lg bg-linear-to-br from-accent/20 to-primary/20 flex items-center justify-center">
                     <SatelliteDish className="h-5 w-5 text-accent" />
                   </div>
                   <div>

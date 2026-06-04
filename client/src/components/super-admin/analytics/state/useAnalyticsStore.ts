@@ -7,6 +7,7 @@ import { ApiResult } from "@/components/storefront/orders/types/orderTypes";
 import { http } from "@/lib/http";
 import { AxiosError } from "axios";
 import { create } from "zustand";
+import { sentryTracker } from "@/lib/monitoring";
 
 type ApiErrorPayload = { message?: string; error?: string };
 
@@ -109,6 +110,7 @@ export const useAnalyticsStore = create<AnalyticsStore>((set, get) => ({
 
         return payload;
       } catch (error: unknown) {
+    sentryTracker(error, { source: "useAnalyticsStore" });
         set((current) => ({
           isLoading: false,
           error: getAxiosErrorMessage(error, "Failed to load analytics"),

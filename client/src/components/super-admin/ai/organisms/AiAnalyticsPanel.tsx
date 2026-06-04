@@ -76,7 +76,7 @@ function QueryList({
               >
                 <div className="min-w-0">
                   <p className="text-xs text-muted-foreground">#{index + 1}</p>
-                  <p className="text-sm font-medium break-words">{item.query}</p>
+                  <p className="text-sm font-medium wrap-break-word">{item.query}</p>
                 </div>
                 <Badge variant="secondary">{item.count}</Badge>
               </li>

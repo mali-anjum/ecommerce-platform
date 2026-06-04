@@ -57,7 +57,7 @@ console.log(total);
     <Card className="glass-effect border border-glass-border sticky top-8">
       <CardContent className="p-6">
         <div className="flex items-center gap-3 mb-6">
-          <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-accent/20 to-primary/20 flex items-center justify-center">
+          <div className="h-10 w-10 rounded-lg bg-linear-to-br from-accent/20 to-primary/20 flex items-center justify-center">
             <ShoppingBag className="h-5 w-5 text-accent" />
           </div>
           <div>
@@ -71,7 +71,7 @@ console.log(total);
           {cartItems.map((item) => (
             <div key={item.id} className="flex items-center gap-4 p-3 rounded-lg bg-card">
               <div className="relative">
-                <div className="w-16 h-16 rounded-lg overflow-hidden bg-gradient-to-br from-primary/10 to-secondary/10">
+                <div className="w-16 h-16 rounded-lg overflow-hidden bg-linear-to-br from-primary/10 to-secondary/10">
                   {item.product.images?.[0] ? (
                     <img
                       src={item.product.images[0]}

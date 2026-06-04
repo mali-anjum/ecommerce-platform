@@ -16,6 +16,7 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import jwt from "jsonwebtoken";
 import { mapAuthErrorResponse } from "../utils/auth/authErrors";
+import { sentryTracker } from "../lib/monitoring";
 
 const register = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -60,6 +61,7 @@ const register = async (req: Request, res: Response): Promise<void> => {
       userId: user.id,
     });
   } catch (error) {
+    sentryTracker(error, { source: "authController" });
     console.error("Registration error:", error);
     const { status, error: message } = mapAuthErrorResponse(error);
     res.status(status).json({ success: false, error: message });
@@ -169,6 +171,7 @@ const login = async (req: Request, res: Response): Promise<void> => {
       tokenInfo: buildTokenInfo(),
     });
   } catch (error) {
+    sentryTracker(error, { source: "authController" });
     const endTime = Date.now();
     console.error(`💥 Login error after ${endTime - startTime}ms:`, error);
 
@@ -212,6 +215,7 @@ const getCurrentUser = async (req: Request, res: Response) => {
 
     return res.status(200).json({ user });
   } catch (error) {
+    sentryTracker(error, { source: "authController" });
     console.error("Error fetching current user:", error);
     return res.status(401).json({ error: "Invalid or expired token" });
   }
@@ -274,6 +278,7 @@ const refreshAccessToken = async (
       tokenInfo: buildTokenInfo(now),
     });
   } catch (error) {
+    sentryTracker(error, { source: "authController" });
     console.error("Token refresh error:", error);
     res.status(500).json({ success: false, error: "Token refresh failed" });
   }
@@ -297,6 +302,7 @@ const heartbeat = async (
       tokenInfo: buildTokenInfo(),
     });
   } catch (error) {
+    sentryTracker(error, { source: "authController" });
     if (error instanceof UnauthorizedError) {
       res.status(401).json({ success: false, error: error.message });
       return;
@@ -360,6 +366,7 @@ const markProfileComplete = async (
     });
     res.status(200).json({ success: true, message: "Profile marked complete" });
   } catch (error) {
+    sentryTracker(error, { source: "authController" });
     if (error instanceof UnauthorizedError) {
       res.status(401).json({ success: false, error: error.message });
       return;

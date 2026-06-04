@@ -2,6 +2,7 @@ import { API_ROUTES } from "@/lib/routes/api";
 import axios from "axios";
 import { create } from "zustand";
 import type { ProductCategory } from "@/components/products/types/category";
+import { sentryTracker } from "@/lib/monitoring";
 
 interface CategoryState {
   categories: ProductCategory[];
@@ -51,6 +52,7 @@ export const useCategoryStore = create<CategoryState>((set, get) => ({
           lastFetchedAt: Date.now(),
         });
       } catch (error: any) {
+    sentryTracker(error, { source: "useCategoryStore" });
         set({
           isLoading: false,
           error: error?.response?.data?.message || "Failed to fetch categories",

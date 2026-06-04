@@ -1,6 +1,7 @@
 import { API_ROUTES } from "@/lib/routes/api";
 import axios from "axios";
 import { create } from "zustand";
+import { sentryTracker } from "@/lib/monitoring";
 
 interface FeatureBanner {
   id: string;
@@ -38,6 +39,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
       });
       set({ banners: response.data.banners, isLoading: false });
     } catch (e) {
+    sentryTracker(e, { source: "useSettingsStore" });
       console.error(e);
       set({ error: "Failed to fetch banners", isLoading: false });
     }
@@ -56,6 +58,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
         isLoading: false,
       });
     } catch (e) {
+    sentryTracker(e, { source: "useSettingsStore" });
       console.error(e);
       set({ error: "Failed to fetch banners", isLoading: false });
     }
@@ -81,6 +84,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
 
       return response.data.success;
     } catch (e) {
+    sentryTracker(e, { source: "useSettingsStore" });
       console.error(e);
       set({ error: "Failed to fetch banners", isLoading: false });
     }
@@ -100,6 +104,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
       });
       return response.data.success;
     } catch (e) {
+    sentryTracker(e, { source: "useSettingsStore" });
       console.error(e);
       set({ error: "Failed to fetch banners", isLoading: false });
     }

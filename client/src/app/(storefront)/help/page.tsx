@@ -58,11 +58,11 @@ export default function HelpPage() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-background to-card/30 py-10">
+    <main className="min-h-screen bg-linear-to-b from-background to-card/30 py-10">
       <div className="container mx-auto max-w-5xl px-4">
         <div className="mb-8 rounded-2xl border border-glass-border glass-effect p-6">
           <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-r from-primary to-secondary">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-linear-to-r from-primary to-secondary">
               <HelpCircle className="h-6 w-6 text-white" />
             </div>
             <div>

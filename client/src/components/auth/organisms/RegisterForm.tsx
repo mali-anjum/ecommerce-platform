@@ -51,7 +51,7 @@ export const RegisterForm = () => {
         {/* Logo Section */}
         <div className="flex justify-center mb-8 group">
           <div className="relative">
-            <div className="absolute -inset-4 rounded-full bg-gradient-to-r from-primary via-secondary to-accent opacity-20 blur-xl group-hover:opacity-30 transition-opacity duration-500" />
+            <div className="absolute -inset-4 rounded-full bg-linear-to-r from-primary via-secondary to-accent opacity-20 blur-xl group-hover:opacity-30 transition-opacity duration-500" />
             <Image 
               src="/images/logo.webp"
               width={180} 
@@ -76,7 +76,7 @@ export const RegisterForm = () => {
           <p className="text-muted-foreground">
             Begin your journey into the future
           </p>
-          <div className="w-16 h-1 bg-gradient-to-r from-primary via-secondary to-accent mx-auto rounded-full mt-4" />
+          <div className="w-16 h-1 bg-linear-to-r from-primary via-secondary to-accent mx-auto rounded-full mt-4" />
         </div>
 
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-5">

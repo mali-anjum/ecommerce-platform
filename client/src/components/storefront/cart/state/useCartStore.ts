@@ -4,6 +4,7 @@ import { create } from "zustand";
 import { CartItem } from "@/components/storefront/cart/types/cartItemStore";
 import { useCartSelectionStore } from "./useCartSelectionStore";
 import { getAnalyticsSessionId } from "@/lib/analytics/sessionId";
+import { sentryTracker } from "@/lib/monitoring";
 
 interface CartStore {
   items: CartItem[];
@@ -34,6 +35,7 @@ export const useCartStore = create<CartStore>((set, get) => {
           }
         );
       } catch (e: any) {
+    sentryTracker(e, { source: "useCartStore" });
         console.error("❌ Failed to update cart quantity:", e);
         set({ error: "Failed to update cart quantity" });
       }
@@ -76,6 +78,7 @@ export const useCartStore = create<CartStore>((set, get) => {
           console.log("✅ Cart fetched successfully");
           lastCartFetchAt = Date.now();
         } catch (error: any) {
+    sentryTracker(error, { source: "useCartStore" });
           console.error("❌ Cart fetch failed:", error);
 
           set({
@@ -111,6 +114,7 @@ export const useCartStore = create<CartStore>((set, get) => {
           isLoading: false,
         }));
       } catch (error: any) {
+    sentryTracker(error, { source: "useCartStore" });
         console.error("❌ Add to cart failed:", error);
         set({
           error: error.response?.data?.error || "Failed to add to cart",
@@ -137,6 +141,7 @@ export const useCartStore = create<CartStore>((set, get) => {
           .getState()
           .pruneInvalidIds(get().items.map((item) => item.id));
       } catch (error: any) {
+    sentryTracker(error, { source: "useCartStore" });
         console.error("❌ Remove from cart failed:", error);
         set({
           error: error.response?.data?.error || "Failed to delete from cart",
@@ -172,6 +177,7 @@ export const useCartStore = create<CartStore>((set, get) => {
 
         set({ items: [], isLoading: false });
       } catch (error: any) {
+    sentryTracker(error, { source: "useCartStore" });
         console.error("❌ Clear cart failed:", error);
         set({
           error: error.response?.data?.error || "Failed to clear cart",

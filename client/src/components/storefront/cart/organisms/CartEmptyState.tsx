@@ -8,7 +8,7 @@ export function CartEmptyState({ onContinueShopping }: { onContinueShopping: () 
     <div className="text-center py-16">
       <div className="flex flex-col items-center gap-6">
         <div className="relative">
-          <div className="h-32 w-32 rounded-full bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center">
+          <div className="h-32 w-32 rounded-full bg-linear-to-br from-primary/10 to-secondary/10 flex items-center justify-center">
             <ShoppingCart className="h-16 w-16 text-primary" />
           </div>
           <div className="absolute -inset-4 rounded-full bg-primary/5 animate-pulse"></div>
@@ -26,7 +26,7 @@ export function CartEmptyState({ onContinueShopping }: { onContinueShopping: () 
         <div className="flex flex-col sm:flex-row gap-4">
           <Button
             onClick={onContinueShopping}
-            className="bg-gradient-to-r from-primary to-secondary hover:from-primary-light hover:to-secondary-light text-primary-foreground"
+            className="bg-linear-to-r from-primary to-secondary hover:from-primary-light hover:to-secondary-light text-primary-foreground"
           >
             <Sparkles className="h-4 w-4 mr-2" />
             Start Shopping

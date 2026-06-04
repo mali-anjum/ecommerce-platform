@@ -11,6 +11,7 @@ import {
 import type { AiChatBody } from "../validations/aiChatSchema";
 import { scheduleAnalyticsEvent } from "../services/analytics/analyticsEventService";
 import { AnalyticsEventType } from "@prisma/client";
+import { sentryTracker } from "../lib/monitoring";
 export const postAiChat = asyncHandler(
   async (req: AuthenticatedRequest, res: Response, _next: NextFunction) => {
     const body = req.validatedData as AiChatBody;
@@ -51,6 +52,7 @@ export const postAiChat = asyncHandler(
         userMessage: body.message,
         assistantReply: result.reply,
       }).catch((error) => {
+        sentryTracker(error, { source: "aiController", route: "persistSessionTurn" });
         console.error("[session-memory] Failed to persist chat turn", error);
       });
     }

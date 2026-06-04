@@ -1,6 +1,7 @@
 import { Response } from "express";
 import { AuthenticatedRequest } from "../types/express";
 import { prisma } from "../lib/prisma";
+import { sentryTracker } from "../lib/monitoring";
 
 const createCoupon = async (
   req: AuthenticatedRequest,
@@ -26,6 +27,7 @@ const createCoupon = async (
       coupon: newlyCreatedCoupon,
     });
   } catch (e) {
+    sentryTracker(e, { source: "couponController" });
     console.error(e);
     res.status(500).json({
       success: false,
@@ -48,6 +50,7 @@ const fetchAllCoupons = async (
       couponList: fetchAllCouponsList,
     });
   } catch (e) {
+    sentryTracker(e, { source: "couponController" });
     console.error(e);
     res.status(500).json({
       success: false,
@@ -73,6 +76,7 @@ const deleteCoupon = async (
       id: id,
     });
   } catch (e) {
+    sentryTracker(e, { source: "couponController" });
     console.error(e);
     res.status(500).json({
       success: false,

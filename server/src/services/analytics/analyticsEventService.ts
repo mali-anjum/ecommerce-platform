@@ -1,5 +1,6 @@
 import { AnalyticsEventType, Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
+import { sentryTracker } from "../../lib/monitoring";
 
 export type AnalyticsEventMetadata = Record<string, unknown>;
 
@@ -24,6 +25,7 @@ export class AnalyticsEventService {
 
   schedule(input: LogAnalyticsEventInput): void {
     void this.log(input).catch((error) => {
+      sentryTracker(error, { source: "analyticsEventService" });
       console.error("[analytics-event] Failed to log event", error);
     });
   }

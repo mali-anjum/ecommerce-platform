@@ -13,6 +13,7 @@ import {
 } from "@/lib/assistant/intent";
 import { getAnalyticsSessionId } from "@/lib/analytics/sessionId";
 import { isFeatureEnabled } from "@/lib/feature-flags";
+import { sentryTracker } from "@/lib/monitoring";
 
 const WELCOME_MESSAGE =
   "Hi! I can help with products, shipping, returns, and FAQs. What would you like to know?";
@@ -134,6 +135,7 @@ export function useAssistantChat({
       ]);
       setFailureCount(0);
     } catch (err) {
+    sentryTracker(err, { source: "useAssistantChat" });
       const message =
         err instanceof Error ? err.message : "Something went wrong.";
       setError(message);

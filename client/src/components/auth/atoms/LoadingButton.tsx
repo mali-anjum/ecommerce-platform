@@ -41,10 +41,10 @@ export const LoadingButton = ({ isLoading, isWarming = false, variant = 'login' 
         {getContent()}
       </span>
       {!isLoading && !isWarming && variant === 'register' && (
-        <div className="absolute inset-0 bg-gradient-to-r from-primary via-secondary to-accent opacity-0 group-hover:opacity-20 transition-opacity duration-500" />
+        <div className="absolute inset-0 bg-linear-to-r from-primary via-secondary to-accent opacity-0 group-hover:opacity-20 transition-opacity duration-500" />
       )}
       {(isLoading || isWarming) && (
-        <div className="absolute inset-0 bg-gradient-to-r from-primary via-secondary to-accent animate-shimmer" />
+        <div className="absolute inset-0 bg-linear-to-r from-primary via-secondary to-accent animate-shimmer" />
       )}
     </Button>
   );

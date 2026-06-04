@@ -4,6 +4,7 @@ import cloudinary from "../config/cloudinary";
 import { prisma } from "../lib/prisma";
 import fs from "fs";
 import { scheduleProductIndexRebuild } from "../services/ai/productIndex";
+import { sentryTracker } from "../lib/monitoring";
 
 const addFeatureBanners = async (
   req: AuthenticatedRequest,
@@ -44,6 +45,7 @@ const addFeatureBanners = async (
       banners,
     });
   } catch (e) {
+    sentryTracker(e, { source: "settingsController" });
     console.error(e);
     res.status(500).json({
       success: false,
@@ -66,6 +68,7 @@ const fetchFeatureBanners = async (
       banners,
     });
   } catch (e) {
+    sentryTracker(e, { source: "settingsController" });
     console.error(e);
     res.status(500).json({
       success: false,
@@ -107,6 +110,7 @@ const updateFeaturedProducts = async (
       message: "Featured products updated successfully !",
     });
   } catch (e) {
+    sentryTracker(e, { source: "settingsController" });
     console.error(e);
     res.status(500).json({
       success: false,
@@ -129,6 +133,7 @@ const getFeaturedProducts = async (
       featuredProducts,
     });
   } catch (e) {
+    sentryTracker(e, { source: "settingsController" });
     console.error(e);
     res.status(500).json({
       success: false,

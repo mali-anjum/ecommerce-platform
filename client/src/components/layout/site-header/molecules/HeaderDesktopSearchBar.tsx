@@ -29,7 +29,7 @@ export function HeaderDesktopSearchBar({
         <select
           value={selectedDepartment}
           onChange={(e) => onDepartmentSelect(e.target.value)}
-          className="h-10 min-w-[220px] rounded-l-full border border-r-0 border-border/50 bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+          className="h-10 min-w-[220px] rounded-l-full border border-r-0 border-border/50 bg-card px-3 text-sm text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/30"
         >
           <option value="all">All Departments</option>
           {departmentOptions.map((group) => (

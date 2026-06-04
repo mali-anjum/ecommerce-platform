@@ -2,6 +2,7 @@
 import { Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { AuthenticatedRequest } from '../types/express';
+import { sentryTracker } from '../lib/monitoring';
 
 export const validate = (schema: z.ZodSchema) => {
     return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
@@ -10,6 +11,7 @@ export const validate = (schema: z.ZodSchema) => {
             req.validatedData = validatedData;
             next();
         } catch (error) {
+            sentryTracker(error, { source: "validation" });
             if (error instanceof z.ZodError) {
                 const errors = error.issues.map((issue) => ({
                     field: issue.path.join('.'),

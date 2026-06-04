@@ -5,6 +5,7 @@ import {
 import { BasePaymentService } from "../base.payment.service";
 import Stripe from "stripe";
 import { getErrorMessage } from "../../../utils/catchError";
+import { sentryTracker } from "../../../lib/monitoring";
 
 function resolveStripeRedirectUrls(): { successUrl: string; cancelUrl: string } {
   const base =
@@ -130,6 +131,7 @@ export class StripeService extends BasePaymentService {
         },
       };
     } catch (error) {
+    sentryTracker(error, { source: "stripe.service" });
       return {
         success: false,
         error: getErrorMessage(error),
@@ -163,6 +165,7 @@ export class StripeService extends BasePaymentService {
         error: `Payment not completed (status: ${session.payment_status})`,
       };
     } catch (error) {
+    sentryTracker(error, { source: "stripe.service" });
       return {
         success: false,
         error: getErrorMessage(error),
@@ -186,6 +189,7 @@ export class StripeService extends BasePaymentService {
         data: session,
       };
     } catch (error) {
+    sentryTracker(error, { source: "stripe.service" });
       return {
         success: false,
         error: getErrorMessage(error),
@@ -244,6 +248,7 @@ export class StripeService extends BasePaymentService {
           return { success: true, event: "unknown", data: event.data.object as Stripe.Checkout.Session };
       }
     } catch (error) {
+    sentryTracker(error, { source: "stripe.service" });
       return { success: false, error: getErrorMessage(error) };
     }
   }

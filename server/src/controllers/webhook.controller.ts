@@ -4,6 +4,7 @@ import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { PaymentFactory } from "../services/payment/payment.factory";
 import { applyPurchaseFulfillment } from "../services/order/fulfillment";
+import { sentryTracker } from "../lib/monitoring";
 
 const orderIncludeWithItems: Prisma.OrderInclude = {
   items: true,
@@ -88,6 +89,7 @@ export const paypalWebhook = async (req: Request, res: Response) => {
 
     res.status(200).send("Webhook processed");
   } catch (error) {
+    sentryTracker(error, { source: "webhook.controller" });
     console.error("Error processing PayPal webhook:", error);
     res.status(500).send("Internal server error");
   }
@@ -112,6 +114,7 @@ export const stripeWebhook = async (req: Request, res: Response) => {
 
     res.status(200).send("Webhook processed");
   } catch (error) {
+    sentryTracker(error, { source: "webhook.controller" });
     console.error("Error processing Stripe webhook:", error);
     res.status(500).send("Internal server error");
   }
@@ -183,6 +186,7 @@ export const genericWebhook = async (req: Request, res: Response) => {
 
     res.status(200).send("Webhook processed");
   } catch (error) {
+    sentryTracker(error, { source: "webhook.controller" });
     console.error("Error processing webhook:", error);
     res.status(500).send("Internal server error");
   }

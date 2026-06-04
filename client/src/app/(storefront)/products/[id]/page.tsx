@@ -1,38 +1,10 @@
-// import { Suspense } from "react";
-// import ProductDetailsSkeleton from "./productSkeleton";
-// import ProductDetailsContent from "./productDetails";
-// import { notFound } from 'next/navigation';
-
-// export default async function ProductDetailsPage({ 
-//   params 
-// }: { 
-//   params: Promise<{ id: string }> 
-// }) {
-//   try {
-//     const { id } = await params;
-    
-//     // ✅ Optional: Validate the ID
-//     if (!id || typeof id !== 'string') {
-//       notFound(); // Show 404 page
-//     }
-    
-//     return (
-//       <Suspense fallback={<ProductDetailsSkeleton />}>
-//         <ProductDetailsContent id={id} />
-//       </Suspense>
-//     );
-//   } catch (error) {
-//     // ✅ Handle any errors during params resolution
-//     console.error('Error resolving params:', error);
-//     notFound();
-//   }
-// }
 
 import { Suspense } from "react";
 import ProductDetailsSkeleton from "./productSkeleton";
 import ProductDetailsContent from "./productDetails";
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
+import { sentryTracker } from "@/lib/monitoring";
 
 // Optional: Generate metadata for the page
 export async function generateMetadata({ 
@@ -70,8 +42,8 @@ function ProductDetailsErrorBoundary({
       {/* Background effects */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="error-grid absolute inset-0 opacity-10" />
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent animate-pulse" />
-        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-secondary to-transparent animate-pulse animation-delay-1000" />
+        <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-primary to-transparent animate-pulse" />
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-secondary to-transparent animate-pulse animation-delay-1000" />
       </div>
       
       {/* Hologram effect overlay */}
@@ -91,7 +63,7 @@ function EnhancedSuspenseFallback() {
         <div className="relative">
           <div className="w-24 h-24 rounded-full border-4 border-transparent border-t-primary border-r-secondary border-b-accent border-l-primary-light animate-spin-slow" />
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 animate-pulse" />
+            <div className="w-16 h-16 rounded-full bg-linear-to-br from-primary/20 to-secondary/20 animate-pulse" />
           </div>
           <div className="absolute -inset-4 rounded-full border border-primary/10 animate-ping" />
         </div>
@@ -142,7 +114,7 @@ export default async function ProductDetailsPage({
           fallback={
             <div className="relative">
               {/* Animated background for loading state */}
-              <div className="absolute inset-0 bg-gradient-to-br from-background via-card to-background animate-gradient-shift" />
+              <div className="absolute inset-0 bg-linear-to-br from-background via-card to-background animate-gradient-shift" />
               <ProductDetailsSkeleton />
             </div>
           }
@@ -152,6 +124,7 @@ export default async function ProductDetailsPage({
       </ProductDetailsErrorBoundary>
     );
   } catch (error) {
+    sentryTracker(error, { source: "page" });
     // Enhanced error handling with futuristic logging
     console.error('⚡ Error in ProductDetailsPage:', error);
     

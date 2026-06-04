@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { Address } from "@/components/storefront/checkout/types/Address";
 import { http } from "@/lib/http";
 import { API_ROUTES } from "@/lib/routes/api";
+import { sentryTracker } from "@/lib/monitoring";
 
 interface AddressStore {
   addresses: Address[];
@@ -50,6 +51,7 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
         lastFetched: Date.now(),
       });
     } catch (error) {
+    sentryTracker(error, { source: "useAddressStore" });
       set({
         isLoading: false,
         error: "Failed to fetch address",

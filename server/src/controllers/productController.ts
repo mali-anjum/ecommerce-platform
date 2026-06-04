@@ -23,6 +23,7 @@ import {
   parseProductConditionValue,
 } from "../services/product";
 import { scheduleProductIndexSync } from "../services/ai/productIndex";
+import { sentryTracker } from "../lib/monitoring";
 
 // TODO: Consider cleaning up uploaded Cloudinary images if DB insert failed (use public_id to delete).
 // Use Promise.allSettled and handle partial failures gracefully.
@@ -256,6 +257,7 @@ const createProduct = asyncHandler(
           )
         );
     } catch (error) {
+    sentryTracker(error, { source: "productController" });
       logger.requestError(error as Error, req, "createProduct");
       throw error;
     }
@@ -293,6 +295,7 @@ const fetchAllProductsForAdmin = asyncHandler(
         new ApiResponse(200, { items, meta }, "Products fetched successfully")
       );
     } catch (error) {
+    sentryTracker(error, { source: "productController" });
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         throw new InternalServerError("Database error occurred");
       }

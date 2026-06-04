@@ -2,6 +2,7 @@
 import { NextFunction, Response } from "express";
 import { jwtVerify } from "jose";
 import { AuthenticatedRequest } from "../types/express";
+import { sentryTracker } from "../lib/monitoring";
 
 export const authenticateJwt = async (
   req: AuthenticatedRequest,
@@ -36,6 +37,7 @@ export const authenticateJwt = async (
     
     next();
   } catch (error) {
+    sentryTracker(error, { source: "authMiddleware" });
     console.error("JWT verification failed:", error);
     res.status(401).json({ 
       success: false, 

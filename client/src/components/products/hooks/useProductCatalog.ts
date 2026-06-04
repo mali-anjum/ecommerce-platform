@@ -3,6 +3,7 @@
 import type { AdminCatalogDepartment } from "@/components/products/utils/inferSubcategoryFromTitle";
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { sentryTracker } from "@/lib/monitoring";
 
 export function useProductCatalog() {
   const [catalogDepartments, setCatalogDepartments] = useState<
@@ -26,6 +27,7 @@ export function useProductCatalog() {
           setCatalogDepartments(rows as AdminCatalogDepartment[]);
         }
       } catch (err) {
+    sentryTracker(err, { source: "useProductCatalog" });
         if (!cancelled) {
           const message = axios.isAxiosError(err)
             ? err.response?.data?.message ||

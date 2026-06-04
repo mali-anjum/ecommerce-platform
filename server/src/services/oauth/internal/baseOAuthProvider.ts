@@ -11,6 +11,7 @@ import {
   resolvePostLoginRedirect,
 } from "./oauthConfig";
 import { getOAuthStateCookieOptions } from "../../../config/cookies";
+import { sentryTracker } from "../../../lib/monitoring";
 import type {
   NormalizedOAuthProfile,
   OAuthCallbackRequest,
@@ -130,6 +131,7 @@ export abstract class BaseOAuthProvider {
         `${getFrontendUrl()}/api/auth/oauth/complete?code=${encodeURIComponent(exchangeCode)}`,
       );
     } catch (err) {
+    sentryTracker(err, { source: "baseOAuthProvider" });
       if (err instanceof OAuth2RequestError) {
         res.redirect(
           oauthErrorRedirect(

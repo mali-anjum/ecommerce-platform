@@ -33,7 +33,7 @@ export function ThemeMenuRow() {
       }}
       className={cn(
         "mx-1 my-1 flex w-full cursor-pointer items-center justify-between gap-3 rounded-lg px-3 py-2.5",
-        "transition-colors hover:bg-accent/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "transition-colors hover:bg-accent/20 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
         isAnimating && "pointer-events-none opacity-90"
       )}
     >

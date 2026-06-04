@@ -6,6 +6,7 @@ import { useAuthStore } from "@/components/auth/state/useAuthStore";
 import useSilentAuth from "@/components/providers/hooks/useSilentAuth";
 import { usePathname } from "next/navigation";
 import { authLogger } from "@/lib/logger";
+import { sentryTracker } from "@/lib/monitoring";
 
 export default function AuthProvider({
   children,
@@ -44,6 +45,7 @@ export default function AuthProvider({
           setInitError(null);
         }
       } catch (error: any) {
+    sentryTracker(error, { source: "AuthProvider" });
         authLogger.error("AuthProvider initialize:error", {
           traceId,
           message: error?.message || "unknown_error",

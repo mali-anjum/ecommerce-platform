@@ -6,6 +6,7 @@ import type {
   WishlistProductSnapshot,
   WishlistResponse,
 } from "@/components/storefront/wishlist/types/wishlistTypes";
+import { sentryTracker } from "@/lib/monitoring";
 
 interface WishlistStore {
   items: WishlistItem[];
@@ -84,6 +85,7 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
         });
         lastWishlistFetchAt = Date.now();
       } catch (error: unknown) {
+    sentryTracker(error, { source: "useWishlistStore" });
         const message =
           axios.isAxiosError(error) && error.response?.data?.error
             ? String(error.response.data.error)
@@ -159,6 +161,7 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
 
       return result;
     } catch (error: unknown) {
+    sentryTracker(error, { source: "useWishlistStore" });
       set({
         items: previousItems,
         productIds: previousIds,
@@ -195,6 +198,7 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
         headers: { "Content-Type": "application/json" },
       });
     } catch (error: unknown) {
+    sentryTracker(error, { source: "useWishlistStore" });
       set({
         items: previousItems,
         productIds: previousIds,

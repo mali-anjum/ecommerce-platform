@@ -11,6 +11,7 @@ import {
 } from "./productIndexPersistence";
 import { productIndexStore } from "./productIndexStore";
 import type { AiProductIndexEntry, ProductIndexStats } from "./types";
+import { sentryTracker } from "../../../lib/monitoring";
 
 export function isProductIndexReady(): boolean {
   return productIndexStore.isReady();
@@ -36,6 +37,7 @@ export async function warmProductIndex(): Promise<number> {
       return hydrated;
     }
   } catch (error) {
+    sentryTracker(error, { source: "productIndexSync" });
     console.error("[product-index] Failed to load persisted index", error);
   }
 
@@ -46,6 +48,7 @@ export async function warmProductIndex(): Promise<number> {
   try {
     await persistProductIndexEntries(entries);
   } catch (error) {
+    sentryTracker(error, { source: "productIndexSync" });
     console.error("[product-index] Failed to persist rebuilt index", error);
   }
 
@@ -64,6 +67,7 @@ export async function syncProductIndexEntry(productId: string): Promise<void> {
     try {
       await removePersistedProductIndexEntry(productId);
     } catch (error) {
+    sentryTracker(error, { source: "productIndexSync" });
       console.error(
         `[product-index] Failed to remove persisted entry ${productId}`,
         error,
@@ -79,6 +83,7 @@ export async function syncProductIndexEntry(productId: string): Promise<void> {
   try {
     await persistProductIndexEntry(entry);
   } catch (error) {
+    sentryTracker(error, { source: "productIndexSync" });
     console.error(
       `[product-index] Failed to persist entry ${productId}`,
       error,
@@ -89,6 +94,7 @@ export async function syncProductIndexEntry(productId: string): Promise<void> {
 export function removeProductIndexEntry(productId: string): void {
   productIndexStore.remove(productId);
   void removePersistedProductIndexEntry(productId).catch((error) => {
+    sentryTracker(error, { source: "productIndexSync" });
     console.error(
       `[product-index] Failed to remove persisted entry ${productId}`,
       error,
@@ -98,12 +104,14 @@ export function removeProductIndexEntry(productId: string): void {
 
 export function scheduleProductIndexSync(productId: string): void {
   void syncProductIndexEntry(productId).catch((error) => {
+    sentryTracker(error, { source: "productIndexSync" });
     console.error(`[product-index] Failed to sync product ${productId}`, error);
   });
 }
 
 export function scheduleProductIndexRebuild(): void {
   void rebuildProductIndex().catch((error) => {
+    sentryTracker(error, { source: "productIndexSync" });
     console.error("[product-index] Failed to rebuild index", error);
   });
 }

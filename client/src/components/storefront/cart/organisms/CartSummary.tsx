@@ -40,7 +40,7 @@ export function CartSummary({
       <CardContent className="p-6">
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
-          <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+          <div className="h-10 w-10 rounded-lg bg-linear-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
             <ShoppingCart className="h-5 w-5 text-primary" />
           </div>
           <div>
@@ -112,7 +112,7 @@ export function CartSummary({
             </div>
             <div className="h-2 bg-card rounded-full mt-2 overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-primary to-secondary"
+                className="h-full bg-linear-to-r from-primary to-secondary"
                 style={{
                   width: `${(subtotal / CART_FREE_SHIPPING_THRESHOLD) * 100}%`
                 }}

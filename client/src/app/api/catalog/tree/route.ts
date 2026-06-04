@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getServerBackendUrl } from "@/lib/api/getServerBackendUrl";
+import { sentryTracker } from "@/lib/monitoring";
 
 /** Proxies public catalog tree (departments + subcategories + product counts) from Express. */
 export async function GET(req: NextRequest) {
@@ -29,7 +30,8 @@ export async function GET(req: NextRequest) {
 
     const body = await backendRes.json().catch(() => ({}));
     return NextResponse.json(body, { status: backendRes.status });
-  } catch {
+  } catch (error) {
+    sentryTracker(error, { source: "api-route", route: "/api/catalog/tree", method: "GET" });
     return NextResponse.json(
       { success: false, error: "Catalog service unavailable" },
       { status: 503 }

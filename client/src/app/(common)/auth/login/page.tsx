@@ -35,7 +35,7 @@ export default function LoginPage() {
             }}
           />
         ))}
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent animate-pulse" />
+        <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-primary to-transparent animate-pulse" />
       </div>
 
       <div className="flex flex-col lg:flex-row min-h-screen">

@@ -169,7 +169,7 @@ function CouponCard({ coupon, onDelete, onCopy, onView }: CouponCardProps) {
         {/* Discount Display */}
         <div className="mb-4">
           <div className="flex items-center justify-center gap-2">
-            <div className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            <div className="text-3xl font-bold bg-linear-to-r from-primary to-secondary bg-clip-text text-transparent">
               {coupon.discountPercent}%
             </div>
             <span className="text-lg text-muted-foreground">OFF</span>
@@ -187,7 +187,7 @@ function CouponCard({ coupon, onDelete, onCopy, onView }: CouponCardProps) {
             </div>
             <div className="h-2 bg-card rounded-full overflow-hidden">
               <div 
-                className="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-500"
+                className="h-full bg-linear-to-r from-primary to-secondary transition-all duration-500"
                 style={{ width: `${Math.min(usagePercentage, 100)}%` }}
               />
             </div>
@@ -323,7 +323,7 @@ function QuickActions({ onAddCoupon }: { onAddCoupon: () => void }) {
     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
       <Button
         onClick={onAddCoupon}
-        className="bg-gradient-to-r from-primary to-secondary hover:from-primary-light hover:to-secondary-light text-primary-foreground"
+        className="bg-linear-to-r from-primary to-secondary hover:from-primary-light hover:to-secondary-light text-primary-foreground"
       >
         <Plus className="h-4 w-4 mr-2" />
         Create New Coupon
@@ -416,14 +416,14 @@ function SuperAdminCouponsListingPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-card/20 p-4 md:p-6">
+    <div className="min-h-screen bg-linear-to-b from-background to-card/20 p-4 md:p-6">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <header className="glass-effect rounded-2xl p-6 border border-glass-border">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <div className="flex items-center gap-4">
               <div className="relative">
-                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                <div className="h-12 w-12 rounded-xl bg-linear-to-br from-primary to-accent flex items-center justify-center">
                   <Ticket className="h-6 w-6 text-white" />
                 </div>
                 <div className="absolute -inset-2 rounded-xl bg-primary/20 animate-pulse"></div>
@@ -632,7 +632,7 @@ function SuperAdminCouponsListingPage() {
                               </TableCell>
                               <TableCell>
                                 <div className="flex items-center gap-2">
-                                  <span className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                                  <span className="text-2xl font-bold bg-linear-to-r from-primary to-secondary bg-clip-text text-transparent">
                                     {coupon.discountPercent}%
                                   </span>
                                   <span className="text-sm text-muted-foreground">
@@ -654,7 +654,7 @@ function SuperAdminCouponsListingPage() {
                                   </div>
                                   <div className="h-1 bg-card rounded-full overflow-hidden">
                                     <div 
-                                      className="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-500"
+                                      className="h-full bg-linear-to-r from-primary to-secondary transition-all duration-500"
                                       style={{ width: `${Math.min(usagePercentage, 100)}%` }}
                                     />
                                   </div>

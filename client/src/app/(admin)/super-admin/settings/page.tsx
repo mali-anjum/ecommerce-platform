@@ -49,7 +49,7 @@ function FileUploadSection({
     <div className="glass-effect rounded-2xl p-5 md:p-6 border border-glass-border">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-6">
         <div className="flex items-start gap-3 min-w-0">
-          <div className="h-10 w-10 shrink-0 rounded-lg bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+          <div className="h-10 w-10 shrink-0 rounded-lg bg-linear-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
             <ImageLucide className="h-5 w-5 text-primary" />
           </div>
           <div className="min-w-0">
@@ -68,11 +68,11 @@ function FileUploadSection({
       {/* Upload Area */}
       <Label
         htmlFor="banner-upload"
-        className="group relative flex flex-col items-center justify-center w-full min-h-[200px] rounded-2xl cursor-pointer transition-all duration-300 border-2 border-dashed border-primary/45 bg-muted/25 hover:border-primary/90 hover:bg-primary/[0.06] dark:border-primary/50 dark:bg-muted/15"
+        className="group relative flex flex-col items-center justify-center w-full min-h-[200px] rounded-2xl cursor-pointer transition-all duration-300 border-2 border-dashed border-primary/45 bg-muted/25 hover:border-primary/90 hover:bg-primary/6 dark:border-primary/50 dark:bg-muted/15"
       >
         <div className="flex flex-col items-center space-y-4 p-8">
           <div className="relative">
-            <div className="h-16 w-16 rounded-full bg-gradient-to-r from-primary/20 to-secondary/20 flex items-center justify-center">
+            <div className="h-16 w-16 rounded-full bg-linear-to-r from-primary/20 to-secondary/20 flex items-center justify-center">
               <Upload className="h-7 w-7 text-primary group-hover:scale-110 transition-transform duration-300" />
             </div>
             <div className="absolute -inset-2 rounded-full bg-primary/10 animate-pulse"></div>
@@ -124,14 +124,14 @@ function FileUploadSection({
                 key={index} 
                 className="group relative overflow-hidden rounded-xl border border-border"
               >
-                <div className="aspect-video bg-gradient-to-br from-primary/10 to-secondary/10">
+                <div className="aspect-video bg-linear-to-br from-primary/10 to-secondary/10">
                   <img
                     src={URL.createObjectURL(file)}
                     alt={`Upload ${index + 1}`}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                 </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <Button
                     variant="destructive"
                     size="icon"
@@ -166,7 +166,7 @@ function BannerGallery({ banners }: { banners: any[] }) {
     <div className="glass-effect rounded-2xl p-6 border border-glass-border">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-accent/20 to-primary/20 flex items-center justify-center">
+          <div className="h-10 w-10 rounded-lg bg-linear-to-br from-accent/20 to-primary/20 flex items-center justify-center">
             <LayoutGrid className="h-5 w-5 text-accent" />
           </div>
           <div>
@@ -188,14 +188,14 @@ function BannerGallery({ banners }: { banners: any[] }) {
             key={banner.id} 
             className="group relative overflow-hidden rounded-xl border border-border hover:border-primary/30 transition-all duration-300"
           >
-            <div className="aspect-video bg-gradient-to-br from-primary/10 to-secondary/10">
+            <div className="aspect-video bg-linear-to-br from-primary/10 to-secondary/10">
               <img
                 src={banner.imageUrl}
                 alt={`Banner ${index + 1}`}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
             </div>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+            <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
               <div className="text-white text-xs">
                 <p>Banner #{index + 1}</p>
                 <p className="text-white/70">Click to view details</p>
@@ -260,7 +260,7 @@ function ProductSelectionCard({
 
         {/* Product Image */}
         <div className="relative mb-4">
-          <div className="aspect-square rounded-lg overflow-hidden bg-gradient-to-br from-primary/10 to-secondary/10">
+          <div className="aspect-square rounded-lg overflow-hidden bg-linear-to-br from-primary/10 to-secondary/10">
             {product.images?.[0] ? (
               <img
                 src={product.images[0]}
@@ -324,9 +324,9 @@ function SelectionCounter({
   isAtLimit: boolean;
 }) {
   return (
-    <div className="flex items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-primary/5 to-secondary/5 border border-primary/20">
+    <div className="flex items-center gap-3 p-4 rounded-xl bg-linear-to-r from-primary/5 to-secondary/5 border border-primary/20">
       <div className="flex items-center gap-2">
-        <div className="h-10 w-10 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center">
+        <div className="h-10 w-10 rounded-full bg-linear-to-r from-primary to-secondary flex items-center justify-center">
           <Award className="h-5 w-5 text-white" />
         </div>
         <div>
@@ -343,7 +343,7 @@ function SelectionCounter({
           <div className="h-2 flex-1 bg-card rounded-full overflow-hidden">
             <div 
               className={`h-full transition-all duration-500 ${
-                isAtLimit ? 'bg-success' : 'bg-gradient-to-r from-primary to-secondary'
+                isAtLimit ? 'bg-success' : 'bg-linear-to-r from-primary to-secondary'
               }`}
               style={{ width: `${(current / max) * 100}%` }}
             />
@@ -464,14 +464,14 @@ function SuperAdminSettingsPage() {
   const isAtLimit = selectedProducts.length >= MAX_FEATURED_PRODUCTS;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-card/20 p-4 md:p-6 pb-10">
+    <div className="min-h-screen bg-linear-to-b from-background to-card/20 p-4 md:p-6 pb-10">
       <div className="max-w-7xl mx-auto space-y-5 md:space-y-6">
         {/* Header */}
         <header className="glass-effect rounded-2xl p-5 md:p-6 border border-glass-border">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <div className="flex items-center gap-4">
               <div className="relative">
-                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                <div className="h-12 w-12 rounded-xl bg-linear-to-br from-primary to-accent flex items-center justify-center">
                   <Settings className="h-6 w-6 text-white" />
                 </div>
                 <div className="absolute -inset-2 rounded-xl bg-primary/20 animate-pulse"></div>
@@ -490,7 +490,7 @@ function SuperAdminSettingsPage() {
               <Button
                 onClick={handleSaveChanges}
                 disabled={isLoading}
-                className="bg-gradient-to-r from-primary to-secondary hover:from-primary-light hover:to-secondary-light text-primary-foreground"
+                className="bg-linear-to-r from-primary to-secondary hover:from-primary-light hover:to-secondary-light text-primary-foreground"
               >
                 {isLoading ? (
                   <div className="flex items-center gap-2">
@@ -564,7 +564,7 @@ function SuperAdminSettingsPage() {
         <div className="glass-effect rounded-2xl p-6 border border-glass-border">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-secondary/20 to-accent/20 flex items-center justify-center">
+              <div className="h-10 w-10 rounded-lg bg-linear-to-br from-secondary/20 to-accent/20 flex items-center justify-center">
                 <Star className="h-5 w-5 text-secondary" />
               </div>
               <div>
@@ -657,7 +657,7 @@ function SuperAdminSettingsPage() {
               <Button
                 onClick={handleSaveChanges}
                 disabled={isLoading}
-                className="bg-gradient-to-r from-primary to-secondary hover:from-primary-light hover:to-secondary-light text-primary-foreground"
+                className="bg-linear-to-r from-primary to-secondary hover:from-primary-light hover:to-secondary-light text-primary-foreground"
                 size="lg"
               >
                 {isLoading ? (

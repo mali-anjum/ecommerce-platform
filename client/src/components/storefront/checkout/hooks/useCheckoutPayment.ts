@@ -7,6 +7,7 @@ import { calculateTotals } from '@/components/storefront/checkout/utils/checkout
 import { useCartSelectionStore } from '@/components/storefront/cart/state/useCartSelectionStore';
 import { useCartStore } from '@/components/storefront/cart/state/useCartStore';
 import type { CheckoutPaymentMethodId } from './usePaymentMethods';
+import { sentryTracker } from "@/lib/monitoring";
 
 interface UseCheckoutPaymentProps {
   user: any;
@@ -122,6 +123,7 @@ export const useCheckoutPayment = ({
 
       window.location.href = redirectUrl;
     } catch (error: any) {
+    sentryTracker(error, { source: "useCheckoutPayment" });
       console.error("Payment initiation error:", error);
       const description =
         error?.response?.data?.message ??
@@ -211,6 +213,7 @@ export const useCheckoutPayment = ({
         );
       }
     } catch (error: any) {
+    sentryTracker(error, { source: "useCheckoutPayment" });
       console.error("Payment capture error:", error);
 
       if (typeof window !== "undefined" && paymentId) {

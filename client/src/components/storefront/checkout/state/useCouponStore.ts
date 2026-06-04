@@ -2,6 +2,7 @@ import { Coupon } from "@/components/storefront/checkout/types/Coupon";
 import { API_ROUTES } from "@/lib/routes/api";
 import axios from "axios";
 import { create } from "zustand";
+import { sentryTracker } from "@/lib/monitoring";
 
 
 interface CouponStore {
@@ -28,6 +29,7 @@ export const useCouponStore = create<CouponStore>((set, get) => ({
       );
       set({ couponList: response.data.couponList, isLoading: false });
     } catch (e) {
+    sentryTracker(e, { source: "useCouponStore" });
       set({ isLoading: false, error: "Failed to fetch coupons" });
     }
   },
@@ -43,6 +45,7 @@ export const useCouponStore = create<CouponStore>((set, get) => ({
       set({ isLoading: false });
       return response.data.coupon;
     } catch (e) {
+    sentryTracker(e, { source: "useCouponStore" });
       set({ isLoading: false, error: "Failed to fetch coupons" });
       return null;
     }
@@ -56,6 +59,7 @@ export const useCouponStore = create<CouponStore>((set, get) => ({
       set({ isLoading: false });
       return response.data.success;
     } catch (error) {
+    sentryTracker(error, { source: "useCouponStore" });
       set({ isLoading: false, error: "Failed to fetch coupons" });
       return null;
     }

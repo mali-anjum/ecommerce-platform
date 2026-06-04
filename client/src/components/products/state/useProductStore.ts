@@ -2,6 +2,7 @@ import { API_ROUTES } from "@/lib/routes/api";
 import axios from "axios";
 import { create } from "zustand";
 import type { Product, ProductFilters, SellerFilterOption } from "@/components/products/types/product";
+import { sentryTracker } from "@/lib/monitoring";
 
 interface ProductState {
   products: Product[];
@@ -51,6 +52,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
         isLoading: false,
       });
     } catch (error: any) {
+    sentryTracker(error, { source: "useProductStore" });
       console.error("Failed to fetch admin products:", error);
       set({
         error: error.response?.data?.message || "Failed to fetch products",
@@ -77,6 +79,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
       set({ isLoading: false });
       return response.data;
     } catch (error: any) {
+    sentryTracker(error, { source: "useProductStore" });
       console.error("Failed to create product:", error);
       set({
         error: error.response?.data?.message || "Failed to create product",
@@ -103,6 +106,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
       set({ isLoading: false });
       return response.data;
     } catch (error: any) {
+    sentryTracker(error, { source: "useProductStore" });
       console.error("Failed to update product:", error);
       set({
         error: error.response?.data?.message || "Failed to update product",
@@ -122,6 +126,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
       set({ isLoading: false });
       return response.data.success;
     } catch (error: any) {
+    sentryTracker(error, { source: "useProductStore" });
       console.error("Failed to delete product:", error);
       set({
         error: error.response?.data?.message || "Failed to delete product",
@@ -141,6 +146,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
       set({ isLoading: false });
       return response.data.data;
     } catch (error: any) {
+    sentryTracker(error, { source: "useProductStore" });
       console.error("Failed to fetch product:", error);
       set({
         error: error.response?.data?.message || "Failed to fetch product",
@@ -203,6 +209,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
         isLoading: false,
       });
     } catch (error: any) {
+    sentryTracker(error, { source: "useProductStore" });
       console.error("Failed to fetch client products:", error);
       set({
         error: error.response?.data?.message || "Failed to fetch products",

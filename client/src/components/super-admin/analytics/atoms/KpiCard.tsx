@@ -55,7 +55,7 @@ export function KpiCard({
           </div>
           <div
             className={cn(
-              "h-11 w-11 rounded-xl bg-gradient-to-br flex items-center justify-center shrink-0",
+              "h-11 w-11 rounded-xl bg-linear-to-br flex items-center justify-center shrink-0",
               accentMap[accent],
             )}
           >

@@ -14,6 +14,7 @@ import {
   completeProfileSchema,
   type CompleteProfileForm,
 } from "@/lib/validation/completeProfileSchema";
+import { sentryTracker } from "@/lib/monitoring";
 
 export default function CompleteProfilePage() {
   const router = useRouter();
@@ -84,6 +85,7 @@ export default function CompleteProfilePage() {
       });
       router.replace("/home");
     } catch (error) {
+    sentryTracker(error, { source: "page" });
       toast({
         title: "Could not save profile",
         description: error instanceof Error ? error.message : "Please try again",

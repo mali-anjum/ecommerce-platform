@@ -8,6 +8,7 @@ import { requireUserId } from "../utils/requireUserId";
 import { CartService } from "../services/cart/get-cart-item";
 import { scheduleAnalyticsEvent } from "../services/analytics/analyticsEventService";
 import { AnalyticsEventType } from "@prisma/client";
+import { sentryTracker } from "../lib/monitoring";
 
 const addToCart = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -196,6 +197,7 @@ const getCart = asyncHandler(
         )
       );
     } catch (error) {
+    sentryTracker(error, { source: "cartController" });
       console.error("❌ getCart error:", error);
       res.status(500).json(new ApiError(500, "Failed to fetch cart"));
     }

@@ -13,7 +13,7 @@
 //                 <Skeleton key={index} className="w-24 h-24" />
 //               ))}
 //             </div>
-//             <Skeleton className="flex-1 aspect-[3/4]" />
+//             <Skeleton className="flex-1 aspect-3/4" />
 //           </div>
 //           <div className="lg:w-1/3 space-y-6">
 //             <div>
@@ -67,7 +67,7 @@ const ImageGallerySkeleton = () => (
       {[...Array(4)].map((_, index) => (
         <div key={index} className="relative">
           <Skeleton className="w-20 h-20 rounded-lg" />
-          <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-transparent via-glass/20 to-transparent animate-shimmer" />
+          <div className="absolute inset-0 rounded-lg bg-linear-to-r from-transparent via-glass/20 to-transparent animate-shimmer" />
         </div>
       ))}
     </div>
@@ -75,8 +75,8 @@ const ImageGallerySkeleton = () => (
     {/* Main image skeleton */}
     <div className="flex-1 relative">
       <div className="relative rounded-2xl overflow-hidden">
-        <Skeleton className="w-full aspect-[3/4] rounded-2xl" />
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-glass/10 to-transparent animate-shimmer" />
+        <Skeleton className="w-full aspect-3/4 rounded-2xl" />
+        <div className="absolute inset-0 bg-linear-to-r from-transparent via-glass/10 to-transparent animate-shimmer" />
         {/* Glow effect */}
         <div className="absolute inset-0 rounded-2xl border border-primary/10 shadow-lg shadow-primary/5" />
       </div>
@@ -287,7 +287,7 @@ function ProductDetailsSkeleton() {
 
       {/* Shimmer overlay for futuristic effect */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-glass/5 to-transparent animate-shimmer" />
+        <div className="absolute inset-0 bg-linear-to-r from-transparent via-glass/5 to-transparent animate-shimmer" />
       </div>
     </div>
   );

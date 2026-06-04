@@ -1,4 +1,5 @@
 import { getAnalyticsSessionId } from "./sessionId";
+import { sentryTracker } from "@/lib/monitoring";
 
 export type AnalyticsEventType =
   | "CHAT"
@@ -28,8 +29,8 @@ export function trackAnalyticsEvent(input: TrackAnalyticsEventInput): void {
       metadata: input.metadata,
     }),
     keepalive: true,
-  }).catch(() => {
-    // Analytics should never block UX.
+  }).catch((error) => {
+    sentryTracker(error, { source: "trackAnalyticsEvent" });
   });
 }
 

@@ -12,6 +12,7 @@ import {
   listKnowledgeBaseForAdmin,
   updateKnowledgeBaseEntry,
 } from "../services/knowledge/knowledgeBaseService";
+import { sentryTracker } from "../lib/monitoring";
 
 export const getAdminKnowledgeBase = asyncHandler(
   async (_req: AuthenticatedRequest, res: Response, _next: NextFunction) => {
@@ -36,7 +37,8 @@ export const uploadKnowledgeBaseDocument = asyncHandler(
     let content: string;
     try {
       content = await extractDocumentText(file.buffer, file.mimetype);
-    } catch {
+    } catch (error) {
+      sentryTracker(error, { source: "knowledgeBaseController" });
       return next(new ApiError(400, "Failed to extract text from document"));
     }
 
@@ -96,7 +98,8 @@ export const updateAdminKnowledgeBase = asyncHandler(
     try {
       const document = await updateKnowledgeBaseEntry(id, req.validatedData);
       res.json(new ApiResponse(200, { document }, "Knowledge entry updated"));
-    } catch {
+    } catch (error) {
+      sentryTracker(error, { source: "knowledgeBaseController" });
       return next(new NotFoundError("Knowledge entry not found"));
     }
   },
@@ -108,7 +111,8 @@ export const deleteAdminKnowledgeBase = asyncHandler(
     try {
       await deleteKnowledgeBaseEntry(id);
       res.json(new ApiResponse(200, { id }, "Knowledge entry deleted"));
-    } catch {
+    } catch (error) {
+      sentryTracker(error, { source: "knowledgeBaseController" });
       return next(new NotFoundError("Knowledge entry not found"));
     }
   },

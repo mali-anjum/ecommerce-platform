@@ -80,7 +80,7 @@ export function AnalyticsShell({
             <ShoppingCart className="h-3.5 w-3.5" />
             Commerce Intelligence
           </div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold bg-linear-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
             {title}
           </h1>
           <p className="text-muted-foreground max-w-2xl">{subtitle}</p>
@@ -121,7 +121,7 @@ export function AnalyticsShell({
         </div>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin]">
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
         {analyticsNav.map((item) => {
           const isActive = item.exact
             ? pathname === item.href
@@ -135,7 +135,7 @@ export function AnalyticsShell({
                 "inline-flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-all",
                 "border border-glass-border",
                 isActive
-                  ? "bg-gradient-to-r from-primary/20 to-secondary/10 text-primary border-primary/30"
+                  ? "bg-linear-to-r from-primary/20 to-secondary/10 text-primary border-primary/30"
                   : "bg-card/40 text-muted-foreground hover:text-foreground hover:bg-primary/5",
               )}
             >

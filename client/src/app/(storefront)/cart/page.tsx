@@ -135,7 +135,7 @@ function UserCartPage() {
 
   if (!isMounted || isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-card/20 py-8">
+      <div className="min-h-screen bg-linear-to-b from-background to-card/20 py-8">
         <div className="container mx-auto px-4 max-w-7xl">
           <CartLoadingSkeleton />
         </div>
@@ -148,13 +148,13 @@ function UserCartPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-card/20 py-8">
+    <div className="min-h-screen bg-linear-to-b from-background to-card/20 py-8">
       <div className="container mx-auto px-4 max-w-7xl">
         <header className="glass-effect rounded-2xl p-6 mb-8 border border-glass-border">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <div className="flex items-center gap-4">
               <div className="relative">
-                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                <div className="h-12 w-12 rounded-xl bg-linear-to-br from-primary to-secondary flex items-center justify-center">
                   <ShoppingCart className="h-6 w-6 text-white" />
                 </div>
                 <div className="absolute -inset-2 rounded-xl bg-primary/20 animate-pulse"></div>

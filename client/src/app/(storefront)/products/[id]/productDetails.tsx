@@ -127,7 +127,7 @@
 //                   <Button
 //                     key={index}
 //                     className={`w-12 h-12`}
-//                     variant={selectedSize === size ? "default" : "outline"}
+//                     variant={selectedSize === size ? "default" : "outline-solid"}
 //                     onClick={() => setSelectedSize(size)}
 //                   >
 //                     {size}
@@ -257,7 +257,7 @@ const ProductImageGallery = memo(({
           loading="eager"
         />
         <div className="absolute top-4 left-4">
-          <span className="bg-accent text-accent-foreground px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm">
+          <span className="bg-accent text-accent-foreground px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-xs">
             FEATURED
           </span>
         </div>
@@ -269,7 +269,7 @@ const ProductImageGallery = memo(({
           <button
             key={index}
             onClick={() => onSelect(index)}
-            className={`flex-shrink-0 w-16 h-16 rounded-lg border-2 transition-all duration-300 ${
+            className={`shrink-0 w-16 h-16 rounded-lg border-2 transition-all duration-300 ${
               selectedImage === index
                 ? "border-primary"
                 : "border-glass-border"
@@ -423,7 +423,7 @@ const ProductInfo = memo(({ product }: { product: any }) => (
         {product.name}
       </h1>
       <div className="flex items-center gap-4">
-        <span className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+        <span className="text-3xl font-bold bg-linear-to-r from-primary to-secondary bg-clip-text text-transparent">
           ${product.price.toFixed(2)}
         </span>
         {product.originalPrice && (
@@ -488,7 +488,7 @@ const ProductTabs = memo(({ product }: { product: any }) => (
           >
             {tab.label}
             {tab.value === "details" && (
-              <div className="absolute -bottom-0.5 left-0 right-0 h-0.5 bg-gradient-to-r from-primary via-secondary to-accent rounded-full" />
+              <div className="absolute -bottom-0.5 left-0 right-0 h-0.5 bg-linear-to-r from-primary via-secondary to-accent rounded-full" />
             )}
           </TabsTrigger>
         ))}

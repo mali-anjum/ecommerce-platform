@@ -65,7 +65,7 @@ export function UserRowActions({
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
-        className="z-[100] w-56 border-border bg-card text-foreground shadow-xl"
+        className="z-100 w-56 border-border bg-card text-foreground shadow-xl"
       >
         <DropdownMenuLabel className="truncate font-normal text-muted-foreground">
           {user.email}
@@ -81,7 +81,7 @@ export function UserRowActions({
           <DropdownMenuSubTrigger disabled={isSelf && user.role === "SUPER_ADMIN"}>
             Change role
           </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent className="z-[100] border-border bg-card shadow-xl">
+          <DropdownMenuSubContent className="z-100 border-border bg-card shadow-xl">
             {ALL_ROLES.map((role) => (
               <DropdownMenuItem
                 key={role}

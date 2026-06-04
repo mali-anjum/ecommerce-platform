@@ -46,7 +46,7 @@ export default function OrderList({
             }}
             className={cn(
               "cursor-pointer rounded-lg border bg-card transition-all",
-              terminalFailure && "border-destructive/25 bg-destructive/[0.02]",
+              terminalFailure && "border-destructive/25 bg-destructive/2",
               active
                 ? "border-primary/50 ring-1 ring-primary/20"
                 : !terminalFailure &&

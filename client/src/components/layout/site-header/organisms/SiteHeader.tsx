@@ -36,7 +36,7 @@ export default function SiteHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-50 glass-effect border-b border-glass-border backdrop-blur-sm">
+    <header className="sticky top-0 z-50 glass-effect border-b border-glass-border backdrop-blur-xs">
       <HeaderPromoTopBar
         selectedLanguage={selectedLanguage}
         onLanguageSelect={selectLanguage}

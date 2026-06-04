@@ -31,6 +31,7 @@ import {
   generateCouponCode,
   validateGeneratedCode,
 } from "@/components/super-admin/coupon/utils/couponGenerator";
+import { sentryTracker } from "@/lib/monitoring";
 
 function SuperAdminManageCouponsPage() {
   const [formData, setFormData] = useState({
@@ -85,6 +86,7 @@ function SuperAdminManageCouponsPage() {
       setFormData((prev) => ({ ...prev, code: result }));
       setGeneratedCodes((prev) => [result, ...prev.slice(0, 4)]);
     } catch (error) {
+    sentryTracker(error, { source: "page" });
       console.error("Failed to generate the coupon", error);
     } finally {
       setIsGenerating(false);
@@ -158,7 +160,7 @@ function SuperAdminManageCouponsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-card/20 p-4 md:p-6">
+    <div className="min-h-screen bg-linear-to-b from-background to-card/20 p-4 md:p-6">
       <div className="max-w-6xl mx-auto">
         <CouponHeader />
 
@@ -168,7 +170,7 @@ function SuperAdminManageCouponsPage() {
             {/* Form Section */}
             <div className="glass-effect rounded-2xl p-6 border border-glass-border">
               <div className="flex items-center gap-3 mb-6">
-                <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+                <div className="h-10 w-10 rounded-lg bg-linear-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
                   <Key className="h-5 w-5 text-primary" />
                 </div>
                 <div>
@@ -332,25 +334,25 @@ function SuperAdminManageCouponsPage() {
               </h3>
               <ul className="space-y-3 text-sm text-muted-foreground">
                 <li className="flex items-start gap-2">
-                  <Zap className="h-4 w-4 text-secondary flex-shrink-0 mt-0.5" />
+                  <Zap className="h-4 w-4 text-secondary shrink-0 mt-0.5" />
                   <span>
                     Use readable codes like "SUMMER25" for better brand recall
                   </span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <Shield className="h-4 w-4 text-accent flex-shrink-0 mt-0.5" />
+                  <Shield className="h-4 w-4 text-accent shrink-0 mt-0.5" />
                   <span>
                     Set usage limits to prevent abuse of high-value coupons
                   </span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <Clock className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                  <Clock className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                   <span>
                     Create seasonal coupons aligned with marketing campaigns
                   </span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <Percent className="h-4 w-4 text-secondary flex-shrink-0 mt-0.5" />
+                  <Percent className="h-4 w-4 text-secondary shrink-0 mt-0.5" />
                   <span>
                     Test different discount percentages to find optimal
                     conversion rates
@@ -366,7 +368,7 @@ function SuperAdminManageCouponsPage() {
             <div className="sticky top-8">
               <div className="glass-effect rounded-2xl p-6 border border-glass-border mb-6">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-secondary/20 to-accent/20 flex items-center justify-center">
+                  <div className="h-10 w-10 rounded-lg bg-linear-to-br from-secondary/20 to-accent/20 flex items-center justify-center">
                     <Ticket className="h-5 w-5 text-secondary" />
                   </div>
                   <div>
@@ -397,7 +399,7 @@ function SuperAdminManageCouponsPage() {
                           key={i}
                           className={`h-2 w-6 rounded-full ${
                             i < Math.min(formData.discountPercent / 20, 5)
-                              ? "bg-gradient-to-r from-primary to-secondary"
+                              ? "bg-linear-to-r from-primary to-secondary"
                               : "bg-border"
                           }`}
                         />

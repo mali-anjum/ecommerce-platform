@@ -22,7 +22,7 @@ export default function SellerLayout({
 
   return (
     <div className="min-h-screen bg-background">
-      <aside className="fixed left-0 top-0 z-40 h-full w-56 border-r bg-card/80 backdrop-blur-sm">
+      <aside className="fixed left-0 top-0 z-40 h-full w-56 border-r bg-card/80 backdrop-blur-xs">
         <div className="flex h-14 items-center border-b px-4 font-semibold">
           Seller hub
         </div>
