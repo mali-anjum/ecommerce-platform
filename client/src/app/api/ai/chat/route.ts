@@ -1,6 +1,7 @@
 import { API_ROUTES } from "@/lib/routes/api";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { NextRequest, NextResponse } from "next/server";
+import { sentryTracker } from "@/lib/monitoring";
 
 export async function POST(request: NextRequest) {
   if (!isFeatureEnabled("ai.chat")) {
@@ -34,6 +35,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(data, { status: backendRes.status });
   } catch (error) {
     console.error("AI chat proxy failed", error);
+    sentryTracker(error, { source: "api-route", route: "/api/ai/chat", method: "POST" });
     return NextResponse.json(
       { success: false, message: "Failed to reach shopping assistant" },
       { status: 500 },

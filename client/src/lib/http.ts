@@ -1,4 +1,5 @@
 import axios from "axios";
+import { attachAxiosErrorReporting } from "@/lib/monitoring";
 
 export const http = axios.create({
     baseURL: "/api",
@@ -9,10 +10,12 @@ export const http = axios.create({
     },
 });
 
+attachAxiosErrorReporting(http, "http");
+
 http.interceptors.response.use(
     (res) => res,
     (err) => {
         console.error("HTTP error:", err.response?.status);
         return Promise.reject(err);
     }
-)
+);

@@ -16,6 +16,7 @@ import { normalizeRefreshResponseTokenInfo } from "@/lib/auth/normalizeTokenInfo
 import { runWithRefreshLock } from "@/lib/auth/runWithRefreshLock";
 import { API_ROUTES } from "@/lib/routes/api";
 import { useWishlistStore } from "@/components/storefront/wishlist/state/useWishlistStore";
+import { sentryTracker } from "@/lib/monitoring";
 
 interface AuthStore {
   user: User | null;
@@ -700,15 +701,11 @@ axiosInstance.interceptors.response.use(
       }
     }
 
-    // Log other errors
-    const responseStatus = error.response?.status;
-    if (typeof responseStatus === "number" && responseStatus >= 500) {
-      console.error(
-        "🚨 Server error:",
-        responseStatus,
-        error.config?.url ?? "unknown"
-      );
-    }
+    sentryTracker(error, {
+      source: "authApi",
+      route: error.config?.url,
+      method: error.config?.method?.toUpperCase(),
+    });
 
     return Promise.reject(error);
   }

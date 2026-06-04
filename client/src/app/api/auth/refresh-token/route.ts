@@ -5,6 +5,7 @@ import { extractSetCookieHeaders } from "@/lib/api/extractSetCookieHeaders";
 import { applyProxyCookies } from "@/lib/api/applyProxyCookies";
 import { getServerBackendUrl } from "@/lib/api/getServerBackendUrl";
 import { proxyLogger } from "@/lib/logger";
+import { sentryTracker } from "@/lib/monitoring";
 
 const ERROR_MESSAGES = {
   BACKEND_NOT_CONFIGURED: "Backend URL not configured",
@@ -117,6 +118,7 @@ export async function POST(req: NextRequest) {
       clearTimeout(timeoutId);
     }
   } catch (error: any) {
+    sentryTracker(error, { source: "api-route", route: "/api/auth/refresh-token", method: "POST" });
     proxyLogger.error("Refresh token proxy error", {
       name: error.name,
       message: error.message,

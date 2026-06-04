@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { proxyLogger } from "@/lib/logger";
+import { sentryTracker } from "@/lib/monitoring";
 
 export async function GET(req: NextRequest) {
   const traceId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -32,6 +33,7 @@ export async function GET(req: NextRequest) {
     });
     
   } catch (error) {
+    sentryTracker(error, { source: "api-route", route: "/api/auth/check-session", method: "GET" });
     proxyLogger.error("Session check error", {
       traceId,
       error: error instanceof Error ? error.message : "unknown_error",

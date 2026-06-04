@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getServerBackendUrl } from "@/lib/api/getServerBackendUrl";
+import { sentryTracker } from "@/lib/monitoring";
 
 const TIMEOUT_MS = 10000;
 
@@ -54,6 +55,7 @@ export async function GET(req: NextRequest) {
 
   } catch (error: any) {
     console.error("❌ Warmup proxy error:", error);
+    sentryTracker(error, { source: "api-route", route: "/api/warm", method: "GET" });
 
     if (error.name === "AbortError") {
       return NextResponse.json(

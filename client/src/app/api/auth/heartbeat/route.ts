@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { applyProxyCookies } from "@/lib/api/applyProxyCookies";
 import { getServerBackendUrl } from "@/lib/api/getServerBackendUrl";
+import { sentryTracker } from "@/lib/monitoring";
 
 const ERROR_MESSAGES = {
   BACKEND_NOT_CONFIGURED: "Backend URL not configured",
@@ -61,6 +62,7 @@ export async function POST(req: NextRequest) {
 
     return response;
   } catch (error: any) {
+    sentryTracker(error, { source: "api-route", route: "/api/auth/heartbeat", method: "POST" });
     if (error.name === "AbortError") {
       return NextResponse.json(
         {

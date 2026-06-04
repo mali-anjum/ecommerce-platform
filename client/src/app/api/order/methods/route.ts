@@ -1,5 +1,6 @@
 import { API_ROUTES } from "@/lib/routes/api";
 import { NextRequest, NextResponse } from "next/server";
+import { sentryTracker } from "@/lib/monitoring";
 
 export async function GET(request: NextRequest) {
   try {
@@ -25,6 +26,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(data, { status: backendRes.status });
   } catch (error) {
     console.error("Failed to fetch payment methods:", error);
+    sentryTracker(error, { source: "api-route", route: "/api/order/methods", method: "GET" });
     return NextResponse.json(
       { success: false, error: "Failed to fetch payment methods" },
       { status: 500 }

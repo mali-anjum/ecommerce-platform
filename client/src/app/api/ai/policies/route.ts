@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { getServerBackendUrl } from "@/lib/api/getServerBackendUrl";
+import { sentryTracker } from "@/lib/monitoring";
 
 function buildCookieHeader(request: NextRequest): string | null {
   const accessToken = request.cookies.get("accessToken")?.value;
@@ -26,6 +27,7 @@ export async function GET() {
     return NextResponse.json(data, { status: backendRes.status });
   } catch (error) {
     console.error("Policies proxy GET failed", error);
+    sentryTracker(error, { source: "api-route", route: "/api/ai/policies", method: "GET" });
     return NextResponse.json(
       { success: false, error: "Failed to load store policies" },
       { status: 500 },
@@ -65,6 +67,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json(data, { status: backendRes.status });
   } catch (error) {
     console.error("Policies proxy PUT failed", error);
+    sentryTracker(error, { source: "api-route", route: "/api/ai/policies", method: "GET" });
     return NextResponse.json(
       { success: false, error: "Failed to save store policies" },
       { status: 500 },

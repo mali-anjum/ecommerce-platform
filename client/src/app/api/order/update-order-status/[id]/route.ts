@@ -1,5 +1,6 @@
 import { API_ROUTES } from "@/lib/routes/api";
 import { NextRequest, NextResponse } from "next/server";
+import { sentryTracker } from "@/lib/monitoring";
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -27,6 +28,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json(data, { status: backendRes.status })
 
   } catch (error) {
+    sentryTracker(error, { source: "api-route", route: "/api/order/update-order-status/[id]", method: "PUT" });
     console.log(
       "Error occured while updating the status of the product",
       error,

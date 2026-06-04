@@ -4,6 +4,7 @@ import type { NextRequest } from "next/server";
 import { extractSetCookieHeaders } from "@/lib/api/extractSetCookieHeaders";
 import { applyProxyCookies } from "@/lib/api/applyProxyCookies";
 import { getServerBackendUrl } from "@/lib/api/getServerBackendUrl";
+import { sentryTracker } from "@/lib/monitoring";
 
 // Constants for better maintainability
 const ERROR_MESSAGES = {
@@ -142,6 +143,7 @@ export async function POST(req: NextRequest) {
     return response;
   } catch (error: any) {
     console.error("Login proxy error:", error);
+    sentryTracker(error, { source: "api-route", route: "/api/auth/login", method: "POST" });
 
     // Differentiate error types for better client handling
     if (error.name === "AbortError") {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerBackendUrl } from "@/lib/api/getServerBackendUrl";
+import { sentryTracker } from "@/lib/monitoring";
 
 export async function GET(request: NextRequest) {
   const BACKEND_URL = getServerBackendUrl();
@@ -44,6 +45,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(data);
   } catch (error: unknown) {
+    sentryTracker(error, { source: "api-route", route: "/api/cart/fetch-cart", method: "GET" });
     const name = error instanceof Error ? error.name : "";
 
     if (name === "AbortError") {

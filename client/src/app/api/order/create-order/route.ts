@@ -1,5 +1,6 @@
 import { API_ROUTES } from "@/lib/routes/api";
 import { NextRequest, NextResponse } from "next/server";
+import { sentryTracker } from "@/lib/monitoring";
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,6 +29,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(data, { status: backendRes.status });
   } catch (error) {
     console.error("Failes to create order: createOrder", error);
+    sentryTracker(error, { source: "api-route", route: "/api/order/create-order", method: "POST" });
     return NextResponse.json(
       { success: false, error: "Failes to create order: createOrder" },
       { status: 500 }

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { applyProxyCookies } from "@/lib/api/applyProxyCookies";
 import { getServerBackendUrl } from "@/lib/api/getServerBackendUrl";
+import { sentryTracker } from "@/lib/monitoring";
 
 export async function GET(req: NextRequest) {
   const BACKEND_URL = getServerBackendUrl();
@@ -54,6 +55,7 @@ export async function GET(req: NextRequest) {
 
   } catch (error) {
     console.error("Proxy /api/auth/me error:", error);
+    sentryTracker(error, { source: "api-route", route: "/api/auth/me", method: "GET" });
     
     // Better error differentiation
     if ((error as Error).name === 'AbortError') {

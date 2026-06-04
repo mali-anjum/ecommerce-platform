@@ -1,5 +1,6 @@
 import { API_ROUTES } from "@/lib/routes/api";
 import { NextRequest, NextResponse } from "next/server";
+import { sentryTracker } from "@/lib/monitoring";
 
 export async function PATCH(
   request: NextRequest,
@@ -32,6 +33,7 @@ export async function PATCH(
     return NextResponse.json(data, { status: backendRes.status });
   } catch (error) {
     console.error("Failed to update user role", error);
+    sentryTracker(error, { source: "api-route", route: "/api/users/[userId]/role", method: "PATCH" });
     return NextResponse.json(
       { success: false, error: "Failed to update user role" },
       { status: 500 }
