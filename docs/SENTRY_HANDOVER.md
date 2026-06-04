@@ -1,6 +1,6 @@
 # Sentry handover checklist
 
-Production error monitoring uses **Sentry** with a shared `sentryTracker()` utility on the client and server. Unknown failures are normalized via `ensureError()` inside the tracker before reporting.
+Production error monitoring uses **Sentry** with a shared `sentryTracker()` utility on the client and server. Unknown failures are normalized inside `sentryTracker()` before reporting.
 
 ## 1. Create Sentry projects
 

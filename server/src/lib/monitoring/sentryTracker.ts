@@ -1,5 +1,4 @@
 import * as Sentry from "@sentry/node";
-import { ensureError } from "./ensureError";
 import { isSentryEnabled } from "./sentryConfig";
 
 export type SentryTrackerContext = {
@@ -10,16 +9,38 @@ export type SentryTrackerContext = {
   extra?: Record<string, unknown>;
 };
 
+/** Convert any thrown value into a JavaScript Error. */
+
+/** Convert any thrown value into a JavaScript Error. */
+
+function ensureErrorTypes(value: unknown): Error {
+  if (value instanceof Error) {
+    return value;
+  } else {
+    if (typeof value !== "object" || value === null) {
+      return new Error(value ? String(value) : "Unknown error");
+    }
+
+    const obj = value as Record<string, unknown>;
+    const message =
+      typeof obj.message === "string"
+        ? obj.message
+        : typeof obj.error === "string"
+          ? obj.error
+          : JSON.stringify(value);
+
+    return new Error(message);
+  }
+}
+
 /** Report every failure to Sentry (when enabled). Use in catch blocks. */
 export function sentryTracker(
   error: unknown,
-  context: SentryTrackerContext = {}
+  context: SentryTrackerContext = {},
 ): void {
-  if (!isSentryEnabled()) {
-    return;
-  }
+  if (!isSentryEnabled()) return;
 
-  const err = ensureError(error);
+  const err = ensureErrorTypes(error);
 
   Sentry.withScope((scope) => {
     if (context.source) scope.setTag("source", context.source);
