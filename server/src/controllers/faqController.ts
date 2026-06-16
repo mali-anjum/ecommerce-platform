@@ -12,6 +12,7 @@ import {
   updateStorePolicies,
 } from "../services/knowledge/knowledgeService";
 import { NotFoundError } from "../utils/ApiError";
+import { sentryTracker } from "../lib/monitoring";
 
 export const getPublicFaqs = asyncHandler(
   async (_req: AuthenticatedRequest, res: Response, _next: NextFunction) => {
@@ -40,7 +41,8 @@ export const updateAdminFaq = asyncHandler(
     try {
       const faq = await updateFaqItem(id, req.validatedData);
       res.json(new ApiResponse(200, { faq }, "FAQ updated"));
-    } catch {
+    } catch (error) {
+      sentryTracker(error, { source: "faqController" });
       throw new NotFoundError("FAQ not found");
     }
   },
@@ -52,7 +54,8 @@ export const deleteAdminFaq = asyncHandler(
     try {
       await deleteFaqItem(id);
       res.json(new ApiResponse(200, { id }, "FAQ deleted"));
-    } catch {
+    } catch (error) {
+      sentryTracker(error, { source: "faqController" });
       throw new NotFoundError("FAQ not found");
     }
   },

@@ -10,7 +10,7 @@ export function CouponHeader() {
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
           <div className="relative">
-            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+            <div className="h-12 w-12 rounded-xl bg-linear-to-br from-primary to-accent flex items-center justify-center">
               <Ticket className="h-6 w-6 text-white" />
             </div>
             <div className="absolute -inset-2 rounded-xl bg-primary/20 animate-pulse"></div>

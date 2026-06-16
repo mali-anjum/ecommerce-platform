@@ -11,6 +11,7 @@ import {
 } from "@/components/storefront/orders/types/orderTypes";
 import { http } from "@/lib/http";
 import { AxiosError } from "axios";
+import { sentryTracker } from "@/lib/monitoring";
 
 type ApiErrorPayload = {
   message?: string;
@@ -68,6 +69,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
 
       return data;
     } catch (error: unknown) {
+    sentryTracker(error, { source: "useOrderStore" });
       set({
         isLoading: false,
         isPaymentProcessing: false,
@@ -94,6 +96,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
 
       return data;
     } catch (error: unknown) {
+    sentryTracker(error, { source: "useOrderStore" });
       set({
         isLoading: false,
         isPaymentProcessing: false,
@@ -131,6 +134,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       }));
       return true;
     } catch (err: unknown) {
+    sentryTracker(err, { source: "useOrderStore" });
       const message = getAxiosErrorMessage(
         err,
         "Failed to update the order status of product"
@@ -151,6 +155,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       set({ isLoading: false, adminOrders: orders });
       return orders;
     } catch (error) {
+    sentryTracker(error, { source: "useOrderStore" });
       set({ error: "Failed to fetch all orders for admin", isLoading: false });
       return null;
     }
@@ -198,6 +203,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       });
       return payload;
     } catch (error: unknown) {
+    sentryTracker(error, { source: "useOrderStore" });
       set({
         isLoading: false,
         error: getAxiosErrorMessage(error, "Failed to fetch transactions"),
@@ -220,6 +226,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       set({ isLoading: false, userOrders: orders });
       return orders;
     } catch (error) {
+    sentryTracker(error, { source: "useOrderStore" });
       set({ error: "Failed to fetch all orders", isLoading: false });
       return null;
     }
@@ -236,6 +243,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       set({ currentOrder: order, error: null });
       return order;
     } catch (error: unknown) {
+    sentryTracker(error, { source: "useOrderStore" });
       const message = getAxiosErrorMessage(error, "Failed to fetch your order");
       set({ error: message, currentOrder: null });
       return null;
@@ -255,6 +263,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       set({ isLoading: false, currentOrder: order });
       return order;
     } catch (error) {
+    sentryTracker(error, { source: "useOrderStore" });
       set({ error: "Failed to fetch order", isLoading: false });
       return null;
     }
@@ -274,6 +283,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       set({ isLoading: false });
       return Array.isArray(lines) ? lines : [];
     } catch (error: unknown) {
+    sentryTracker(error, { source: "useOrderStore" });
       set({
         isLoading: false,
         error: getAxiosErrorMessage(error, "Failed to load sales"),

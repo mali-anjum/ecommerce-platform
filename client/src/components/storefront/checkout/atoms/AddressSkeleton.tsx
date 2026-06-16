@@ -20,7 +20,7 @@ export function AddressSelection({
     <Card className="glass-effect border border-glass-border">
       <CardContent className="p-6">
         <div className="flex items-center gap-3 mb-6">
-          <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+          <div className="h-10 w-10 rounded-lg bg-linear-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
             <MapPin className="h-5 w-5 text-primary" />
           </div>
           <div>

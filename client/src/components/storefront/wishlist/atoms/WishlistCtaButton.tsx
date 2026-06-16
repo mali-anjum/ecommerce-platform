@@ -63,10 +63,10 @@ export function WishlistCtaButton({
       disabled={busy}
       onClick={() => void handleClick()}
       className={cn(
-        "w-full font-semibold shadow-sm transition-all",
+        "w-full font-semibold shadow-xs transition-all",
         saved
           ? "border border-glass-border bg-muted text-foreground hover:bg-muted/80"
-          : "bg-gradient-to-r from-primary to-secondary text-primary-foreground hover:from-primary-light hover:to-secondary-light neon-border",
+          : "bg-linear-to-r from-primary to-secondary text-primary-foreground hover:from-primary-light hover:to-secondary-light neon-border",
         size === "lg" && "rounded-xl py-6 text-lg",
         className
       )}

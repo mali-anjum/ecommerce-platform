@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerBackendUrl } from "@/lib/api/getServerBackendUrl";
+import { sentryTracker } from "@/lib/monitoring";
 
 export async function DELETE(
   request: NextRequest,
@@ -43,6 +44,7 @@ export async function DELETE(
     return NextResponse.json(data, { status: backendRes.status });
   } catch (error) {
     console.error("Remove from cart proxy error:", error);
+    sentryTracker(error, { source: "api-route", route: "/api/cart/remove/[id]", method: "DELETE" });
     return NextResponse.json(
       { success: false, error: "Failed to remove from cart" },
       { status: 500 }

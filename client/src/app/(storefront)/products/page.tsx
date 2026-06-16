@@ -29,7 +29,7 @@ function ProductListingPage() {
   } = useProductListingPage();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-card/20">
+    <div className="min-h-screen bg-linear-to-b from-background to-card/20">
       <ProductsHeroBanner />
 
       <div className="container mx-auto max-w-7xl px-4 py-8">

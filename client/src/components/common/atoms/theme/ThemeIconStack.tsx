@@ -64,7 +64,7 @@ export function ThemeIconStack({
       )}
       <span
         className={cn(
-          "absolute -inset-1 rounded-full blur-sm transition-opacity duration-500 ease-theme-smooth",
+          "absolute -inset-1 rounded-full blur-xs transition-opacity duration-500 ease-theme-smooth",
           THEME_GLOW_CLASSES[preference]
         )}
       />

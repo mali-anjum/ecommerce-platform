@@ -46,7 +46,7 @@ export function ProductsResultsSummary({
         </div>
         <div className="h-2 w-24 overflow-hidden rounded-full bg-card">
           <div
-            className="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-500"
+            className="h-full bg-linear-to-r from-primary to-secondary transition-all duration-500"
             style={{ width: `${progressPercent}%` }}
           />
         </div>

@@ -4,6 +4,7 @@ import { useAuthStore } from "@/components/auth/state/useAuthStore";
 import { useRouter } from "next/navigation";
 import { RegisterFormData } from "@/components/schemas/registerSchema";
 import { protectSignUpAction } from "@/actions/auth";
+import { sentryTracker } from "@/lib/monitoring";
 
 export const useRegister = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -44,6 +45,7 @@ export const useRegister = () => {
 
       return { success: true, userId };
     } catch (error) {
+    sentryTracker(error, { source: "useRegister" });
       toast({
         title: "Registration failed",
         description:

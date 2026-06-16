@@ -84,7 +84,7 @@ export default function SuperAdminTransactionsPage() {
   }, [getAdminTransactions, query]);
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-background to-card/20 p-4 md:p-6">
+    <main className="min-h-screen bg-linear-to-b from-background to-card/20 p-4 md:p-6">
       <div className="mx-auto max-w-7xl space-y-6">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>

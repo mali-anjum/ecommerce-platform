@@ -1,5 +1,6 @@
 import { API_ROUTES } from "@/lib/routes/api";
 import { NextRequest, NextResponse } from "next/server";
+import { sentryTracker } from "@/lib/monitoring";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -26,6 +27,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json(data, { status: backendRes.status })
 
   } catch (error) {
+    sentryTracker(error, { source: "api-route", route: "/api/order/get-order-for-admin/[id]", method: "GET" });
     console.log(
       "Error getting user's single order details",
       error,

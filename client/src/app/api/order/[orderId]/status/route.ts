@@ -1,5 +1,6 @@
 import { API_ROUTES } from "@/lib/routes/api";
 import { NextRequest, NextResponse } from "next/server";
+import { sentryTracker } from "@/lib/monitoring";
 
 export async function PUT(
   request: NextRequest,
@@ -31,6 +32,7 @@ export async function PUT(
     return NextResponse.json(data, { status: backendRes.status });
   } catch (error) {
     console.error("Failed to update order status", error);
+    sentryTracker(error, { source: "api-route", route: "/api/order/[orderId]/status", method: "PUT" });
     return NextResponse.json(
       { success: false, error: "Failed to update order status" },
       { status: 500 }

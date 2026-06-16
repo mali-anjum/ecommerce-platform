@@ -1,5 +1,6 @@
 import { API_ROUTES } from "@/lib/routes/api";
 import { NextRequest, NextResponse } from "next/server";
+import { sentryTracker } from "@/lib/monitoring";
 
 export async function GET(
   request: NextRequest,
@@ -29,6 +30,7 @@ export async function GET(
     return NextResponse.json(data, { status: backendRes.status });
   } catch (error) {
     console.error("Failed to fetch admin order", error);
+    sentryTracker(error, { source: "api-route", route: "/api/order/admin/[orderId]", method: "GET" });
     return NextResponse.json(
       { success: false, error: "Failed to fetch order" },
       { status: 500 }

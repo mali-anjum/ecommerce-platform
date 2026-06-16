@@ -1,5 +1,6 @@
 import { prisma } from "../../../lib/prisma";
 import type { AssistantChatIntent } from "../types";
+import { sentryTracker } from "../../../lib/monitoring";
 
 const CONVERSION_ATTRIBUTION_WINDOW_MS = 48 * 60 * 60 * 1000;
 
@@ -23,6 +24,7 @@ export function scheduleAiConversationLog(input: {
   intent: AssistantChatIntent | string;
 }): void {
   void logAiConversation(input).catch((error) => {
+    sentryTracker(error, { source: "ConversationLogService" });
     console.error("[ai-analytics] Failed to log conversation", error);
   });
 }
@@ -42,6 +44,7 @@ export async function markAiChatConversionsForUser(userId: string): Promise<void
 
 export function scheduleAiChatConversion(userId: string): void {
   void markAiChatConversionsForUser(userId).catch((error) => {
+    sentryTracker(error, { source: "ConversationLogService" });
     console.error("[ai-analytics] Failed to mark chat conversion", error);
   });
 }

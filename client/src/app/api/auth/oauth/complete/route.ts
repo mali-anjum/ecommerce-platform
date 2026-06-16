@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { applyProxyCookies } from "@/lib/api/applyProxyCookies";
 import { getServerBackendUrl } from "@/lib/api/getServerBackendUrl";
+import { sentryTracker } from "@/lib/monitoring";
 
 /**
  * Thin BFF handoff: exchanges a one-time OAuth code from Express for auth cookies
@@ -48,6 +49,7 @@ export async function GET(req: NextRequest) {
     return response;
   } catch (error) {
     console.error("OAuth complete proxy error:", error);
+    sentryTracker(error, { source: "api-route", route: "/api/auth/oauth/complete", method: "GET" });
     return NextResponse.redirect(
       new URL("/auth/login?oauth_error=OAuth%20session%20handoff%20failed", req.url),
     );

@@ -14,7 +14,7 @@ export const LoginBanner = ({
   const [imageError, setImageError] = useState(false);
 
   return (
-    <div className="hidden lg:block lg:w-1/2 relative overflow-hidden group bg-gradient-to-br from-primary/20 to-secondary/20">
+    <div className="hidden lg:block lg:w-1/2 relative overflow-hidden group bg-linear-to-br from-primary/20 to-secondary/20">
       <div className="absolute inset-0">
         {!imageError ? (
           <Image
@@ -28,11 +28,11 @@ export const LoginBanner = ({
             className="scale-110 group-hover:scale-100 transition-transform duration-700"
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-primary to-secondary" />
+          <div className="w-full h-full bg-linear-to-br from-primary to-secondary" />
         )}
       </div>
 
-      <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/50 to-transparent" />
+      <div className="absolute inset-0 bg-linear-to-r from-background/95 via-background/50 to-transparent" />
 
       {showSparkles && (
         <div className="hologram-effect absolute inset-0 opacity-30" />
@@ -45,7 +45,7 @@ export const LoginBanner = ({
       <div className="absolute bottom-10 left-10 max-w-md">
         <h2 className="text-4xl font-bold mb-4 text-foreground">
           {title.split(" ").slice(0, -1).join(" ")}{" "}
-          <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+          <span className="bg-linear-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
             {title.split(" ").slice(-1)}
           </span>
         </h2>

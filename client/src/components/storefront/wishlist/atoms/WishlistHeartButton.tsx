@@ -95,7 +95,7 @@ export function WishlistHeartButton({
       aria-label={saved ? "Remove from wishlist" : "Add to wishlist"}
       className={cn(
         sizeClasses[size],
-        "rounded-full bg-background/80 backdrop-blur-sm border border-border/60 shadow-sm hover:bg-background",
+        "rounded-full bg-background/80 backdrop-blur-xs border border-border/60 shadow-xs hover:bg-background",
         saved && "text-destructive hover:text-destructive",
         className
       )}

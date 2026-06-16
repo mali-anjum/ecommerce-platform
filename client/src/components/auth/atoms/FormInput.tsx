@@ -47,7 +47,7 @@ export const InputField = ({
           type={inputType}
           className={`
             pl-10 pr-10
-            bg-card/50 backdrop-blur-sm
+            bg-card/50 backdrop-blur-xs
             border-glass-border
             focus:border-primary
             focus:ring-1 focus:ring-primary/50

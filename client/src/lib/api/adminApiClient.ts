@@ -1,10 +1,13 @@
 import axios from "axios";
+import { attachAxiosErrorReporting } from "@/lib/monitoring";
 
 /** Same-origin BFF client for super-admin routes (cookies forwarded by Next proxies). */
 export const adminApi = axios.create({
   baseURL: "/api",
   withCredentials: true,
 });
+
+attachAxiosErrorReporting(adminApi, "adminApi");
 
 export function unwrapData<T>(response: { data: { data?: T } }): T {
   return response.data.data as T;

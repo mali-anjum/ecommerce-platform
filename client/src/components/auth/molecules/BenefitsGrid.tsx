@@ -34,7 +34,7 @@ export const BenefitsGrid = () => (
         key={index}
         className="flex items-start gap-3 p-3 rounded-lg glass-effect border-glass-border hover:border-primary/30 transition-all duration-300 group hover:scale-105"
       >
-        <div className={`w-8 h-8 rounded-full bg-${benefit.color}/10 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300`}>
+        <div className={`w-8 h-8 rounded-full bg-${benefit.color}/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300`}>
           <benefit.icon className={`w-4 h-4 text-${benefit.color}`} />
         </div>
         <div>

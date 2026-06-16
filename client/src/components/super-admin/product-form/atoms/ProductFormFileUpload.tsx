@@ -88,7 +88,7 @@ export function ProductFormFileUpload({
     <div className="glass-effect rounded-2xl p-8 border border-glass-border">
       <div className="text-center">
         <div className="relative inline-block">
-          <div className="h-20 w-20 rounded-full bg-gradient-to-r from-primary/20 to-secondary/20 flex items-center justify-center mb-4">
+          <div className="h-20 w-20 rounded-full bg-linear-to-r from-primary/20 to-secondary/20 flex items-center justify-center mb-4">
             <Upload className="h-10 w-10 text-primary" />
           </div>
           <div className="absolute -inset-2 rounded-full bg-primary/10 animate-pulse"></div>
@@ -163,7 +163,7 @@ export function ProductFormFileUpload({
                   unoptimized
                   className="h-32 w-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-2 pt-8 pointer-events-none select-none">
+                <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-2 pt-8 pointer-events-none select-none">
                   <span className="text-white text-xs truncate">{file.name}</span>
                 </div>
               </div>

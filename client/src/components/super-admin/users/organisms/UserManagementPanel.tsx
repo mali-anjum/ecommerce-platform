@@ -85,7 +85,7 @@ export function UserManagementPanel({
       ];
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-background to-card/20 p-4 md:p-6">
+    <main className="min-h-screen bg-linear-to-b from-background to-card/20 p-4 md:p-6">
       <div className="mx-auto max-w-7xl space-y-6">
         <header className="space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">{title}</h1>

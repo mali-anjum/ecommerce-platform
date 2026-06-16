@@ -61,7 +61,7 @@ export function PaymentMethods({
     <Card className="glass-effect border border-glass-border">
       <CardContent className="p-6">
         <div className="flex items-center gap-3 mb-6">
-          <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-secondary/20 to-accent/20 flex items-center justify-center">
+          <div className="h-10 w-10 rounded-lg bg-linear-to-br from-secondary/20 to-accent/20 flex items-center justify-center">
             <CreditCard className="h-5 w-5 text-secondary" />
           </div>
           <div>
@@ -75,7 +75,7 @@ export function PaymentMethods({
         </div>
 
         <div className="space-y-6">
-          <div className="p-4 rounded-xl bg-gradient-to-r from-primary/5 to-secondary/5 border border-primary/20">
+          <div className="p-4 rounded-xl bg-linear-to-r from-primary/5 to-secondary/5 border border-primary/20">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Lock className="h-5 w-5 text-success" />

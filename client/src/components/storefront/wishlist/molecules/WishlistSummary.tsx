@@ -27,7 +27,7 @@ export function WishlistSummary({
     <Card className="glass-effect sticky top-8 border border-glass-border">
       <CardContent className="p-6">
         <div className="mb-6 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-accent/20">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-linear-to-br from-primary/20 to-accent/20">
             <Heart className="h-5 w-5 fill-primary/30 text-primary" />
           </div>
           <div>
@@ -44,7 +44,7 @@ export function WishlistSummary({
           <div className="border-t border-border/60 pt-3">
             <div className="flex justify-between text-lg font-bold text-foreground">
               <span>Estimated value</span>
-              <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              <span className="bg-linear-to-r from-primary to-secondary bg-clip-text text-transparent">
                 ${totalValue.toFixed(2)}
               </span>
             </div>
@@ -58,7 +58,7 @@ export function WishlistSummary({
           {inStockCount > 0 ? (
             <Button
               asChild
-              className="w-full bg-gradient-to-r from-primary to-secondary text-primary-foreground hover:from-primary-light hover:to-secondary-light neon-border"
+              className="w-full bg-linear-to-r from-primary to-secondary text-primary-foreground hover:from-primary-light hover:to-secondary-light neon-border"
             >
               <Link href="/cart">
                 <ShoppingCart className="mr-2 h-4 w-4" />

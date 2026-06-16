@@ -89,7 +89,7 @@ function MenuItem({
       <div className={cn(
         "relative flex items-center justify-center h-10 w-10 rounded-lg transition-all duration-300",
         isActive 
-          ? "bg-gradient-to-br from-primary to-secondary" 
+          ? "bg-linear-to-br from-primary to-secondary" 
           : "bg-card group-hover:bg-primary/10"
       )}>
         <Icon className={cn(
@@ -120,7 +120,7 @@ function MenuItem({
       )}
       
       {/* Hover glow effect */}
-      <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10"></div>
+      <div className="absolute inset-0 rounded-lg bg-linear-to-r from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10"></div>
     </button>
   );
 }
@@ -168,7 +168,7 @@ function Logo({ isOpen }: LogoProps) {
   return (
     <div className="flex items-center justify-center gap-3 p-4">
       <div className="relative">
-        <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary via-secondary to-accent flex items-center justify-center">
+        <div className="h-12 w-12 rounded-xl bg-linear-to-br from-primary via-secondary to-accent flex items-center justify-center">
           <Shield className="h-6 w-6 text-white" />
         </div>
         <div className="absolute -inset-1 rounded-xl bg-primary/20 animate-pulse -z-10"></div>
@@ -176,7 +176,7 @@ function Logo({ isOpen }: LogoProps) {
       
       {isOpen && (
         <div className="space-y-1">
-          <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+          <h1 className="text-xl font-bold bg-linear-to-r from-primary to-secondary bg-clip-text text-transparent">
             NEXUS CONTROL
           </h1>
           <p className="text-xs text-muted-foreground">Admin Dashboard</p>
@@ -409,7 +409,7 @@ function SuperAdminSidebar({ isOpen, toggle }: SidebarProps) {
     <div
       className={cn(
         "fixed left-0 top-0 z-50 h-screen transition-all duration-500 ease-in-out",
-        "glass-effect border-r border-glass-border backdrop-blur-sm",
+        "glass-effect border-r border-glass-border backdrop-blur-xs",
         isOpen ? "w-72" : "w-20",
         "shadow-xl shadow-primary/5"
       )}
@@ -427,7 +427,7 @@ function SuperAdminSidebar({ isOpen, toggle }: SidebarProps) {
               size="icon"
               className={cn(
                 "h-6 w-6 rounded-full shadow-lg transition-all duration-300",
-                "bg-gradient-to-r from-primary to-secondary hover:from-primary-light hover:to-secondary-light"
+                "bg-linear-to-r from-primary to-secondary hover:from-primary-light hover:to-secondary-light"
               )}
               onClick={toggle}
             >
@@ -444,7 +444,7 @@ function SuperAdminSidebar({ isOpen, toggle }: SidebarProps) {
         <div
           className={cn(
             "flex-1 min-h-0 overflow-y-auto py-4",
-            "[scrollbar-width:thin]",
+            "scrollbar-thin",
             "[scrollbar-color:hsl(var(--primary)/0.35)_transparent]",
             "[&::-webkit-scrollbar]:w-1.5",
             "[&::-webkit-scrollbar-thumb]:rounded-full",
@@ -496,9 +496,9 @@ function SuperAdminSidebar({ isOpen, toggle }: SidebarProps) {
         >
           {isOpen ? (
             <div className="space-y-3">
-              <div className="rounded-lg bg-gradient-to-r from-primary/10 to-secondary/10 p-3 border border-glass-border/60">
+              <div className="rounded-lg bg-linear-to-r from-primary/10 to-secondary/10 p-3 border border-glass-border/60">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center">
+                  <div className="h-10 w-10 rounded-full bg-linear-to-r from-primary to-secondary flex items-center justify-center">
                     <Sparkles className="h-5 w-5 text-white" />
                   </div>
                   <div>
@@ -518,17 +518,17 @@ function SuperAdminSidebar({ isOpen, toggle }: SidebarProps) {
             </div>
           ) : (
             <div className="flex flex-col items-center space-y-3">
-              <div className="h-10 w-10 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center">
+              <div className="h-10 w-10 rounded-full bg-linear-to-r from-primary to-secondary flex items-center justify-center">
                 <Sparkles className="h-5 w-5 text-white" />
               </div>
-              <div className="h-2 w-10 rounded-full bg-gradient-to-r from-primary to-secondary"></div>
+              <div className="h-2 w-10 rounded-full bg-linear-to-r from-primary to-secondary"></div>
             </div>
           )}
         </div>
       </div>
 
       {/* Sidebar Glow Effect */}
-      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-primary/5 via-transparent to-secondary/5 opacity-50"></div>
+      <div className="absolute inset-0 -z-10 bg-linear-to-b from-primary/5 via-transparent to-secondary/5 opacity-50"></div>
     </div>
   );
 }

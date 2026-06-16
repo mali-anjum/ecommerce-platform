@@ -40,8 +40,8 @@ export function GoogleOAuthButton({
         disabled={disabled}
         aria-label="Continue with Google"
         className={cn(
-          "group flex w-full items-center justify-center gap-3 rounded-xl border border-border/70 bg-card/80 px-4 py-3 text-sm font-medium text-foreground shadow-sm transition-all",
-          "hover:border-primary/40 hover:bg-primary/5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+          "group flex w-full items-center justify-center gap-3 rounded-xl border border-border/70 bg-card/80 px-4 py-3 text-sm font-medium text-foreground shadow-xs transition-all",
+          "hover:border-primary/40 hover:bg-primary/5 hover:shadow-md focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/40",
           "disabled:cursor-not-allowed disabled:opacity-50",
         )}
       >

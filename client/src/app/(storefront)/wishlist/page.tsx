@@ -66,14 +66,14 @@ export default function WishlistPage() {
   if (!isMounted || !user) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-card/20 py-8">
+    <div className="min-h-screen bg-linear-to-b from-background to-card/20 py-8">
       <div className="container mx-auto max-w-7xl px-4">
         {/* Header — matches cart page */}
         <header className="glass-effect mb-8 rounded-2xl border border-glass-border p-6">
           <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-center">
             <div className="flex items-center gap-4">
               <div className="relative">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-linear-to-br from-primary to-accent">
                   <Heart className="h-6 w-6 fill-white/20 text-white" />
                 </div>
                 <div className="absolute -inset-2 animate-pulse rounded-xl bg-primary/20" />

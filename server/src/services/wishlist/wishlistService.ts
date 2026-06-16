@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { ApiError } from "../../utils/ApiError";
 import { getWishlistAvailability } from "./availability";
+import { sentryTracker } from "../../lib/monitoring";
 import {
   computeProductPricing,
   getEffectiveUnitPrice,
@@ -171,6 +172,7 @@ export class WishlistService {
         productId,
       };
     } catch (error) {
+    sentryTracker(error, { source: "wishlistService" });
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === "P2002"

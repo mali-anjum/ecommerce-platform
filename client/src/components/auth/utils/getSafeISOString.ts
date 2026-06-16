@@ -1,4 +1,5 @@
 import { authLogger } from "@/lib/logger";
+import { sentryTracker } from "@/lib/monitoring";
 
 export const getSafeISOString = (dateValue: any): string | null => {
   try {
@@ -13,6 +14,7 @@ export const getSafeISOString = (dateValue: any): string | null => {
     
     return date.toISOString();
   } catch (error) {
+    sentryTracker(error, { source: "getSafeISOString" });
     authLogger.error('Error converting to ISO string:', error);
     return null;
   }

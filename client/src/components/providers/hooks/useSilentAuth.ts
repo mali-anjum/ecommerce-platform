@@ -4,6 +4,7 @@ import { useEffect, useRef, useCallback } from "react";
 import { useAuthStore } from "@/components/auth/state/useAuthStore";
 import { authLogger } from "@/lib/logger";
 import { getSafeISOString } from "@/components/auth/utils/getSafeISOString";
+import { sentryTracker } from "@/lib/monitoring";
 
 export const REFRESH_FAILURE_COOLDOWN_MS = 2 * 60 * 1000;
 
@@ -78,6 +79,7 @@ export default function useSilentAuth(enabled = true) {
       authLogger.warn("No refresh token available, skipping schedule");
       return null;
     } catch (error) {
+    sentryTracker(error, { source: "useSilentAuth" });
       authLogger.error("Failed to calculate refresh time", error);
       return null;
     }
@@ -170,6 +172,7 @@ export default function useSilentAuth(enabled = true) {
         setTimeout(() => scheduleTokenRefresh(), backoffTime);
       }
     } catch (error) {
+    sentryTracker(error, { source: "useSilentAuth" });
       authLogger.error("Token refresh operation failed with error", error, {
         retryCount: retryCountRef.current + 1,
       });
@@ -229,6 +232,7 @@ export default function useSilentAuth(enabled = true) {
         await performTokenRefresh();
       }, refreshTime);
     } catch (error) {
+    sentryTracker(error, { source: "useSilentAuth" });
       authLogger.error("Token refresh scheduling failed", error);
     }
   }, [calculateRefreshTime, performTokenRefresh]);
@@ -303,6 +307,7 @@ export default function useSilentAuth(enabled = true) {
         });
       }
     } catch (error) {
+    sentryTracker(error, { source: "useSilentAuth" });
       authLogger.error("Session check failed", error);
     }
   }, [

@@ -12,7 +12,7 @@ export function WishlistEmptyState({ onContinueShopping }: WishlistEmptyStatePro
     <div className="py-12 text-center">
       <div className="flex flex-col items-center gap-6">
         <div className="relative">
-          <div className="flex h-32 w-32 items-center justify-center rounded-full bg-gradient-to-br from-primary/15 to-accent/15">
+          <div className="flex h-32 w-32 items-center justify-center rounded-full bg-linear-to-br from-primary/15 to-accent/15">
             <Heart className="h-16 w-16 text-primary" />
           </div>
           <div className="absolute -inset-4 animate-pulse rounded-full bg-primary/5" />
@@ -29,7 +29,7 @@ export function WishlistEmptyState({ onContinueShopping }: WishlistEmptyStatePro
         <div className="flex flex-col gap-4 sm:flex-row">
           <Button
             onClick={onContinueShopping}
-            className="bg-gradient-to-r from-primary to-secondary text-primary-foreground hover:from-primary-light hover:to-secondary-light"
+            className="bg-linear-to-r from-primary to-secondary text-primary-foreground hover:from-primary-light hover:to-secondary-light"
           >
             <Sparkles className="mr-2 h-4 w-4" />
             Start Shopping

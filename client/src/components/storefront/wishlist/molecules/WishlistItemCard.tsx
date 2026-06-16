@@ -164,7 +164,7 @@ export function WishlistItemCard({ item }: WishlistItemCardProps) {
 
         {/* Price row — visible on mobile & desktop */}
         <div className="flex flex-wrap items-baseline gap-2">
-          <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-xl font-bold text-transparent sm:text-2xl">
+          <span className="bg-linear-to-r from-primary to-secondary bg-clip-text text-xl font-bold text-transparent sm:text-2xl">
             ${displayPrice.toFixed(2)}
           </span>
           {hasDiscount && (

@@ -38,7 +38,7 @@ export function HeaderAccountDropdown({ user, onLogout }: HeaderAccountDropdownP
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="rounded-full">
           <div className="flex items-center space-x-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-r from-primary to-secondary">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-linear-to-r from-primary to-secondary">
               <User className="h-4 w-4 text-white" />
             </div>
             <div className="hidden text-left xl:block">

@@ -29,7 +29,7 @@ const ThemeGlowEffect = ({
     >
       <div
         className={cn(
-          "absolute inset-0 bg-gradient-to-r opacity-80",
+          "absolute inset-0 bg-linear-to-r opacity-80",
           isHovered && "animate-pulse",
           gradientColors[preference]
         )}

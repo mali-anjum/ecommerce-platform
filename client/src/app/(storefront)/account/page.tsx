@@ -53,12 +53,13 @@ import {
   XCircle
 } from "lucide-react";
 import { format } from "date-fns";
-import { 
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
-  TooltipTrigger 
+  TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { sentryTracker } from "@/lib/monitoring";
 
 const initialAddressFormState = {
   name: "",
@@ -318,7 +319,7 @@ function AddressForm({
     <Card className="glass-effect border border-glass-border">
       <CardContent className="p-6">
         <div className="flex items-center gap-3 mb-6">
-          <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+          <div className="h-10 w-10 rounded-lg bg-linear-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
             <MapPin className="h-5 w-5 text-primary" />
           </div>
           <div>
@@ -442,7 +443,7 @@ function AddressForm({
             <Button
               type="submit"
               disabled={isLoading}
-              className="bg-gradient-to-r from-primary to-secondary hover:from-primary-light hover:to-secondary-light text-primary-foreground"
+              className="bg-linear-to-r from-primary to-secondary hover:from-primary-light hover:to-secondary-light text-primary-foreground"
             >
               {isLoading ? (
                 <div className="flex items-center gap-2">
@@ -551,6 +552,7 @@ function UserAccountPage() {
       setShowAddressForm(false);
       setFormData(initialAddressFormState);
     } catch (err) {
+    sentryTracker(err, { source: "page" });
       toast({
         title: "Error",
         description: "Failed to save address. Please try again.",
@@ -591,6 +593,7 @@ function UserAccountPage() {
           fetchAddresses();
         }
       } catch (e) {
+    sentryTracker(e, { source: "page" });
         toast({
           title: "Error",
           description: "Failed to delete address. Please try again.",
@@ -610,14 +613,14 @@ function UserAccountPage() {
   const totalSpent = userOrders.reduce((sum, order) => sum + order.total, 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-card/20 py-8">
+    <div className="min-h-screen bg-linear-to-b from-background to-card/20 py-8">
       <div className="container mx-auto px-4 max-w-7xl">
         {/* Header */}
         <header className="glass-effect rounded-2xl p-6 mb-8 border border-glass-border">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <div className="flex items-center gap-4">
               <div className="relative">
-                <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                <div className="h-16 w-16 rounded-xl bg-linear-to-br from-primary to-secondary flex items-center justify-center">
                   <User className="h-8 w-8 text-white" />
                 </div>
                 <div className="absolute -inset-2 rounded-xl bg-primary/20 animate-pulse"></div>
@@ -830,7 +833,7 @@ function UserAccountPage() {
                           setFormData(initialAddressFormState);
                           setShowAddressForm(true);
                         }}
-                        className="bg-gradient-to-r from-primary to-secondary hover:from-primary-light hover:to-secondary-light text-primary-foreground"
+                        className="bg-linear-to-r from-primary to-secondary hover:from-primary-light hover:to-secondary-light text-primary-foreground"
                       >
                         <Plus className="h-4 w-4 mr-2" />
                         Add New Address

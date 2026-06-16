@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerBackendUrl } from "@/lib/api/getServerBackendUrl";
+import { sentryTracker } from "@/lib/monitoring";
 
 type ProxyOptions = {
   method: "GET" | "POST" | "DELETE" | "PUT" | "PATCH";
@@ -55,8 +56,13 @@ export async function proxyWithAuth(
         { status: 504 }
       );
     }
+    sentryTracker(error, {
+      source: "proxyWithAuth",
+      route: backendPath,
+      method,
+    });
     return NextResponse.json(
-      { success: false, error: "Wishlist request failed" },
+      { success: false, error: "Proxy request failed" },
       { status: 500 }
     );
   }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerBackendUrl } from "@/lib/api/getServerBackendUrl";
+import { sentryTracker } from "@/lib/monitoring";
 
 export async function POST(request: NextRequest) {
   const BACKEND_URL = getServerBackendUrl();
@@ -37,6 +38,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(data, { status: backendRes.status });
   } catch (error) {
     console.error("Add to cart proxy error:", error);
+    sentryTracker(error, { source: "api-route", route: "/api/cart/add-to-cart", method: "POST" });
     return NextResponse.json(
       { success: false, error: "Failed to add to cart" },
       { status: 500 }

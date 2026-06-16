@@ -25,10 +25,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  FormProvider,
-  useForm,
-} from "react-hook-form";
+import { FormProvider, useForm } from "react-hook-form";
+import { sentryTracker } from "@/lib/monitoring";
 
 function mergeImageFiles(prev: File[], incoming: File[]): File[] {
   const seen = new Set(
@@ -314,6 +312,7 @@ function ProductForm({
         router.push(listPath);
       }
     } catch (submitErr) {
+    sentryTracker(submitErr, { source: "ProductForm" });
       const message = axios.isAxiosError(submitErr)
         ? submitErr.response?.data?.message ||
           submitErr.response?.data?.error ||
@@ -333,7 +332,7 @@ function ProductForm({
 
   return (
     <FormProvider {...methods}>
-      <div className="min-h-screen bg-gradient-to-b from-background to-card/30 p-4 md:p-6">
+      <div className="min-h-screen bg-linear-to-b from-background to-card/30 p-4 md:p-6">
         <div className="max-w-6xl mx-auto">
           <ProductFormHeader
             isEditMode={isEditMode}

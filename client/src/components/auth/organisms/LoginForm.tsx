@@ -45,7 +45,7 @@ export const LoginForm = () => {
           {/* Logo Section */}
           <div className="flex justify-center mb-8 group">
             <div className="relative">
-              <div className="absolute -inset-4 rounded-full bg-gradient-to-r from-primary via-secondary to-accent opacity-20 blur-xl group-hover:opacity-30 transition-opacity duration-500" />
+              <div className="absolute -inset-4 rounded-full bg-linear-to-r from-primary via-secondary to-accent opacity-20 blur-xl group-hover:opacity-30 transition-opacity duration-500" />
               <Image 
                 src="/images/logo.webp"
                 width={180} 

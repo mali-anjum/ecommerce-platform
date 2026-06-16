@@ -1,6 +1,7 @@
 // src/controllers/warmController.ts
 import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
+import { sentryTracker } from "../lib/monitoring";
 
 export const warmUp = async (req: Request, res: Response): Promise<void> => {
   const startTime = Date.now();
@@ -30,6 +31,7 @@ export const warmUp = async (req: Request, res: Response): Promise<void> => {
       }
     });
   } catch (error) {
+    sentryTracker(error, { source: "warmController" });
     console.error("❌ Warmup failed:", error);
     
     res.status(500).json({

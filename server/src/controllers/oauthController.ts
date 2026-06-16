@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { setSessionCookies } from "../services/auth/tokenService";
 import { oauthExchangeStore } from "../services/oauth";
+import { sentryTracker } from "../lib/monitoring";
 
 /**
  * One-time exchange after Google OAuth callback.
@@ -35,6 +36,7 @@ export async function exchangeOAuthCode(
       redirectTo: entry.redirectTo,
     });
   } catch (error) {
+    sentryTracker(error, { source: "oauthController" });
     console.error("OAuth exchange error:", error);
     res.status(500).json({
       success: false,

@@ -13,7 +13,7 @@ export function ProductFormLoadingOverlay({
 
   return (
     <div
-      className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-background/70 backdrop-blur-sm"
+      className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-background/70 backdrop-blur-xs"
       aria-busy="true"
       aria-live="polite"
     >

@@ -26,7 +26,7 @@ Requires the API running at `NEXT_PUBLIC_API_URL` (default `http://localhost:400
 | Category | Libraries |
 |----------|-----------|
 | Framework | Next.js 16, React 19, TypeScript |
-| Styling | Tailwind CSS 3, `tailwindcss-animate`, CVA, `clsx`, `tailwind-merge` |
+| Styling | Tailwind CSS 4, `tw-animate-css`, CVA, `clsx`, `tailwind-merge` |
 | UI | Radix UI primitives (dialog, dropdown, tabs, toast, …) |
 | Forms | React Hook Form, Zod, `@hookform/resolvers` |
 | State | Zustand (`src/store/`) |
@@ -217,7 +217,7 @@ Light/dark (and related preferences) use:
 - `src/components/layout/ThemeInitializer.tsx` — hydrate theme on load
 - `src/components/common/theme/*` — toggle UI (desktop segmented control, mobile menu rows)
 
-Tailwind `darkMode` is configured in `tailwind.config.ts` (class strategy).
+Tailwind v4 uses `src/app/globals.css` (`@theme inline`, `data-theme` dark variant).
 
 ---
 

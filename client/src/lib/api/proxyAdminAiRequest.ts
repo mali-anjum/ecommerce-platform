@@ -2,6 +2,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { getServerBackendUrl } from "@/lib/api/getServerBackendUrl";
+import { sentryTracker } from "@/lib/monitoring";
 
 const UPLOAD_PATH_SUFFIX = "knowledge-base/upload";
 
@@ -73,6 +74,7 @@ export async function proxyAdminAiRequest(
     const text = await backendRes.text();
     return new NextResponse(text, { status: backendRes.status });
   } catch (error: unknown) {
+    sentryTracker(error, { source: "proxyAdminAiRequest" });
     const name = error instanceof Error ? error.name : "";
     if (name === "AbortError") {
       return NextResponse.json(

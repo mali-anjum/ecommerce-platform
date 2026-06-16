@@ -287,7 +287,7 @@ export function FunnelPanel({
             </div>
             <div className="h-2 rounded-full bg-muted overflow-hidden">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-primary to-secondary transition-all"
+                className="h-full rounded-full bg-linear-to-r from-primary to-secondary transition-all"
                 style={{
                   width: `${Math.max(
                     8,
@@ -397,7 +397,7 @@ export function AiMetricsPanel({
               </div>
               <div className="h-2 rounded-full bg-muted overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-primary to-secondary transition-all"
+                  className="h-full rounded-full bg-linear-to-r from-primary to-secondary transition-all"
                   style={{
                     width: `${Math.max(8, (row.count / totalIntents) * 100)}%`,
                     opacity: 1 - index * 0.12,
@@ -469,7 +469,7 @@ export function FunnelTrackingPanel({
             </div>
             <div className="h-2 rounded-full bg-muted overflow-hidden">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-primary to-accent transition-all"
+                className="h-full rounded-full bg-linear-to-r from-primary to-accent transition-all"
                 style={{
                   width: `${Math.max(
                     8,

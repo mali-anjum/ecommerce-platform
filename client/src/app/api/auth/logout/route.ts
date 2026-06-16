@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { applyProxyCookies } from "@/lib/api/applyProxyCookies";
 import { getServerBackendUrl } from "@/lib/api/getServerBackendUrl";
+import { sentryTracker } from "@/lib/monitoring";
 
 export async function POST(req: NextRequest) {
   const BACKEND_URL = getServerBackendUrl();
@@ -55,6 +56,7 @@ export async function POST(req: NextRequest) {
     return response;
   } catch (error: unknown) {
     console.error("Logout proxy error:", error);
+    sentryTracker(error, { source: "api-route", route: "/api/auth/logout", method: "POST" });
 
     if (error instanceof Error && error.name === "AbortError") {
       return NextResponse.json(

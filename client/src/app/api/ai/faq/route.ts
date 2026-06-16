@@ -1,6 +1,7 @@
 import { API_ROUTES } from "@/lib/routes/api";
 import { isModuleEnabled } from "@/lib/feature-flags";
 import { NextResponse } from "next/server";
+import { sentryTracker } from "@/lib/monitoring";
 
 export async function GET() {
   if (!isModuleEnabled("ai")) {
@@ -18,6 +19,7 @@ export async function GET() {
     return NextResponse.json(data, { status: backendRes.status });
   } catch (error) {
     console.error("FAQ proxy failed", error);
+    sentryTracker(error, { source: "api-route", route: "/api/ai/faq", method: "GET" });
     return NextResponse.json(
       { success: false, message: "Failed to load FAQ" },
       { status: 500 },

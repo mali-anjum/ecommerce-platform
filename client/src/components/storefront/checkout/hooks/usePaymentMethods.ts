@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
+import { sentryTracker } from "@/lib/monitoring";
 
 export type CheckoutPaymentMethodId = "PAYPAL" | "STRIPE";
 
@@ -20,6 +21,7 @@ export function usePaymentMethods() {
       const methods = Array.isArray(data?.data) ? data.data : [];
       setAvailableMethods(methods);
     } catch (err: unknown) {
+    sentryTracker(err, { source: "usePaymentMethods" });
       console.error("Failed to load payment methods:", err);
       setError("Could not load payment methods");
       setAvailableMethods([]);

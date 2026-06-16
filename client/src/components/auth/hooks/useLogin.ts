@@ -3,6 +3,7 @@ import { useToast } from "@/components/ui/hooks/use-toast";
 import { useAuthStore } from "@/components/auth/state/useAuthStore";
 import { ROUTES } from "@/lib/routes/api";
 import { LoginFormData } from "@/components/schemas/loginSchema";
+import { sentryTracker } from "@/lib/monitoring";
 
 export const useLogin = () => {
   const { toast } = useToast();
@@ -40,6 +41,7 @@ export const useLogin = () => {
         throw new Error(error || "Authentication failed");
       }
     } catch (err) {
+    sentryTracker(err, { source: "useLogin" });
       toast({
         title: "Authentication error",
         description: err instanceof Error ? err.message : "Invalid credentials",

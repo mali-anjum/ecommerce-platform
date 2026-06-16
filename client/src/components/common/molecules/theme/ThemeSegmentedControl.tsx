@@ -43,7 +43,7 @@ export function ThemeSegmentedControl({
       role="group"
       aria-label="Theme"
       className={cn(
-        "relative flex h-7 w-[4.75rem] shrink-0 items-center rounded-full bg-muted/50 px-0.5",
+        "relative flex h-7 w-19 shrink-0 items-center rounded-full bg-muted/50 px-0.5",
         className
       )}
       onClick={(e) => e.stopPropagation()}
@@ -69,7 +69,7 @@ export function ThemeSegmentedControl({
           onClick={() => onSelect(t)}
           className={cn(
             "relative z-10 flex h-full flex-1 items-center justify-center rounded-full",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background",
+            "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background",
             "disabled:pointer-events-none disabled:opacity-50"
           )}
         >

@@ -1,4 +1,5 @@
 import "./config/loadEnv";
+import { initSentry, registerProcessErrorHandlers, sentryTracker } from "./lib/monitoring";
 import express, { Request, Response } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -24,6 +25,9 @@ import { registerFeatureModuleRoutes } from "./config/featureFlags";
 import { warmProductIndex } from "./services/ai/productIndex";
 
 const app = express();
+initSentry();
+registerProcessErrorHandlers();
+
 const PORT = process.env.PORT || 3001;
 
 const corsOptions: cors.CorsOptions = {
@@ -100,7 +104,7 @@ const moduleBootstraps = registerFeatureModuleRoutes(app, [
   },
 ]);
 
-app.get("/", (req: Request, res: Response) => {
+app.get("/", (_req: Request, res: Response) => {
   res.send("Hello from E-Commerce backend");
 });
 
@@ -117,6 +121,7 @@ app.listen(PORT, () => {
   for (const bootstrap of moduleBootstraps) {
     void Promise.resolve(bootstrap()).catch((error) => {
       console.error("Feature module bootstrap failed", error);
+      sentryTracker(error, { source: "featureBootstrap" });
     });
   }
 });

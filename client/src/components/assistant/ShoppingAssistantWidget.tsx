@@ -54,7 +54,7 @@ export function ShoppingAssistantWidget() {
           size="icon"
           aria-label="Open shopping assistant"
           onClick={() => setOpen(true)}
-          className="h-14 w-14 rounded-full bg-gradient-to-r from-primary to-secondary shadow-lg hover:scale-105 transition-transform"
+          className="h-14 w-14 rounded-full bg-linear-to-r from-primary to-secondary shadow-lg hover:scale-105 transition-transform"
         >
           <MessageCircle className="h-6 w-6 text-white" />
         </Button>
@@ -67,7 +67,7 @@ export function ShoppingAssistantWidget() {
         >
           <SheetHeader className="border-b border-border/70 px-6 py-4 text-left">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-r from-primary to-secondary">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-r from-primary to-secondary">
                 <Bot className="h-5 w-5 text-white" />
               </div>
               <div>

@@ -9,6 +9,7 @@ import {
   closeSupportTicket,
   listSupportTickets,
 } from "../services/ai/handoff/SupportTicketService";
+import { sentryTracker } from "../lib/monitoring";
 
 export const getAdminSupportTickets = asyncHandler(
   async (req: AuthenticatedRequest, res: Response, _next: NextFunction) => {
@@ -28,7 +29,8 @@ export const closeAdminSupportTicket = asyncHandler(
     try {
       const ticket = await closeSupportTicket(req.params.id);
       res.json(new ApiResponse(200, { ticket }, "Support ticket closed"));
-    } catch {
+    } catch (error) {
+      sentryTracker(error, { source: "supportTicketController" });
       throw new NotFoundError("Support ticket not found");
     }
   },
@@ -46,7 +48,8 @@ export const replyAdminSupportTicket = asyncHandler(
     try {
       const ticket = await addAgentReply(req.params.id, content);
       res.json(new ApiResponse(200, { ticket }, "Agent reply added"));
-    } catch {
+    } catch (error) {
+      sentryTracker(error, { source: "supportTicketController" });
       throw new NotFoundError("Support ticket not found");
     }
   },

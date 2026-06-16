@@ -30,6 +30,7 @@ import {
   withLegacyPaymentAliases,
 } from "../services/order";
 import type { OrderStatus } from "@prisma/client";
+import { sentryTracker } from "../lib/monitoring";
 
 const createPaymentOrder = asyncHandler(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -219,6 +220,7 @@ const createPaymentOrder = asyncHandler(
           ),
         );
     } catch (error) {
+    sentryTracker(error, { source: "orderController" });
       next(error);
     }
   },
@@ -371,6 +373,7 @@ const capturePayment = asyncHandler(
         ),
       );
     } catch (error) {
+    sentryTracker(error, { source: "orderController" });
       next(error);
     }
   },
@@ -442,6 +445,7 @@ const upsertOrderTrackingAdminOnly = asyncHandler(
       shippedAt = parseOptionalDate(shippedAtRaw);
       deliveredAt = parseOptionalDate(deliveredAtRaw);
     } catch (err) {
+    sentryTracker(err, { source: "orderController" });
       return next(err as Error);
     }
 

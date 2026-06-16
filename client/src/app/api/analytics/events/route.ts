@@ -1,5 +1,6 @@
 import { API_ROUTES } from "@/lib/routes/api";
 import { NextRequest, NextResponse } from "next/server";
+import { sentryTracker } from "@/lib/monitoring";
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,6 +27,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(data, { status: backendRes.status });
   } catch (error) {
     console.error("Analytics event proxy failed", error);
+    sentryTracker(error, { source: "api-route", route: "/api/analytics/events", method: "POST" });
     return NextResponse.json(
       { success: false, message: "Failed to log analytics event" },
       { status: 500 },

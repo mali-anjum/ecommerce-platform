@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 import { proxyLogger } from "@/lib/logger";
+import { sentryTracker } from "@/lib/monitoring";
 
 const publicRoutes = ["/auth/register", "/auth/login", "/help"];
 const authRoutes = ["/auth/register", "/auth/login"];
@@ -127,6 +128,7 @@ export async function proxy(request: NextRequest) {
       proxyLogger.debug("proxy:allow", { traceId, pathname, role });
       return NextResponse.next();
     } catch (error) {
+      sentryTracker(error, { source: "proxy", route: pathname });
       proxyLogger.warn("proxy:access-token-invalid-or-expired", {
         traceId,
         pathname,

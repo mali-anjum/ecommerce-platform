@@ -53,7 +53,7 @@ export function ProductGrid({ products, isLoading, error }: ProductGridProps) {
           key={productItem.id}
           className="group cursor-pointer"
         >
-          <div className="relative aspect-[3/4] mb-4 bg-gray-100 overflow-hidden">
+          <div className="relative aspect-3/4 mb-4 bg-gray-100 overflow-hidden">
             <img
               src={productItem.images[0]}
               alt={productItem.name}

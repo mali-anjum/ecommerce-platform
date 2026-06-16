@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { applyProxyCookies } from "@/lib/api/applyProxyCookies";
 import { getServerBackendUrl } from "@/lib/api/getServerBackendUrl";
+import { sentryTracker } from "@/lib/monitoring";
 
 export async function POST(req: NextRequest) {
   const BACKEND_URL = getServerBackendUrl();
@@ -66,6 +67,7 @@ export async function POST(req: NextRequest) {
 
   } catch (error: unknown) {
     console.error("Register proxy error:", error);
+    sentryTracker(error, { source: "api-route", route: "/api/auth/register", method: "POST" });
 
     const cause = error instanceof Error && "cause" in error ? error.cause : null;
     const causeCode =

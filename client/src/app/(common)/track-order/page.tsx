@@ -110,7 +110,7 @@ export default function TrackOrderPage() {
   );
 
   return (
-    <main className="bg-gradient-to-b from-background to-card/30 py-8">
+    <main className="bg-linear-to-b from-background to-card/30 py-8">
       <div className="container mx-auto max-w-7xl px-4">
         <div className="flex gap-8">
           <AccountOrdersSidebar />

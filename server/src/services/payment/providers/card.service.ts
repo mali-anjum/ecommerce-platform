@@ -2,6 +2,7 @@
 import {  PaymentOrderData, PaymentResult } from "../../interfaces/payment.interface";
 import { BasePaymentService } from "../base.payment.service";
 import { getErrorMessage } from "../../../utils/catchError";
+import { sentryTracker } from "../../../lib/monitoring";
 
 export class CardService extends BasePaymentService {
   protected providerName = "CARD";
@@ -31,6 +32,7 @@ export class CardService extends BasePaymentService {
         data: mockPaymentResponse
       };
     } catch (error) {
+    sentryTracker(error, { source: "card.service" });
       return {
         success: false,
         error: getErrorMessage(error)
@@ -61,6 +63,7 @@ export class CardService extends BasePaymentService {
         data: mockCaptureResponse
       };
     } catch (error) {
+    sentryTracker(error, { source: "card.service" });
       return {
         success: false,
         error: getErrorMessage(error)
@@ -96,6 +99,7 @@ export class CardService extends BasePaymentService {
         card_type: this.detectCardType(cardData.cardNumber)
       };
     } catch (error) {
+    sentryTracker(error, { source: "card.service" });
       return {
         success: false,
         error: getErrorMessage(error)

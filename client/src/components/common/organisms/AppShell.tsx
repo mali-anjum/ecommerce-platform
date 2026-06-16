@@ -39,7 +39,7 @@ const BackgroundGrid = ({ isVisible }: { isVisible: boolean }) => {
   return (
     <div className="fixed inset-0 pointer-events-none z-0">
       <div className="error-grid absolute inset-0 opacity-[0.03]" />
-      <div className="absolute inset-0 bg-gradient-to-br from-background via-transparent to-background" />
+      <div className="absolute inset-0 bg-linear-to-br from-background via-transparent to-background" />
     </div>
   );
 };
@@ -61,8 +61,8 @@ const RouteTransitionIndicator = ({ pathname }: { pathname: string }) => {
 
   return (
     <div className="fixed inset-0 z-50 pointer-events-none">
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-secondary to-accent animate-shimmer" />
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/5 to-transparent animate-pulse" />
+      <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-primary via-secondary to-accent animate-shimmer" />
+      <div className="absolute inset-0 bg-linear-to-b from-transparent via-primary/5 to-transparent animate-pulse" />
     </div>
   );
 };
@@ -107,7 +107,7 @@ function CommonLayout({ children }: { children: React.ReactNode }) {
           <div className="relative">
             <div className="w-12 h-12 rounded-full border-4 border-transparent border-t-primary border-r-secondary border-b-accent border-l-primary-light animate-spin-slow" />
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 animate-pulse" />
+              <div className="w-6 h-6 rounded-full bg-linear-to-br from-primary/20 to-secondary/20 animate-pulse" />
             </div>
           </div>
         </div>
@@ -135,7 +135,7 @@ function CommonLayout({ children }: { children: React.ReactNode }) {
             <span className="text-foreground group-hover:text-primary transition-colors">
               ↑
             </span>
-            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="absolute inset-0 rounded-full bg-linear-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           </button>
         </div>
       )}

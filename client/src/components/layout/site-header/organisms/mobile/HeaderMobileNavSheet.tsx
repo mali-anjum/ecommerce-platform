@@ -113,7 +113,7 @@ export function HeaderMobileNavSheet({
           <SheetHeader>
             <SheetTitle className="flex items-center">
               <Link href="/" onClick={closeSheet}>
-                <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-xl font-bold text-transparent">
+                <span className="bg-linear-to-r from-primary to-secondary bg-clip-text text-xl font-bold text-transparent">
                   FUTURESHOP
                 </span>
               </Link>

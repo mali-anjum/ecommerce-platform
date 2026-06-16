@@ -10,6 +10,7 @@ import { API_ROUTES } from "@/lib/routes/api";
 import type { Product } from "@/components/products/types/product";
 import { WishlistHeartButton } from "@/components/storefront/wishlist/atoms/WishlistHeartButton";
 import { buildWishlistSnapshot } from "@/components/storefront/wishlist/utils/wishlistSnapshot";
+import { sentryTracker } from "@/lib/monitoring";
 
 const TILE_IMAGE_FALLBACK =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='1600' viewBox='0 0 1200 1600'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%' stop-color='%230f172a'/><stop offset='100%' stop-color='%23334155'/></linearGradient></defs><rect width='1200' height='1600' fill='url(%23g)'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23e2e8f0' font-size='62' font-family='Arial, sans-serif'>Category Image</text></svg>";
@@ -86,7 +87,7 @@ const BannerSlide = memo(({ banner, isActive }: { banner: any; isActive: boolean
           }
         }}
       />
-      <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-background/50 to-transparent" />
+      <div className="absolute inset-0 bg-linear-to-r from-background/80 via-background/50 to-transparent" />
       <div className="absolute inset-0 cosmic-gradient opacity-20" />
     </div>
     <div className="relative h-full container mx-auto px-4 flex items-center">
@@ -97,7 +98,7 @@ const BannerSlide = memo(({ banner, isActive }: { banner: any; isActive: boolean
         <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold leading-tight text-foreground">
           BEST SELLING
           <br />
-          <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+          <span className="bg-linear-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
             E-COMMERCE WEBSITE
           </span>
         </h1>
@@ -132,7 +133,7 @@ const SlideIndicator = memo(({ count, current, onChange }: {
         className={`w-3 h-3 rounded-full transition-all duration-300 theme-transition ${
           current === index
             ? "bg-primary w-8 neon-border"
-            : "bg-primary/30 hover:bg-primary/50 backdrop-blur-sm"
+            : "bg-primary/30 hover:bg-primary/50 backdrop-blur-xs"
         }`}
         aria-label={`Go to slide ${index + 1}`}
       />
@@ -144,16 +145,16 @@ SlideIndicator.displayName = "SlideIndicator";
 
 const ProductCard = memo(({ product }: { product: Product }) => (
   <div className="group relative overflow-hidden rounded-xl glass-effect border-glass-border hover:border-primary/50 transition-all duration-500 theme-transition hover:scale-[1.02]">
-    <div className="aspect-[3/4] relative overflow-hidden">
+    <div className="aspect-3/4 relative overflow-hidden">
       <img
         src={product.images[0]}
         alt={product.name}
         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
         loading="lazy"
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      <div className="absolute inset-0 bg-linear-to-t from-background/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
     </div>
-    <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-background via-background/95 to-transparent transform translate-y-full group-hover:translate-y-0 transition-transform duration-500">
+    <div className="absolute bottom-0 left-0 right-0 p-6 bg-linear-to-t from-background via-background/95 to-transparent transform translate-y-full group-hover:translate-y-0 transition-transform duration-500">
       <div className="text-center space-y-3">
         <h3 className="text-lg font-semibold text-foreground">{product.name}</h3>
         <p className="text-primary font-bold text-xl">{formatPrice(product.price)}</p>
@@ -198,7 +199,7 @@ const GridItemCard = memo(({ item }: { item: (typeof gridItems)[0] }) => {
 
   return (
     <div className="group relative overflow-hidden rounded-xl glass-effect border-glass-border hover:neon-border transition-all duration-500 theme-transition">
-      <div className="aspect-[3/4] relative overflow-hidden">
+      <div className="aspect-3/4 relative overflow-hidden">
         <img
           src={imageSrc}
           alt={item.title}
@@ -211,7 +212,7 @@ const GridItemCard = memo(({ item }: { item: (typeof gridItems)[0] }) => {
             }
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-background via-background/20 to-transparent" />
         <div className="hologram-effect absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
       </div>
       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 theme-transition">
@@ -244,7 +245,7 @@ const SectionHeader = memo(({ title, subtitle }: { title: string; subtitle: stri
     <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
       {subtitle}
     </p>
-    <div className="w-24 h-1 bg-gradient-to-r from-primary via-secondary to-accent mx-auto rounded-full" />
+    <div className="w-24 h-1 bg-linear-to-r from-primary via-secondary to-accent mx-auto rounded-full" />
   </div>
 ));
 
@@ -280,8 +281,8 @@ function HomePage() {
           setCatalogFallback(list as Product[]);
         }
       })
-      .catch(() => {
-        /* empty DB or network */
+      .catch((error) => {
+        sentryTracker(error, { source: "home-page", route: "/home" });
       });
     return () => {
       cancelled = true;
@@ -346,7 +347,7 @@ function HomePage() {
       </section>
 
       {/* Featured Products Section */}
-      <section className="py-16 md:py-20 lg:py-24 bg-gradient-to-b from-background to-card/30">
+      <section className="py-16 md:py-20 lg:py-24 bg-linear-to-b from-background to-card/30">
         <div className="container mx-auto px-4 md:px-6">
           <SectionHeader
             title="Featured picks"
@@ -386,7 +387,7 @@ function HomePage() {
                 <input
                   type="email"
                   placeholder="Enter your email"
-                  className="flex-1 px-6 py-3 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-primary-light focus:border-transparent"
+                  className="flex-1 px-6 py-3 rounded-lg bg-white/10 backdrop-blur-xs border border-white/20 text-white placeholder-white/50 focus:outline-hidden focus:ring-2 focus:ring-primary-light focus:border-transparent"
                 />
                 <Button className="bg-white text-background hover:bg-white/90 px-8 py-3 rounded-lg font-semibold transition-all duration-300 hover:scale-105">
                   SUBSCRIBE

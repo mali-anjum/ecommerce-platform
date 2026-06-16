@@ -54,7 +54,7 @@ export function CartItem({
 
           {/* Product Image */}
           <div className="relative shrink-0">
-            <div className="h-20 w-20 rounded-md overflow-hidden bg-gradient-to-br from-primary/10 to-secondary/10 border border-border/60">
+            <div className="h-20 w-20 rounded-md overflow-hidden bg-linear-to-br from-primary/10 to-secondary/10 border border-border/60">
               <img
                 src={item.image ?? "/placeholder-product.png"}
                 alt={item.name}

@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { oauthService } from "../services/oauth";
+import { sentryTracker } from "../lib/monitoring";
 
 function startOAuthForProvider(
   providerSlug: string,
@@ -19,6 +20,7 @@ function startOAuthForProvider(
 
     oauthService.start(providerSlug, res);
   } catch (error) {
+    sentryTracker(error, { source: "oauthProviderController" });
     console.error(`${providerSlug} OAuth start error:`, error);
     res.status(500).json({
       success: false,
@@ -48,6 +50,7 @@ async function handleOAuthCallbackForProvider(
 
     await oauthService.handleCallback(providerSlug, req, res);
   } catch (error) {
+    sentryTracker(error, { source: "oauthProviderController" });
     console.error(`${providerSlug} OAuth callback error:`, error);
     res.status(500).json({
       success: false,

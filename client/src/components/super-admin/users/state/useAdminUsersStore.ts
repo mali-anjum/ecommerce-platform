@@ -10,6 +10,7 @@ import {
   AdminUsersStore,
 } from "@/components/super-admin/users/types/userAdminTypes";
 import { ApiResult } from "@/components/storefront/orders/types/orderTypes";
+import { sentryTracker } from "@/lib/monitoring";
 
 type ApiErrorPayload = { message?: string; error?: string };
 
@@ -45,6 +46,7 @@ export const useAdminUsersStore = create<AdminUsersStore>((set, get) => ({
         meta: payload?.meta ?? defaultMeta,
       });
     } catch (error: unknown) {
+    sentryTracker(error, { source: "useAdminUsersStore" });
       set({
         isLoading: false,
         error: getAxiosErrorMessage(error, "Failed to load users"),
@@ -68,6 +70,7 @@ export const useAdminUsersStore = create<AdminUsersStore>((set, get) => ({
       }
       return true;
     } catch (error: unknown) {
+    sentryTracker(error, { source: "useAdminUsersStore" });
       set({ error: getAxiosErrorMessage(error, "Failed to update user status") });
       return false;
     }
@@ -89,6 +92,7 @@ export const useAdminUsersStore = create<AdminUsersStore>((set, get) => ({
       }
       return true;
     } catch (error: unknown) {
+    sentryTracker(error, { source: "useAdminUsersStore" });
       set({ error: getAxiosErrorMessage(error, "Failed to update user role") });
       return false;
     }

@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { sentryTracker } from "@/lib/monitoring";
 
 type StructureSub = {
   id: string;
@@ -111,6 +112,7 @@ function SuperAdminCategoriesPage() {
 
       setDepartments(mergeStructureWithTree(structure, tree));
     } catch (e) {
+    sentryTracker(e, { source: "page" });
       const message = axios.isAxiosError(e)
         ? e.response?.data?.message ||
           e.response?.data?.error ||
@@ -142,13 +144,13 @@ function SuperAdminCategoriesPage() {
   }, [departments]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-card/30 p-4 md:p-6">
+    <div className="min-h-screen bg-linear-to-b from-background to-card/30 p-4 md:p-6">
       <div className="max-w-7xl mx-auto space-y-8">
         <header className="glass-effect rounded-2xl p-6 border border-glass-border">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <div className="flex items-start gap-4">
               <div className="relative shrink-0">
-                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                <div className="h-12 w-12 rounded-xl bg-linear-to-br from-primary to-secondary flex items-center justify-center">
                   <Layers className="h-6 w-6 text-white" />
                 </div>
                 <div className="absolute -inset-2 rounded-xl bg-primary/20 animate-pulse -z-10" />
@@ -180,7 +182,7 @@ function SuperAdminCategoriesPage() {
               </Button>
               <Button
                 asChild
-                className="bg-gradient-to-r from-primary to-secondary hover:opacity-90"
+                className="bg-linear-to-r from-primary to-secondary hover:opacity-90"
               >
                 <Link href="/super-admin/products/add">
                   <Package className="h-4 w-4 mr-2" />

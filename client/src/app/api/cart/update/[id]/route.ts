@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerBackendUrl } from "@/lib/api/getServerBackendUrl";
+import { sentryTracker } from "@/lib/monitoring";
 
 export async function PUT(
   request: NextRequest,
@@ -44,6 +45,7 @@ export async function PUT(
     return NextResponse.json(data, { status: backendRes.status });
   } catch (error) {
     console.error("Update cart proxy error:", error);
+    sentryTracker(error, { source: "api-route", route: "/api/cart/update/[id]", method: "PUT" });
     return NextResponse.json(
       { success: false, error: "Failed to update cart" },
       { status: 500 }

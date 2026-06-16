@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "../../../lib/prisma";
 import type { OAuthProfileInput } from "./types";
 import { buildOAuthUserPatch } from "./helpers/oauthUserPatch";
+import { sentryTracker } from "../../../lib/monitoring";
 
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
@@ -84,6 +85,7 @@ export class OAuthAccountService {
           }),
         ]);
       } catch (error) {
+    sentryTracker(error, { source: "OAuthAccountService" });
         // Race: another request linked this provider identity first.
         if (isUniqueConstraintError(error)) {
           const linked = await prisma.oAuthAccount.findUnique({
@@ -124,6 +126,7 @@ export class OAuthAccountService {
 
       return { userId: created.id, isNewUser: true };
     } catch (error) {
+    sentryTracker(error, { source: "OAuthAccountService" });
       // Handle races: user created by email, or oauth account created by provider id.
       if (isUniqueConstraintError(error)) {
         const account = await prisma.oAuthAccount.findUnique({
@@ -153,6 +156,7 @@ export class OAuthAccountService {
               },
             });
           } catch (linkError) {
+    sentryTracker(linkError, { source: "OAuthAccountService" });
             if (!isUniqueConstraintError(linkError)) throw linkError;
           }
 

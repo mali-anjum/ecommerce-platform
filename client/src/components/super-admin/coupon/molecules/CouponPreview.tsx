@@ -44,7 +44,7 @@ export function CouponPreview({
     <Card className="glass-effect border border-glass-border overflow-hidden">
       <div className="relative">
         {/* Coupon Cut Pattern */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-secondary to-accent" />
+        <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-primary via-secondary to-accent" />
         <div className="absolute -left-2 top-1/2 -translate-y-1/2 h-6 w-4 bg-background rounded-r-full" />
         <div className="absolute -right-2 top-1/2 -translate-y-1/2 h-6 w-4 bg-background rounded-l-full" />
         
@@ -68,7 +68,7 @@ export function CouponPreview({
 
           {/* Coupon Code Display */}
           <div className="text-center mb-6">
-            <div className="inline-block px-6 py-3 rounded-xl bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 border border-primary/20">
+            <div className="inline-block px-6 py-3 rounded-xl bg-linear-to-r from-primary/10 via-secondary/10 to-accent/10 border border-primary/20">
               <div className="flex items-center gap-2">
                 <Tag className="h-5 w-5 text-primary" />
                 <code className="text-2xl font-bold tracking-widest text-foreground font-mono">
@@ -81,7 +81,7 @@ export function CouponPreview({
 
           {/* Discount Display */}
           <div className="text-center mb-6">
-            <div className="inline-flex items-center justify-center px-6 py-2 rounded-full bg-gradient-to-r from-primary to-secondary">
+            <div className="inline-flex items-center justify-center px-6 py-2 rounded-full bg-linear-to-r from-primary to-secondary">
               <span className="text-4xl font-bold text-primary-foreground">
                 {discountPercent}%
               </span>

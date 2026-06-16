@@ -16,6 +16,7 @@ import { normalizeRefreshResponseTokenInfo } from "@/lib/auth/normalizeTokenInfo
 import { runWithRefreshLock } from "@/lib/auth/runWithRefreshLock";
 import { API_ROUTES } from "@/lib/routes/api";
 import { useWishlistStore } from "@/components/storefront/wishlist/state/useWishlistStore";
+import { sentryTracker } from "@/lib/monitoring";
 
 interface AuthStore {
   user: User | null;
@@ -214,6 +215,7 @@ export const useAuthStore = create<AuthStore>()(
             get().clearTokenExpiry();
           }
         } catch (error) {
+          sentryTracker(error, { source: "useAuthStore", route: "initialize" });
           console.error("AuthStore: Initialization error:", error);
           set({ user: null });
           get().clearTokenExpiry();
@@ -236,6 +238,7 @@ export const useAuthStore = create<AuthStore>()(
           set({ isLoading: false });
           return response.data.userId;
         } catch (error: unknown) {
+          sentryTracker(error, { source: "useAuthStore", route: "register" });
           const errorMessage = axios.isAxiosError(error)
             ? extractAuthErrorMessage(
                 error.response?.data,
@@ -267,6 +270,7 @@ export const useAuthStore = create<AuthStore>()(
           set({ isLoading: false });
           return true;
         } catch (error) {
+          sentryTracker(error, { source: "useAuthStore", route: "registerSeller" });
           const errorMessage = axios.isAxiosError(error)
             ? error.response?.data?.message ||
               error.response?.data?.error ||
@@ -308,6 +312,7 @@ export const useAuthStore = create<AuthStore>()(
             throw new Error(errorMessage);
           }
         } catch (error: unknown) {
+          sentryTracker(error, { source: "useAuthStore", route: "login" });
           const errorMessage = axios.isAxiosError(error)
             ? extractAuthErrorMessage(error.response?.data, "Login failed")
             : error instanceof Error
@@ -326,6 +331,7 @@ export const useAuthStore = create<AuthStore>()(
         try {
           await axiosInstance.post("/logout");
         } catch (error) {
+          sentryTracker(error, { source: "useAuthStore", route: "logout" });
           console.error("Logout error:", error);
         } finally {
           get().reset();
@@ -389,6 +395,7 @@ export const useAuthStore = create<AuthStore>()(
             get().updateTokenExpiry(res.data.tokenInfo);
           }
         } catch (error) {
+          sentryTracker(error, { source: "useAuthStore", route: "heartbeat" });
           if (process.env.NODE_ENV === "development") {
             console.warn("AuthStore: heartbeat failed", error);
           }
@@ -469,6 +476,7 @@ export const useAuthStore = create<AuthStore>()(
               return false;
             }
           } catch (error: any) {
+            sentryTracker(error, { source: "useAuthStore", route: "refreshAccessToken" });
             const duration = performance.now() - startTime;
 
             if (axios.isAxiosError(error)) {
@@ -504,6 +512,10 @@ export const useAuthStore = create<AuthStore>()(
                     );
                   }
                 } catch (sessionError) {
+                  sentryTracker(sessionError, {
+                    source: "useAuthStore",
+                    route: "refreshAccessToken/checkSession",
+                  });
                   authLogger.error(
                     "Session re-check failed after refresh 401; falling back to logout",
                     sessionError
@@ -577,6 +589,7 @@ export const useAuthStore = create<AuthStore>()(
           });
           return normalizedSession;
         } catch (error) {
+          sentryTracker(error, { source: "useAuthStore", route: "checkSession" });
           console.error("AuthStore: Session check failed:", error);
           const failedSession: Session = {
             success: false,
@@ -610,6 +623,7 @@ export const useAuthStore = create<AuthStore>()(
           }
           return null;
         } catch (error: any) {
+          sentryTracker(error, { source: "useAuthStore", route: "fetchMe" });
           if (error.response?.status === 401) {
             // Token might be expired, but don't logout - let interceptor handle it
           }
@@ -624,6 +638,7 @@ export const useAuthStore = create<AuthStore>()(
           await get().fetchMe();
           return true;
         } catch (error) {
+          sentryTracker(error, { source: "useAuthStore", route: "completeProfile" });
           console.error("AuthStore: completeProfile failed:", error);
           return false;
         }
@@ -688,6 +703,7 @@ axiosInstance.interceptors.response.use(
           useAuthStore.getState().logout();
         }
       } catch (refreshError) {
+        sentryTracker(refreshError, { source: "useAuthStore", route: "authInterceptor" });
         console.error("❌ Interceptor: Token refresh failed", refreshError);
         try {
           const session = await useAuthStore.getState().checkSession();
@@ -700,15 +716,11 @@ axiosInstance.interceptors.response.use(
       }
     }
 
-    // Log other errors
-    const responseStatus = error.response?.status;
-    if (typeof responseStatus === "number" && responseStatus >= 500) {
-      console.error(
-        "🚨 Server error:",
-        responseStatus,
-        error.config?.url ?? "unknown"
-      );
-    }
+    sentryTracker(error, {
+      source: "authApi",
+      route: error.config?.url,
+      method: error.config?.method?.toUpperCase(),
+    });
 
     return Promise.reject(error);
   }

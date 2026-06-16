@@ -1,235 +1,379 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
+@custom-variant dark (&:is([data-theme="dark"] *));
+
+/* Theme CSS variables (must be defined before @theme inline) */
 :root {
-  /* Base radius */
   --radius: 1rem;
-  
-  /* Light Theme - Futuristic Clean */
-  --background: 240 10% 4%;           /* Deep space black */
-  --foreground: 210 20% 98%;          /* Clean white with blue tint */
-  
-  --card: 240 10% 6%;                 /* Slightly lighter black */
+
+  --background: 240 10% 4%;
+  --foreground: 210 20% 98%;
+  --card: 240 10% 6%;
   --card-foreground: 210 20% 98%;
-  
-  /* Primary - Futuristic Blue/Purple */
-  --primary: 255 85% 65%;             /* Electric blue-purple */
+
+  --primary: 255 85% 65%;
   --primary-foreground: 0 0% 100%;
-  --primary-light: 255 100% 75%;      /* Brighter for hover */
-  --primary-dark: 255 70% 55%;        /* Darker for active */
-  --primary-glow: 255 100% 75% / 0.3; /* Glow effect */
-  
-  /* Secondary - Neon Cyan */
-  --secondary: 180 100% 50%;          /* Neon cyan */
+  --primary-light: 255 100% 75%;
+  --primary-dark: 255 70% 55%;
+  --primary-glow: 255 100% 75% / 0.3;
+
+  --secondary: 180 100% 50%;
   --secondary-foreground: 240 10% 4%;
   --secondary-light: 180 100% 65%;
   --secondary-dark: 180 100% 35%;
-  
-  /* Accent - Electric Pink */
-  --accent: 330 100% 65%;             /* Electric pink */
+
+  --accent: 330 100% 65%;
   --accent-foreground: 0 0% 100%;
   --accent-subtle: 330 100% 65% / 0.2;
-  
-  /* Utility */
+
   --muted: 240 5% 15%;
   --muted-foreground: 240 5% 65%;
-  
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 98%;
-  
   --success: 142 76% 45%;
   --warning: 38 92% 55%;
-  
   --border: 240 5% 20% / 0.5;
   --input: 240 5% 20% / 0.3;
   --ring: 255 85% 65%;
-  
-  /* Futuristic Effects */
   --glass: 240 10% 10% / 0.2;
   --glass-border: 255 85% 65% / 0.2;
   --glow: 255 100% 75% / 0.1;
   --hologram: 180 100% 50% / 0.1;
 }
 
-[data-theme="dark"] {
-  /* Dark Theme - Deep Futuristic */
-  --background: 240 15% 3%;           /* Deeper space black */
+[data-theme='dark'] {
+  --background: 240 15% 3%;
   --foreground: 210 20% 96%;
-  
   --card: 240 15% 5%;
   --card-foreground: 210 20% 96%;
-  
-  /* Primary - Deeper Blue */
   --primary: 255 75% 60%;
   --primary-foreground: 0 0% 100%;
   --primary-light: 255 85% 70%;
   --primary-dark: 255 65% 50%;
   --primary-glow: 255 85% 70% / 0.4;
-  
-  /* Secondary - Teal */
   --secondary: 170 100% 45%;
   --secondary-foreground: 240 15% 3%;
   --secondary-light: 170 100% 55%;
   --secondary-dark: 170 100% 35%;
-  
-  /* Accent - Magenta */
   --accent: 320 100% 60%;
   --accent-foreground: 0 0% 100%;
   --accent-subtle: 320 100% 60% / 0.25;
-  
-  /* Utility */
   --muted: 240 10% 12%;
   --muted-foreground: 240 5% 60%;
-  
   --destructive: 0 74% 55%;
   --destructive-foreground: 0 0% 98%;
-  
   --success: 142 71% 40%;
   --warning: 38 87% 50%;
-  
   --border: 240 10% 15% / 0.6;
   --input: 240 10% 15% / 0.4;
   --ring: 255 75% 60%;
-  
-  /* Futuristic Effects */
   --glass: 240 15% 8% / 0.3;
   --glass-border: 255 75% 60% / 0.25;
   --glow: 255 85% 70% / 0.15;
   --hologram: 170 100% 45% / 0.15;
 }
 
-[data-theme="light"] {
-  /* Light Theme - Futuristic Bright */
-  --background: 0 0% 99%;             /* Almost white */
+[data-theme='light'] {
+  --background: 0 0% 99%;
   --foreground: 240 10% 4%;
-  
   --card: 0 0% 100%;
   --card-foreground: 240 10% 4%;
-  
-  /* Primary - Bright Blue */
   --primary: 230 100% 60%;
   --primary-foreground: 0 0% 100%;
   --primary-light: 230 100% 70%;
   --primary-dark: 230 100% 50%;
   --primary-glow: 230 100% 70% / 0.3;
-  
-  /* Secondary - Bright Cyan */
   --secondary: 190 100% 50%;
   --secondary-foreground: 240 10% 4%;
   --secondary-light: 190 100% 65%;
   --secondary-dark: 190 100% 35%;
-  
-  /* Accent - Bright Pink */
   --accent: 340 100% 65%;
   --accent-foreground: 0 0% 100%;
   --accent-subtle: 340 100% 65% / 0.15;
-  
-  /* Utility */
   --muted: 240 5% 95%;
   --muted-foreground: 240 4% 46%;
-  
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 98%;
-  
   --success: 142 76% 45%;
   --warning: 38 92% 55%;
-  
   --border: 240 5% 90% / 0.8;
   --input: 240 5% 90% / 0.6;
   --ring: 230 100% 60%;
-  
-  /* Futuristic Effects */
   --glass: 0 0% 100% / 0.6;
   --glass-border: 230 100% 60% / 0.2;
   --glow: 230 100% 70% / 0.1;
   --hologram: 190 100% 50% / 0.1;
 }
 
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-primary-light: hsl(var(--primary-light));
+  --color-primary-dark: hsl(var(--primary-dark));
+  --color-primary-glow: hsl(var(--primary-glow));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-secondary-light: hsl(var(--secondary-light));
+  --color-secondary-dark: hsl(var(--secondary-dark));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-accent-subtle: hsl(var(--accent-subtle));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-success: hsl(var(--success));
+  --color-warning: hsl(var(--warning));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-glass: hsl(var(--glass));
+  --color-glass-border: hsl(var(--glass-border));
+  --color-glow: hsl(var(--glow));
+  --color-hologram: hsl(var(--hologram));
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  --animate-glow-pulse: glow-pulse 4s ease-in-out infinite;
+  --animate-hologram-shimmer: hologram-shimmer 3s ease-in-out infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-theme-icon-in: theme-icon-in 0.4s cubic-bezier(0.34, 1.4, 0.64, 1)
+    forwards;
+  --animate-theme-glow-in: theme-glow-in 0.35s ease-out forwards;
+
+  --ease-theme-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+
+  --backdrop-blur-glass: 12px;
+
+  @keyframes glow-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.7;
+    }
+  }
+  @keyframes hologram-shimmer {
+    0%,
+    100% {
+      background-position: 0% 50%;
+      opacity: 0.9;
+    }
+    50% {
+      background-position: 100% 50%;
+      opacity: 1;
+    }
+  }
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-20px);
+    }
+  }
+  @keyframes theme-icon-in {
+    0% {
+      opacity: 0;
+      transform: scale(0.75) rotate(-20deg);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) rotate(0deg);
+    }
+  }
+  @keyframes theme-glow-in {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-border, currentcolor);
+  }
+}
+
+@utility glass-effect {
+  backdrop-filter: blur(var(--backdrop-blur-glass));
+  border-color: var(--color-glass-border);
+  background-color: var(--color-glass);
+  box-shadow:
+    0 8px 32px var(--glow),
+    inset 0 1px 0 var(--glass-border);
+}
+
+@utility hologram-effect {
+  /* Hologram effect */
+  background: linear-gradient(
+    135deg,
+    transparent,
+    var(--hologram),
+    transparent
+  );
+  background-size: 200% 200%;
+  background: linear-gradient(
+    135deg,
+    transparent 25%,
+    hsl(var(--primary) / 0.1) 50%,
+    transparent 75%
+  );
+  background-size: 200% 200%;
+  animation: hologram-shimmer 4s linear infinite;
+}
+
+@utility text-glow {
+  /* Glow text */
+  text-shadow: 0 0 20px var(--primary-glow);
+}
+
+@utility neon-border {
+  /* Neon border */
+  box-shadow:
+    0 0 10px var(--primary),
+    inset 0 0 10px var(--primary-glow);
+}
+
+@utility futuristic-gradient {
+  /* Futuristic gradient */
+  background: linear-gradient(
+    135deg,
+    hsl(var(--primary)),
+    hsl(var(--secondary)),
+    hsl(var(--accent))
+  );
+}
+
+@utility theme-transition {
+  transition-property: all;
+  transition-duration: 300ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@utility animate-spin-slow {
+  animation: spin 12s linear infinite;
+}
+
+@utility animate-orbit {
+  /* Orbit animation */
+  animation: orbit 4s linear infinite;
+
+  /* Gradient border animation */
+
+  /* Matrix-like text animation */
+}
+
+@utility animate-shimmer {
+  /* Shimmer animation for progress bars */
+  background-size: 200% auto;
+  animation: shimmer 2s linear infinite;
+
+  /* Gradient border animation */
+
+  /* Matrix-like text animation */
+}
+
+@utility animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@utility animate-radar-scan {
+  /* Radar scan animation */
+  animation: radar-scan 8s linear infinite;
+}
+
+@utility animate-glitch {
+  /* Glitch effect for error state */
+  animation: glitch 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@utility animate-twinkle {
+  /* Particle twinkle */
+  animation: twinkle 2s ease-in-out infinite;
+}
+
+@utility animate-digital-pulse {
+  /* Digital pulse */
+  animation: digital-pulse 3s ease-in-out infinite;
+}
+@utility error-grid {
+  background-image:
+    linear-gradient(to right, hsl(var(--border)) 1px, transparent 1px),
+    linear-gradient(to bottom, hsl(var(--border)) 1px, transparent 1px);
+  background-size: 50px 50px;
+  opacity: 0.1;
+}
+@utility cosmic-gradient {
+  background: linear-gradient(
+    45deg,
+    hsl(var(--primary)),
+    hsl(var(--secondary)),
+    hsl(var(--accent)),
+    hsl(var(--primary))
+  );
+  background-size: 400% 400%;
+  animation: gradient-shift 15s ease infinite;
+}
+
 @layer base {
   * {
-    @apply border-border;
+    border-color: var(--color-border);
   }
-  
+
   body {
-    @apply bg-background text-foreground;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
     font-feature-settings: "rlig" 1, "calt" 1;
   }
-  
-  /* Custom scrollbar */
+
   ::-webkit-scrollbar {
     width: 10px;
   }
-  
+
   ::-webkit-scrollbar-track {
-    @apply bg-muted;
+    background-color: var(--color-muted);
   }
-  
+
   ::-webkit-scrollbar-thumb {
-    @apply bg-primary/50 rounded-full;
+    background-color: color-mix(in srgb, var(--color-primary) 50%, transparent);
+    border-radius: 9999px;
   }
-  
+
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-primary;
+    background-color: var(--color-primary);
   }
 }
 
 @layer utilities {
-  /* Glass morphism effect */
-  .glass-effect {
-    @apply backdrop-blur-glass border-glass-border bg-glass;
-    box-shadow: 
-      0 8px 32px var(--glow),
-      inset 0 1px 0 var(--glass-border);
-  }
-  
-  /* Hologram effect */
-  .hologram-effect {
-    background: linear-gradient(
-      135deg,
-      transparent,
-      var(--hologram),
-      transparent
-    );
-    @apply animate-hologram-shimmer;
-    background-size: 200% 200%;
-  }
-  
-  /* Glow text */
-  .text-glow {
-    text-shadow: 0 0 20px var(--primary-glow);
-  }
-  
-  /* Neon border */
-  .neon-border {
-    box-shadow: 
-      0 0 10px var(--primary),
-      inset 0 0 10px var(--primary-glow);
-  }
-  
-  /* Futuristic gradient */
-  .futuristic-gradient {
-    background: linear-gradient(
-      135deg,
-      hsl(var(--primary)),
-      hsl(var(--secondary)),
-      hsl(var(--accent))
-    );
-  }
-  
-  /* Smooth transitions */
-  .theme-transition {
-    @apply transition-all duration-300 ease-in-out;
-  }
-}
-
-@layer utilities {
-  /* Slow spin animation */
-  .animate-spin-slow {
-    animation: spin 8s linear infinite;
-  }
-  
-  /* Orbit animation */
   @keyframes orbit {
     0% {
       transform: rotate(0deg) translateX(60px) rotate(0deg);
@@ -238,12 +382,6 @@
       transform: rotate(360deg) translateX(60px) rotate(-360deg);
     }
   }
-  
-  .animate-orbit {
-    animation: orbit 4s linear infinite;
-  }
-  
-  /* Shimmer animation for progress bars */
   @keyframes shimmer {
     0% {
       background-position: -200% center;
@@ -252,13 +390,6 @@
       background-position: 200% center;
     }
   }
-  
-  .animate-shimmer {
-    background-size: 200% auto;
-    animation: shimmer 2s linear infinite;
-  }
-  
-  /* Pulse with different colors */
   @keyframes pulse-primary {
     0%, 100% {
       opacity: 1;
@@ -285,8 +416,6 @@
       opacity: 0.8;
     }
   }
-  
-  /* Floating animation */
   @keyframes float {
     0%, 100% {
       transform: translateY(0px);
@@ -295,12 +424,6 @@
       transform: translateY(-20px);
     }
   }
-  
-  .animate-float {
-    animation: float 6s ease-in-out infinite;
-  }
-  
-  /* Gradient border animation */
   @keyframes border-gradient {
     0% {
       background-position: 0% 50%;
@@ -312,8 +435,6 @@
       background-position: 0% 50%;
     }
   }
-  
-  /* Matrix-like text animation */
   @keyframes matrix-fall {
     0% {
       transform: translateY(-100%);
@@ -337,30 +458,20 @@
   }
   
   .loading-scrollbar::-webkit-scrollbar-track {
-    @apply bg-card;
+    background-color: var(--color-card);
   }
-  
+
   .loading-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-gradient-to-b from-primary to-secondary rounded-full;
+    border-radius: 9999px;
+    background: linear-gradient(
+      to bottom,
+      var(--color-primary),
+      var(--color-secondary)
+    );
   }
 }
 
 @layer utilities {
-  /* Float animation */
-  @keyframes float {
-    0%, 100% {
-      transform: translateY(0) rotate(0deg);
-    }
-    50% {
-      transform: translateY(-20px) rotate(5deg);
-    }
-  }
-  
-  .animate-float {
-    animation: float 6s ease-in-out infinite;
-  }
-  
-  /* Radar scan animation */
   @keyframes radar-scan {
     0% {
       transform: translateY(-100%);
@@ -374,17 +485,6 @@
       opacity: 0;
     }
   }
-  
-  .animate-radar-scan {
-    animation: radar-scan 8s linear infinite;
-  }
-  
-  /* Slow spin animation */
-  .animate-spin-slow {
-    animation: spin 12s linear infinite;
-  }
-  
-  /* Glitch effect for error state */
   @keyframes glitch {
     0% {
       transform: translate(0);
@@ -405,12 +505,6 @@
       transform: translate(0);
     }
   }
-  
-  .animate-glitch {
-    animation: glitch 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
-  }
-  
-  /* Particle twinkle */
   @keyframes twinkle {
     0%, 100% {
       opacity: 0.2;
@@ -421,12 +515,6 @@
       transform: scale(1.2);
     }
   }
-  
-  .animate-twinkle {
-    animation: twinkle 2s ease-in-out infinite;
-  }
-  
-  /* Digital pulse */
   @keyframes digital-pulse {
     0%, 100% {
       opacity: 0.3;
@@ -435,33 +523,10 @@
       opacity: 1;
     }
   }
-  
-  .animate-digital-pulse {
-    animation: digital-pulse 3s ease-in-out infinite;
-  }
 }
 
 /* 404-specific styles */
 @layer components {
-  .error-grid {
-    background-image: 
-      linear-gradient(to right, hsl(var(--border)) 1px, transparent 1px),
-      linear-gradient(to bottom, hsl(var(--border)) 1px, transparent 1px);
-    background-size: 50px 50px;
-    opacity: 0.1;
-  }
-  
-  .cosmic-gradient {
-    background: linear-gradient(
-      45deg,
-      hsl(var(--primary)),
-      hsl(var(--secondary)),
-      hsl(var(--accent)),
-      hsl(var(--primary))
-    );
-    background-size: 400% 400%;
-    animation: gradient-shift 15s ease infinite;
-  }
   
   @keyframes gradient-shift {
     0% {
@@ -473,17 +538,6 @@
     100% {
       background-position: 0% 50%;
     }
-  }
-  
-  .hologram-effect {
-    background: linear-gradient(
-      135deg,
-      transparent 25%,
-      hsl(var(--primary)/0.1) 50%,
-      transparent 75%
-    );
-    background-size: 200% 200%;
-    animation: hologram-shimmer 4s linear infinite;
   }
   
   @keyframes hologram-shimmer {

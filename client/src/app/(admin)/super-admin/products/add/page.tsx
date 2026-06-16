@@ -20,7 +20,7 @@ export const dynamic = 'force-dynamic';
 // 1. Futuristic Loading Component
 function FuturisticLoader() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-card/50 to-background">
+    <div className="min-h-screen bg-linear-to-br from-background via-card/50 to-background">
       {/* Animated background */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-1/4 left-1/4 h-64 w-64 rounded-full bg-primary/5 animate-pulse" />
@@ -31,7 +31,7 @@ function FuturisticLoader() {
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-8">
         {/* Logo/Icon with animation */}
         <div className="relative mb-8">
-          <div className="h-24 w-24 rounded-2xl bg-gradient-to-br from-primary via-secondary to-accent flex items-center justify-center animate-spin-slow">
+          <div className="h-24 w-24 rounded-2xl bg-linear-to-br from-primary via-secondary to-accent flex items-center justify-center animate-spin-slow">
             <div className="h-20 w-20 rounded-xl bg-background flex items-center justify-center">
               <Package className="h-10 w-10 text-primary" />
             </div>
@@ -56,7 +56,7 @@ function FuturisticLoader() {
 
         {/* Loading text with gradient */}
         <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold mb-3 bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold mb-3 bg-linear-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
             Initializing Product Matrix
           </h1>
           <p className="text-muted-foreground max-w-md">
@@ -74,7 +74,7 @@ function FuturisticLoader() {
           {/* Main progress bar */}
           <div className="h-2 bg-card rounded-full overflow-hidden">
             <div 
-              className="h-full bg-gradient-to-r from-primary via-secondary to-accent animate-shimmer"
+              className="h-full bg-linear-to-r from-primary via-secondary to-accent animate-shimmer"
               style={{ width: '45%' }}
             />
           </div>

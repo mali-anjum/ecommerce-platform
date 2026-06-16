@@ -8,6 +8,7 @@ import {
   NotFoundError,
 } from "../utils/ApiError";
 import { AuthenticatedRequest } from "../types/express";
+import { sentryTracker } from "../lib/monitoring";
 
 const errorLogger = createLogger("ERROR_HANDLER");
 
@@ -88,6 +89,18 @@ export const errorHandler = (
       processedError = new InternalServerError(message);
     }
   }
+
+  sentryTracker(error, {
+    source: "errorHandler",
+    route: req.path,
+    method: req.method,
+    userId: authReq.user?.userId ?? null,
+    extra: {
+      processedStatus: processedError.statusCode,
+      processedName: processedError.name,
+      isOperational: processedError.isOperational,
+    },
+  });
 
   // compose response payload
   const payload: any = {

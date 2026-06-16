@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useToast } from '@/components/ui/hooks/use-toast';
+import { sentryTracker } from "@/lib/monitoring";
 
 export const useCheckoutData = () => {
   const { toast } = useToast();
@@ -22,6 +23,7 @@ export const useCheckoutData = () => {
       await Promise.all([fetchAddresses(), fetchCart(), fetchCoupons()]);
       hasFetched.current = true; // Mark as fetched
     } catch (error) {
+    sentryTracker(error, { source: "useCheckoutData" });
       if (isMounted.current) {
         toast({
           title: "Error",
