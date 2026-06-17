@@ -473,6 +473,7 @@ enum AnalyticsEventType {
   PRODUCT_VIEW
   CART_ADD
   ORDER_COMPLETE
+  SESSION_PING
 }
 
 /// Funnel and behavioral event log for analytics.
