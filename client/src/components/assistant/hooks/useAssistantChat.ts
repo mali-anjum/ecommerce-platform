@@ -15,8 +15,17 @@ import { getAnalyticsSessionId } from "@/lib/analytics/sessionId";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { sentryTracker } from "@/lib/monitoring";
 
-const WELCOME_MESSAGE =
-  "Hi! I can help with products, shipping, returns, and FAQs. What would you like to know?";
+const WELCOME_MESSAGE = [
+  "Customer Support",
+  "",
+  "I pull answers from your live orders, shipping tracking, FAQs, and store policies — not generic chat replies.",
+  "",
+  "Try:",
+  "• “Where is my order?” (sign in, or send order ID + checkout email)",
+  "• “What is your return policy?”",
+  "• “When will my order arrive?”",
+  "• “Talk to agent” for a human",
+].join("\n");
 
 export function createAssistantMessage(
   role: AssistantMessage["role"],

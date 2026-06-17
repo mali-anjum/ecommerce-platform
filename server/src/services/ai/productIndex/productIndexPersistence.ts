@@ -12,7 +12,7 @@ export async function loadPersistedProductIndex(): Promise<AiProductIndexEntry[]
     .map((row) => row.payload as AiProductIndexEntry)
     .filter((entry) => entry && typeof entry.id === "string");
 }
-
+// TODO: For performance check this whether for loop is better or Promise.all
 export async function persistProductIndexEntries(
   entries: AiProductIndexEntry[],
 ): Promise<void> {

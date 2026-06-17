@@ -18,6 +18,10 @@ export const SERVER_FLAG_DEFAULTS = {
   "ai.orderSupport": true,
   "ai.leadCapture": true,
   "ai.humanHandoff": true,
+  "ai.salesAgent": true,
+  "ai.reviewAnalyzer": true,
+  "ai.seoGenerator": true,
+  "ai.smartSearch": true,
 
   // ── New module template (copy, uncomment, sync JSON) ──────────────────────
   // "yourModule.enabled": true,

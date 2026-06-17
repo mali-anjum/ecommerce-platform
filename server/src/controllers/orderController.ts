@@ -18,6 +18,8 @@ import {
 import { validateCheckoutSelection } from "../services/cart/validateCheckoutSelection";
 import {
   applyPurchaseFulfillment,
+  buildFulfillmentAnalyticsContext,
+  parsePurchasedCartItemIds,
   fetchSellerOrderLinesPage,
   fetchAdminTransactionsPage,
   findOrderForPublicTracking,
@@ -34,7 +36,8 @@ import { sentryTracker } from "../lib/monitoring";
 
 const createPaymentOrder = asyncHandler(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    const { cartItemIds, paymentMethod, addressId, couponId } = req.body;
+    const { cartItemIds, paymentMethod, addressId, couponId, sessionId, visitorId } =
+      req.body;
     const userId = requireUserId(req);
 
     // Validate required fields
@@ -178,7 +181,15 @@ const createPaymentOrder = asyncHandler(
           clientSecret: paymentResult.clientSecret,
           amount: total,
           currency: "USD",
-          metadata: { cartItemIds: selectedCartItemIds },
+          metadata: {
+            cartItemIds: selectedCartItemIds,
+            ...(typeof sessionId === "string" && sessionId.trim()
+              ? { sessionId: sessionId.trim() }
+              : {}),
+            ...(typeof visitorId === "string" && visitorId.trim()
+              ? { visitorId: visitorId.trim() }
+              : {}),
+          },
         },
       });
 
@@ -339,19 +350,18 @@ const capturePayment = asyncHandler(
         },
       });
 
-      const paymentMetadata = paymentRow.metadata as
-        | { cartItemIds?: string[] }
-        | null
-        | undefined;
-      const purchasedCartItemIds = Array.isArray(paymentMetadata?.cartItemIds)
-        ? paymentMetadata.cartItemIds
-        : undefined;
+      const purchasedCartItemIds = parsePurchasedCartItemIds(paymentRow.metadata);
+      const analyticsContext = buildFulfillmentAnalyticsContext(
+        { id: internalOrderId, total: existingOrder.total },
+        paymentRow.metadata,
+      );
 
       // 4. Update stock and remove only purchased cart lines
       await applyPurchaseFulfillment(
         userId,
         existingOrder.items,
-        purchasedCartItemIds
+        purchasedCartItemIds,
+        analyticsContext,
       );
 
       // 5. Apply coupon usage if exists

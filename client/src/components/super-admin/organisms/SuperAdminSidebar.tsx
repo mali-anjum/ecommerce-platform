@@ -34,6 +34,7 @@ import {
   Zap as ZapIcon,
   TrendingUp,
   Bot,
+  MessageSquareWarning,
   HelpCircle,
   BookOpen,
   UserPlus,
@@ -329,6 +330,16 @@ const menuSections: MenuSectionConfig[] = [
         name: "Knowledge",
         icon: BookOpen,
         href: "/super-admin/ai/knowledge",
+      },
+      {
+        name: "Sales agent",
+        icon: Sparkles,
+        href: "/super-admin/ai/sales-agent",
+      },
+      {
+        name: "Review analyzer",
+        icon: MessageSquareWarning,
+        href: "/super-admin/ai/review-analyzer",
       },
       {
         name: "Analytics",

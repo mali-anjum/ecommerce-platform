@@ -138,10 +138,12 @@ function buildWhereClause(
 export async function getProductRecommendations(
   query: string,
   filters?: RecommendationFilters,
+  options?: { limit?: number },
 ): Promise<ProductRecommendationResult> {
   const resolvedFilters = filters ?? parseRecommendationFilters(query);
+  const limit = options?.limit ?? MAX_RECOMMENDATIONS;
 
-  const indexed = queryRecommendationsFromIndex(query, resolvedFilters);
+  const indexed = queryRecommendationsFromIndex(query, resolvedFilters, limit);
   if (indexed) {
     return {
       intent: "product_recommendation",
@@ -156,7 +158,7 @@ export async function getProductRecommendations(
   let products = await prisma.product.findMany({
     where,
     orderBy,
-    take: MAX_RECOMMENDATIONS,
+    take: limit,
     select: productSelect,
   });
 
@@ -176,7 +178,7 @@ export async function getProductRecommendations(
     products = await prisma.product.findMany({
       where: relaxedWhere,
       orderBy,
-      take: MAX_RECOMMENDATIONS,
+      take: limit,
       select: productSelect,
     });
   }
@@ -190,7 +192,7 @@ export async function getProductRecommendations(
         price: { lte: resolvedFilters.maxPrice },
       },
       orderBy: buildOrderBy("price_asc"),
-      take: MAX_RECOMMENDATIONS,
+      take: limit,
       select: productSelect,
     });
   }
@@ -212,7 +214,7 @@ export async function getProductRecommendations(
       }
       return true;
     })
-    .slice(0, MAX_RECOMMENDATIONS);
+    .slice(0, limit);
 
   if (resolvedFilters.sortBy === "price_asc" || resolvedFilters.preferDiscount) {
     recommended.sort((a, b) => a.effectivePrice - b.effectivePrice);

@@ -6,16 +6,19 @@ import { ProductFormHeader } from "@/components/super-admin/product-form/molecul
 import { ProductFormLoadingOverlay } from "@/components/super-admin/product-form/atoms/ProductFormLoadingOverlay";
 import { ProductFormDetailsSection } from "@/components/super-admin/product-form/organisms/ProductFormDetailsSection";
 import { ProductFormVariantsPricingSection } from "@/components/super-admin/product-form/organisms/ProductFormVariantsPricingSection";
+import { ProductFormSeoSection } from "@/components/super-admin/product-form/organisms/ProductFormSeoSection";
+import { ProductFormWorkflowSteps } from "@/components/super-admin/product-form/molecules/ProductFormWorkflowSteps";
 import {
   type ProductFormValues,
   emptyProductFormValues,
   productFormSchema,
 } from "@/components/schemas/productFormSchema";
 import {
-  // (keep Button import for file upload + header)
   Button,
 } from "@/components/ui/button";
 import { useToast } from "@/components/ui/hooks/use-toast";
+import { isFeatureEnabled } from "@/lib/feature-flags";
+import type { SeoContentResult } from "@/lib/seo-generator/types";
 import { useProductCatalog } from "@/components/products/hooks/useProductCatalog";
 import {
   inferSubcategoryFromTitle,
@@ -24,7 +27,7 @@ import { useProductStore } from "@/components/products/state/useProductStore";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { sentryTracker } from "@/lib/monitoring";
 
@@ -137,6 +140,11 @@ function ProductForm({
           name: product.name,
           brand: product.brand,
           description: product.description ?? "",
+          seoTitle: product.seoTitle ?? "",
+          metaDescription: product.metaDescription ?? "",
+          seoKeywords: Array.isArray(product.seoKeywords)
+            ? product.seoKeywords.join(", ")
+            : "",
           category: product.category,
           gender: product.gender ?? "",
           price: product.price.toString(),
@@ -214,6 +222,22 @@ function ProductForm({
 
   const sizesValue = watch("sizes");
   const colorsValue = watch("colors");
+  const brandValue = watch("brand");
+  const categoryValue = watch("category");
+  const aiSeoEnabled = isFeatureEnabled("ai.seoGenerator");
+
+  const handleApplyGeneratedContent = useCallback(
+    (content: SeoContentResult) => {
+      setValue("description", content.productDescription, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+      setValue("seoTitle", content.title, { shouldDirty: true });
+      setValue("metaDescription", content.metaDescription, { shouldDirty: true });
+      setValue("seoKeywords", content.keywords.join(", "), { shouldDirty: true });
+    },
+    [setValue],
+  );
 
   const toggleSize = (size: string) => {
     const prev = sizesValue ?? [];
@@ -247,6 +271,15 @@ function ProductForm({
     formData.append("name", values.name);
     formData.append("brand", values.brand);
     formData.append("description", values.description);
+    if (values.seoTitle?.trim()) {
+      formData.append("seoTitle", values.seoTitle.trim());
+    }
+    if (values.metaDescription?.trim()) {
+      formData.append("metaDescription", values.metaDescription.trim());
+    }
+    if (values.seoKeywords?.trim()) {
+      formData.append("seoKeywords", values.seoKeywords.trim());
+    }
     formData.append("category", values.category);
     formData.append("gender", values.gender);
     formData.append("price", values.price);
@@ -345,6 +378,9 @@ function ProductForm({
             noValidate
           >
             <ProductFormLoadingOverlay show={isEditHydrating} />
+
+            <ProductFormWorkflowSteps showSeoStep />
+
             <ProductFormFileUpload
               selectedFiles={selectedFiles}
               onFilesAdded={(incoming) =>
@@ -375,9 +411,6 @@ function ProductForm({
               />
 
               <ProductFormVariantsPricingSection
-                isEditMode={isEditMode}
-                isSubmitting={isSubmitting}
-                errorMessage={error}
                 selectedSizes={sizesValue ?? []}
                 selectedColors={colorsValue ?? []}
                 onToggleSize={toggleSize}
@@ -386,6 +419,46 @@ function ProductForm({
                 registerPrice={register("price")}
                 registerStock={register("stock")}
               />
+            </div>
+
+            <ProductFormSeoSection
+              errors={errors}
+              registerSeoTitle={register("seoTitle")}
+              registerMetaDescription={register("metaDescription")}
+              registerSeoKeywords={register("seoKeywords")}
+              productName={nameValue}
+              brand={brandValue}
+              category={categoryValue}
+              onApplyGeneratedContent={handleApplyGeneratedContent}
+            />
+
+            <div className="rounded-xl border border-border/60 bg-card/50 p-5 space-y-4">
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full py-6 text-lg font-semibold rounded-xl"
+              >
+                {isSubmitting ? (
+                  <span className="flex items-center gap-2">
+                    <span className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                    {isEditMode ? "Updating product…" : "Creating product…"}
+                  </span>
+                ) : (
+                  isEditMode ? "Save changes" : "Create product"
+                )}
+              </Button>
+
+              {error ? (
+                <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                  <p className="text-destructive text-sm">{error}</p>
+                </div>
+              ) : null}
+
+              <p className="text-xs text-center text-muted-foreground">
+                {aiSeoEnabled
+                  ? "Review all three steps above, then save once."
+                  : "Review product details and pricing, then save."}
+              </p>
             </div>
           </form>
         </div>

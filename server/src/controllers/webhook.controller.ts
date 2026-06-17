@@ -3,7 +3,11 @@ import type { Prisma } from "@prisma/client";
 import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { PaymentFactory } from "../services/payment/payment.factory";
-import { applyPurchaseFulfillment } from "../services/order/fulfillment";
+import {
+  applyPurchaseFulfillment,
+  buildFulfillmentAnalyticsContext,
+  parsePurchasedCartItemIds,
+} from "../services/order/fulfillment";
 import { sentryTracker } from "../lib/monitoring";
 
 const orderIncludeWithItems: Prisma.OrderInclude = {
@@ -270,7 +274,12 @@ async function handlePayPalPaymentCaptured(resource: any) {
     },
   });
 
-  await applyPurchaseFulfillment(order.userId, order.items);
+  await applyPurchaseFulfillment(
+    order.userId,
+    order.items,
+    parsePurchasedCartItemIds(payment.metadata),
+    buildFulfillmentAnalyticsContext(order, payment.metadata),
+  );
 
   if (order.couponId) {
     await prisma.coupon.update({
@@ -336,7 +345,12 @@ async function handleStripePaymentSuccess(session: any) {
     },
   });
 
-  await applyPurchaseFulfillment(order.userId, order.items);
+  await applyPurchaseFulfillment(
+    order.userId,
+    order.items,
+    parsePurchasedCartItemIds(payment.metadata),
+    buildFulfillmentAnalyticsContext(order, payment.metadata),
+  );
 
   if (order.couponId) {
     await prisma.coupon.update({

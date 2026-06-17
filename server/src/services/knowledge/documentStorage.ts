@@ -14,12 +14,12 @@ async function saveLocalFile(
   originalName: string,
 ): Promise<string> {
   await mkdir(LOCAL_DIR, { recursive: true });
-  const safeName = `${randomUUID()}-${sanitizeFilename(originalName)}`;
+  const safeName = `${randomUUID()}-${sanitizeFilename(originalName)}`; // TODO: What the filename would be?
   const filePath = path.join(LOCAL_DIR, safeName);
   await writeFile(filePath, buffer);
   return `/uploads/knowledge-base/${safeName}`;
 }
-
+// TODO: Is this duplicate as we have the upload for the product
 function uploadToCloudinary(
   buffer: Buffer,
   originalName: string,
@@ -42,7 +42,7 @@ function uploadToCloudinary(
     uploadStream.end(buffer);
   });
 }
-
+// TODO: why local file is saved locally? Is this can happen in production and is this okay? 
 export async function persistDocumentFile(
   buffer: Buffer,
   originalName: string,

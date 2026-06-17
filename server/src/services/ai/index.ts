@@ -18,6 +18,8 @@ export {
 export type { ClassifiedIntent } from "./types";
 
 export { getProductRecommendations } from "./recommendations/ProductRecommendationService";
+export { getSetupRecommendations } from "./recommendations/SetupRecommendationService";
+export type { SetupRecommendationResult } from "./types";
 export { runOrderSupportChat } from "./orders/OrderSupportService";
 export { runLeadCaptureChat } from "./leads/LeadCaptureService";
 
@@ -56,6 +58,19 @@ export {
   persistSessionTurn,
   mergeSessionHistory,
 } from "./sessionMemory/SessionMemoryService";
+
+export {
+  scheduleSalesAgentEvaluation,
+  evaluateSalesAgentOffer,
+  getSalesAgentContext,
+  captureGuestEmailForSales,
+  getPendingOffersForSession,
+  fetchSalesAgentSummary,
+  fetchSalesAgentAdminDashboard,
+  startSalesEmailQueueProcessor,
+  scheduleSalesOfferConversion,
+} from "./sales";
+export type { SalesOfferPayload, SalesAgentContext } from "./sales";
 
 export * from "./productIndex";
 export type * from "./types";

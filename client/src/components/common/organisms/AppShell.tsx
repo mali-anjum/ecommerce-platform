@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import Header from "@/components/layout/site-header";
 import { ShoppingAssistantWidget } from "@/components/assistant/ShoppingAssistantWidget";
+import { SalesAgentShell } from "@/components/sales-agent/SalesAgentShell";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { useEffect, useState } from "react";
 
@@ -123,6 +124,8 @@ function CommonLayout({ children }: { children: React.ReactNode }) {
       {showHeader && isFeatureEnabled("ai.assistant.widget") && (
         <ShoppingAssistantWidget />
       )}
+
+      {showHeader && isFeatureEnabled("ai.salesAgent") && <SalesAgentShell />}
 
       {/* Floating Navigation Helper */}
       {showHeader && (

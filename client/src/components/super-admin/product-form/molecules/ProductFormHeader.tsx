@@ -25,8 +25,8 @@ export function ProductFormHeader({
           </h1>
           <p className="text-muted-foreground mt-2">
             {isEditMode
-              ? "Update your futuristic product details"
-              : "Add a new product to your futuristic collection"}
+              ? "Update catalog, inventory, and SEO in one place."
+              : "Add catalog details, pricing, and optional SEO — then save once."}
           </p>
         </div>
 

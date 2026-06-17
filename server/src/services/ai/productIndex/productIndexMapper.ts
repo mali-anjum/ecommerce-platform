@@ -1,6 +1,7 @@
 import type { Product } from "@prisma/client";
 import type { AiProductIndexEntry } from "./types";
 
+// TODO: Weired formula for calculating price
 export function computeEffectivePrice(
   price: number,
   discountPercent: number | null,

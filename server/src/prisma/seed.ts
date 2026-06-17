@@ -563,6 +563,50 @@ async function seedKnowledgeDefaults() {
   console.log("Store policy settings ensured");
 }
 
+async function seedDemoProductReviews() {
+  const existing = await prisma.productReview.count();
+  if (existing > 0) {
+    console.log("Product reviews already seeded, skipping");
+    return;
+  }
+
+  const products = await prisma.product.findMany({
+    where: { isActive: true },
+    take: 3,
+    select: { id: true, name: true },
+  });
+  if (products.length === 0) return;
+
+  const samples = [
+    { rating: 2, body: "Battery bad, does not last a full day" },
+    { rating: 2, body: "Packaging damaged when it arrived" },
+    { rating: 2, body: "Delivery slow, took two weeks" },
+    { rating: 3, body: "Battery life could be better but screen is nice" },
+    { rating: 5, body: "Great quality and fast shipping" },
+    { rating: 1, body: "Box was crushed and item scratched" },
+    { rating: 2, body: "Late delivery again" },
+    { rating: 4, body: "Good value for the price" },
+  ];
+
+  const createdAt = new Date();
+  for (let index = 0; index < samples.length; index += 1) {
+    const sample = samples[index]!;
+    const product = products[index % products.length]!;
+    createdAt.setDate(createdAt.getDate() - index);
+    await prisma.productReview.create({
+      data: {
+        productId: product.id,
+        rating: sample.rating,
+        body: sample.body,
+        status: "APPROVED",
+        createdAt: new Date(createdAt),
+      },
+    });
+  }
+
+  console.log(`Seeded ${samples.length} demo product reviews for AI analyzer`);
+}
+
 async function main() {
   await ensureSuperAdmin();
   await ensureDemoSeller();
@@ -575,6 +619,7 @@ async function main() {
   console.log("Catalog upsert:", catalogUpsert);
   const linked = await linkOrphanProductsToSubcategories();
   console.log("Products linked to Subcategory rows:", linked);
+  await seedDemoProductReviews();
 }
 
 main()

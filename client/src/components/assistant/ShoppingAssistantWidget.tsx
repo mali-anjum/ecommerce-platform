@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/sheet";
 import { useAssistantChat } from "@/components/assistant/hooks/useAssistantChat";
 import { AssistantMessageList } from "@/components/assistant/AssistantMessageList";
+import { AssistantQuickPrompts } from "@/components/assistant/AssistantQuickPrompts";
 const HIDDEN_PREFIXES = ["/auth", "/super-admin", "/seller"];
 
 function extractProductIdFromPath(pathname: string | null): string | undefined {
@@ -71,9 +72,9 @@ export function ShoppingAssistantWidget() {
                 <Bot className="h-5 w-5 text-white" />
               </div>
               <div>
-                <SheetTitle>Shopping Assistant</SheetTitle>
+                <SheetTitle>Customer Support</SheetTitle>
                 <SheetDescription>
-                  Ask about orders, products, FAQs, or say “talk to agent” for human help.
+                  Order tracking, shipping, returns, and FAQs — connected to your store data.
                 </SheetDescription>
               </div>
             </div>
@@ -83,6 +84,13 @@ export function ShoppingAssistantWidget() {
             messages={messages}
             isLoading={isLoading}
             scrollRef={scrollRef}
+          />
+
+          <AssistantQuickPrompts
+            disabled={isLoading}
+            onSelect={(text) => {
+              setInput(text);
+            }}
           />
 
           <div className="border-t border-border/70 p-4">

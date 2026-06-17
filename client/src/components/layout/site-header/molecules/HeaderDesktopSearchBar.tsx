@@ -45,7 +45,7 @@ export function HeaderDesktopSearchBar({
 
         <Input
           type="search"
-          placeholder="Search futuristic products..."
+          placeholder="Try: wireless mouse under $50 for FPS games"
           value={searchQuery}
           onChange={(e) => onSearchQueryChange(e.target.value)}
           className="rounded-none rounded-r-full border-border/50 bg-card pr-12 focus:border-primary/50"

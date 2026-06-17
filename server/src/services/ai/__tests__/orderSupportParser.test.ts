@@ -1,5 +1,6 @@
 import {
   detectOrderSupportSubIntent,
+  extractEmail,
   extractOrderId,
   isOrderSupportQuery,
 } from "../classification/parsers/OrderSupportParser";
@@ -31,5 +32,18 @@ describe("orderSupportParser", () => {
   it("extracts order UUID from message", () => {
     const id = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
     expect(extractOrderId(`Track order ${id}`)).toBe(id);
+  });
+
+  it("classifies refund requests", () => {
+    expect(detectOrderSupportSubIntent("How do I get a refund?")).toBe(
+      "refund_request",
+    );
+    expect(isOrderSupportQuery("What is your return policy?")).toBe(false);
+  });
+
+  it("extracts email from guest tracking messages", () => {
+    expect(extractEmail("Track order abc email buyer@store.com")).toBe(
+      "buyer@store.com",
+    );
   });
 });
