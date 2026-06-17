@@ -36,7 +36,8 @@ export type OrderSupportSubIntent =
   | "track_order"
   | "cancel_request"
   | "delivery_status"
-  | "order_list";
+  | "order_list"
+  | "refund_request";
 
 export type RecommendedProduct = {
   id: string;
