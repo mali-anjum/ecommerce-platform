@@ -7,6 +7,7 @@ import { ApiResponse } from "../utils/ApiResponse";
 import { requireUserId } from "../utils/requireUserId";
 import { CartService } from "../services/cart/get-cart-item";
 import { scheduleAnalyticsEvent } from "../services/analytics/analyticsEventService";
+import { scheduleSalesAgentEvaluation } from "../services/ai/sales";
 import { AnalyticsEventType } from "@prisma/client";
 import { sentryTracker } from "../lib/monitoring";
 
@@ -150,6 +151,13 @@ const addToCart = asyncHandler(
         color: cartColorValue,
       },
     });
+
+    if (typeof sessionId === "string") {
+      scheduleSalesAgentEvaluation({
+        sessionId,
+        userId,
+      });
+    }
 
     return res
       .status(201)

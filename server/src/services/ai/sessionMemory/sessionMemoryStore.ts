@@ -24,7 +24,7 @@ function pruneCache(): void {
     }
   }
 }
-
+// TODO: return type here
 function trimMessages(messages: StoredChatMessage[]): StoredChatMessage[] {
   return messages.slice(-MAX_SESSION_MESSAGES);
 }

@@ -57,6 +57,7 @@ export async function fetchFunnelTrackingSummary(
     PRODUCT_VIEW: 0,
     CART_ADD: 0,
     ORDER_COMPLETE: 0,
+    SESSION_PING: 0,
   };
 
   for (const event of events) {

@@ -1,29 +1,43 @@
+/**
+ * LLM entry point for the AI commerce module.
+ * Provider is selected via feature-flags.config.json → ai.llmProvider (openai | gemini | llama).
+ */
 import OpenAI from "openai";
+import {
+  completeChat,
+  getActiveLlmModel,
+  isActiveLlmConfigured,
+} from "./ai/providers";
+import { getLlmProviderId } from "./ai/llmConfig";
 
-const DEFAULT_MODEL = "gpt-4o-mini";
-
-let openaiClient: OpenAI | null = null;
+export { completeChat, getLlmProviderId };
+export type { LlmCompletionRequest, LlmChatMessage } from "./ai/providers";
 
 export function isAiConfigured(): boolean {
-  return Boolean(process.env.OPENAI_API_KEY?.trim());
+  return isActiveLlmConfigured();
 }
 
+export function getLlmModel(): string {
+  return getActiveLlmModel();
+}
+
+/** @deprecated Use completeChat() — kept for any legacy direct SDK usage */
 export function getOpenAiModel(): string {
-  return process.env.OPENAI_MODEL?.trim() || DEFAULT_MODEL;
+  return getLlmModel();
 }
 
+/** @deprecated Prefer completeChat(); only valid when ai.llmProvider is openai */
 export function getOpenAiClient(): OpenAI {
-  if (openaiClient) {
-    return openaiClient;
+  if (getLlmProviderId() !== "openai") {
+    throw new Error(
+      `getOpenAiClient() is only available when ai.llmProvider is "openai" (current: ${getLlmProviderId()}). Use completeChat() instead.`,
+    );
   }
 
   const apiKey = process.env.OPENAI_API_KEY?.trim();
   if (!apiKey) {
-    throw new Error(
-      "OPENAI_API_KEY is not configured. Add it to server env to enable the shopping assistant.",
-    );
+    throw new Error("OPENAI_API_KEY is not configured.");
   }
 
-  openaiClient = new OpenAI({ apiKey });
-  return openaiClient;
+  return new OpenAI({ apiKey });
 }

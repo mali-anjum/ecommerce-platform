@@ -5,28 +5,68 @@ import ProductDetailsContent from "./productDetails";
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { sentryTracker } from "@/lib/monitoring";
+import { publicEnv } from "@/config/publicEnv";
 
-// Optional: Generate metadata for the page
-export async function generateMetadata({ 
-  params 
-}: { 
-  params: Promise<{ id: string }> 
+type ProductSeoPayload = {
+  name: string;
+  description: string;
+  seoTitle?: string | null;
+  metaDescription?: string | null;
+  seoKeywords?: string[];
+  images?: string[];
+};
+
+async function fetchProductForSeo(id: string): Promise<ProductSeoPayload | null> {
+  const base = publicEnv.apiUrl.replace(/\/$/, "");
+  const res = await fetch(`${base}/api/products/${id}`, {
+    next: { revalidate: 300 },
+  });
+  if (!res.ok) return null;
+  const json = (await res.json()) as { data?: ProductSeoPayload };
+  return json.data ?? null;
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   try {
     const { id } = await params;
+    const product = await fetchProductForSeo(id);
+
+    if (!product) {
+      return {
+        title: `Product ${id} | Futuristic Store`,
+        description: "Explore cutting-edge products with futuristic design",
+      };
+    }
+
+    const title = product.seoTitle?.trim() || `${product.name} | Futuristic Store`;
+    const description =
+      product.metaDescription?.trim() ||
+      product.description.slice(0, 160) ||
+      "Explore cutting-edge products with futuristic design";
+    const keywords = product.seoKeywords?.length
+      ? product.seoKeywords
+      : undefined;
+    const image = product.images?.[0];
+
     return {
-      title: `Product ${id} | Futuristic Store`,
-      description: 'Explore cutting-edge products with futuristic design',
+      title,
+      description,
+      keywords,
       openGraph: {
-        title: `Product ${id}`,
-        description: 'Experience the future of shopping',
-        type: 'website',
+        title,
+        description,
+        type: "website",
+        ...(image ? { images: [{ url: image }] } : {}),
       },
     };
   } catch {
     return {
-      title: 'Product Details | Futuristic Store',
-      description: 'Explore our cutting-edge products',
+      title: "Product Details | Futuristic Store",
+      description: "Explore our cutting-edge products",
     };
   }
 }

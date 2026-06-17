@@ -245,34 +245,17 @@ After seeding, sign in as super admin: **admin@gmail.com** / **123456**.
 
 ## Environment variables
 
-### Server (`server/.env.example`)
+**Full guide:** [`docs/ENVIRONMENT.md`](docs/ENVIRONMENT.md) — loading order, local vs production connectivity, where to obtain each secret, and deployment checklists.
 
-| Variable | Purpose |
-|----------|---------|
-| `DATABASE_URL` | PostgreSQL connection string |
-| `PORT` | API port (default `4001`) |
-| `JWT_SECRET` | Must match client for token verification |
-| `ACCESS_TOKEN_*` / `REFRESH_TOKEN_*` | Token signing and expiry |
-| `COOKIE_DOMAIN` | Cookie domain (e.g. `localhost`) |
-| `FRONTEND_URL` | Allowed CORS origin |
-| `CLOUDINARY_*` | Image uploads |
-| `STRIPE_*` | Checkout and webhooks |
-| `PAYPAL_*` | Sandbox/live PayPal + return URLs |
-| `SMTP_*` | Optional email |
+| File | When |
+|------|------|
+| `client/.env.local` / `server/.env.local` | `NODE_ENV=development` (local dev) |
+| `client/.env.production` / `server/.env.production` | `NODE_ENV=production` (or set vars in Vercel/Render) |
+| `client/.env.example` / `server/.env.example` | Committed templates — copy to `.env.local` |
 
-### Client (`client/.env.example`)
+**Critical:** `JWT_SECRET` must be identical on client and server. In development, set `DEV_URL=http://localhost:4001` on the client so BFF routes hit your local API (not a remote `BACKEND_URL`).
 
-| Variable | Purpose |
-|----------|---------|
-| `NEXT_PUBLIC_API_URL` | Backend origin **without** `/api` |
-| `NEXT_PUBLIC_APP_URL` | App origin (e.g. `http://localhost:3012`) |
-| `DEV_URL` / `BACKEND_URL` | Server-side proxy targets |
-| `JWT_SECRET` | **Same as server** — required for `proxy.ts` |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe.js |
-| `NEXT_PUBLIC_PAYPAL_CLIENT_ID` | PayPal JS SDK |
-| `ARCJET_KEY` | Optional rate limiting |
-
-Never commit `.env.local` or production secrets.
+Never commit `.env.local`, `.env.production`, or real secrets (use host dashboards for production).
 
 ---
 

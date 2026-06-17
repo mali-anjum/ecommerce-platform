@@ -43,7 +43,7 @@ export default function SiteHeader() {
       />
 
       <div className="container mx-auto px-4">
-        <div className="flex h-16 items-center justify-between">
+        <div className="flex h-16 items-center gap-3 lg:gap-4">
           <HeaderBrandLogo />
 
           <HeaderDesktopSearchBar
@@ -55,15 +55,13 @@ export default function SiteHeader() {
             onSubmit={handleSearch}
           />
 
-          <div className="hidden items-center space-x-2 lg:flex">
+          <div className="hidden shrink-0 items-center gap-1 lg:flex">
             <HeaderDesktopQuickActions
               wishlistCount={wishlistCount}
               cartCount={cartCount}
             />
             <HeaderAccountDropdown user={user} onLogout={() => void handleLogout()} />
-            <div className="hidden xl:block">
-              <ThemeToggle />
-            </div>
+            <ThemeToggle />
           </div>
 
           <HeaderMobileNavSheet

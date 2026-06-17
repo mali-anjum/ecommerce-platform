@@ -7,6 +7,8 @@ import { calculateTotals } from '@/components/storefront/checkout/utils/checkout
 import { useCartSelectionStore } from '@/components/storefront/cart/state/useCartSelectionStore';
 import { useCartStore } from '@/components/storefront/cart/state/useCartStore';
 import type { CheckoutPaymentMethodId } from './usePaymentMethods';
+import { getAnalyticsSessionId } from "@/lib/analytics/sessionId";
+import { getAnalyticsVisitorId } from "@/lib/analytics/visitorId";
 import { sentryTracker } from "@/lib/monitoring";
 
 interface UseCheckoutPaymentProps {
@@ -82,12 +84,17 @@ export const useCheckoutPayment = ({
     try {
       const { total } = calculateTotals(cartItemsWithDetails, appliedCoupon);
 
+      const sessionId = getAnalyticsSessionId();
+      const visitorId = getAnalyticsVisitorId();
+
       const orderRequest = {
         cartItemIds: selectedIds,
         total,
         paymentMethod,
         addressId: selectedAddress,
         couponId: appliedCoupon?.id,
+        ...(sessionId ? { sessionId } : {}),
+        ...(visitorId ? { visitorId } : {}),
       };
 
       const response = await createOrder(orderRequest);

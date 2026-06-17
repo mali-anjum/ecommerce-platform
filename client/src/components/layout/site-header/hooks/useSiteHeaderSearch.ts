@@ -4,6 +4,8 @@ import { useCategoryStore } from "@/components/products/state/useCategoryStore";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type { DepartmentOptionGroup } from "@/components/layout/site-header/types/site-header.types";
+import { isFeatureEnabled } from "@/lib/feature-flags";
+import { isSmartSearchQuery } from "@/lib/smart-search/isSmartSearchQuery";
 
 export function useSiteHeaderSearch() {
   const router = useRouter();
@@ -41,7 +43,13 @@ export function useSiteHeaderSearch() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const params = new URLSearchParams();
-    if (searchQuery.trim()) params.set("search", searchQuery.trim());
+    const trimmedSearch = searchQuery.trim();
+    if (trimmedSearch) {
+      params.set("search", trimmedSearch);
+      if (isFeatureEnabled("ai.smartSearch") && isSmartSearchQuery(trimmedSearch)) {
+        params.set("smart", "1");
+      }
+    }
 
     if (selectedDepartment !== "all") {
       const [mainCategory, subcategory] = selectedDepartment.split("::");

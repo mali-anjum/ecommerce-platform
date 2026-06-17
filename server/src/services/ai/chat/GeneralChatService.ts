@@ -1,4 +1,4 @@
-import { getOpenAiClient, getOpenAiModel, isAiConfigured } from "../../../config/ai";
+import { completeChat, getLlmProviderId, isAiConfigured } from "../../../config/ai";
 import { ApiError } from "../../../utils/ApiError";
 import { loadAssistantKnowledgeContext } from "../knowledge/KnowledgeContextLoader";
 import {
@@ -20,7 +20,7 @@ export async function runGeneralChat(input: {
   if (!isAiConfigured()) {
     throw new ApiError(
       503,
-      "Shopping assistant is not configured. Please try again later.",
+      `Shopping assistant LLM is not configured for provider "${getLlmProviderId()}". Add the matching API keys to server env.`,
     );
   }
 
@@ -41,17 +41,11 @@ export async function runGeneralChat(input: {
     input.history ?? [],
   );
 
-  const client = getOpenAiClient();
-  const completion = await client.chat.completions.create({
-    model: getOpenAiModel(),
+  const reply = await completeChat({
     messages,
     temperature: 0.3,
-    max_tokens: 800,
+    maxTokens: 800,
   });
-
-  const reply =
-    completion.choices[0]?.message?.content?.trim() ||
-    "I could not generate a response. Please try again.";
 
   const productIdsReferenced = context.products
     .filter(

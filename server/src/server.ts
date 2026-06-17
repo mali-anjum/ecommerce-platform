@@ -16,6 +16,7 @@ import sellerRoutes from "./routes/sellerRoutes";
 import userRoutes from "./routes/userRoutes";
 import analyticsRoutes from "./routes/analyticsRoutes";
 import aiRoutes from "./routes/aiRoutes";
+import reviewRoutes from "./routes/reviewRoutes";
 import leadRoutes from "./routes/leadRoutes";
 import warmRoutes from "./routes/warm"
 import { ApiError } from "./utils/ApiError";
@@ -23,6 +24,7 @@ import { errorHandler } from "./middleware/errHandler";
 import prisma from "./lib/prisma";
 import { registerFeatureModuleRoutes } from "./config/featureFlags";
 import { warmProductIndex } from "./services/ai/productIndex";
+import { startSalesEmailQueueProcessor } from "./services/ai/sales";
 
 const app = express();
 initSentry();
@@ -91,16 +93,19 @@ app.use("/api/address", addressRoutes);
 app.use("/api/order", orderRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/leads", leadRoutes);
+app.use("/api/reviews", reviewRoutes);
 
 const moduleBootstraps = registerFeatureModuleRoutes(app, [
   {
     module: "ai",
     path: "/api/ai",
     router: aiRoutes,
-    onListen: () =>
-      warmProductIndex().then((count) => {
+    onListen: () => {
+      startSalesEmailQueueProcessor();
+      return warmProductIndex().then((count) => {
         console.log(`📦 AI product index warmed with ${count} products`);
-      }),
+      });
+    },
   },
 ]);
 

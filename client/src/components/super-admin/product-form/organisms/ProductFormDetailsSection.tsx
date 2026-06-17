@@ -61,10 +61,18 @@ export function ProductFormDetailsSection({
 }: ProductFormDetailsSectionProps) {
   return (
     <div className="glass-effect rounded-2xl p-6 border border-glass-border space-y-6">
-      <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-        <Tag className="h-5 w-5 text-primary" />
-        Product Details
-      </h2>
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-wider text-primary mb-1">
+          Step 1
+        </p>
+        <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+          <Tag className="h-5 w-5 text-primary" />
+          Product details
+        </h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          Name, catalog placement, brand, and customer-facing description.
+        </p>
+      </div>
 
       <ProductFormCatalogAlerts
         catalogLoading={catalogLoading}

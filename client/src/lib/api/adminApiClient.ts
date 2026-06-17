@@ -18,6 +18,9 @@ export const AI_ADMIN_ROUTES = {
   knowledgeBase: "/ai/admin/knowledge-base",
   knowledgeBaseUpload: "/ai/admin/knowledge-base/upload",
   analytics: "/ai/admin/analytics",
+  salesAgent: "/ai/admin/sales-agent",
+  reviewAnalyzer: "/ai/admin/review-analyzer",
+  seoGenerator: "/ai/admin/seo-generator",
   supportTickets: "/ai/admin/support-tickets",
   policies: "/ai/policies",
 } as const;
