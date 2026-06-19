@@ -64,6 +64,7 @@ export async function PUT(request: NextRequest) {
       cache: "no-store",
     });
     const data = await backendRes.json();
+    console.log("data for save policies", data);
     return NextResponse.json(data, { status: backendRes.status });
   } catch (error) {
     console.error("Policies proxy PUT failed", error);
