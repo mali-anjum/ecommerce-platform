@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
-import ProductForm from "@/components/super-admin/products/screen/ProductForm";
+import { ProductAddScreen } from "@/components/super-admin/products/screen/ProductAddScreen";
 import { 
   Package, 
   Zap, 
@@ -154,7 +154,7 @@ function SuperAdminManageProductPage() {
   return (
     <ProductFormErrorBoundary>
       <Suspense fallback={<FuturisticLoader />}>
-        <ProductForm />
+        <ProductAddScreen />
       </Suspense>
     </ProductFormErrorBoundary>
   );
