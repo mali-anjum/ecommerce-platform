@@ -1,5 +1,5 @@
-import { ProductFormCatalogAlerts } from "@/components/super-admin/product-form/molecules/ProductFormCatalogAlerts";
-import { ProductFormField } from "@/components/super-admin/product-form/atoms/ProductFormField";
+import { ProductFormCatalogAlerts } from "@/components/super-admin/products/molecules/ProductFormCatalogAlerts";
+import { ProductFormField } from "@/components/super-admin/products/atoms/ProductFormField";
 import { Input } from "@/components/ui/input";
 import {
   Select,

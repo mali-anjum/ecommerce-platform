@@ -1,6 +1,6 @@
 "use client";
 
-import { ProductFormField } from "@/components/super-admin/product-form/atoms/ProductFormField";
+import { ProductFormField } from "@/components/super-admin/products/atoms/ProductFormField";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";

@@ -111,12 +111,12 @@ import {
         {
           name: "Categories",
           icon: Layers,
-          href: "/super-admin/categories",
+          href: "/super-admin/products/categories",
         },
         {
           name: "Inventory",
           icon: Database,
-          href: "/super-admin/inventory",
+          href: "/super-admin/products/inventory",
         },
       ],
     },

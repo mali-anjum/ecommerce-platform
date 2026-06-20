@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
-import ProductForm from "@/components/super-admin/organisms/ProductForm";
+import ProductForm from "@/components/super-admin/products/screen/ProductForm";
 import { 
   Package, 
   Zap, 

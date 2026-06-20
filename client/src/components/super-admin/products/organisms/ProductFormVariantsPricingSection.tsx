@@ -1,8 +1,8 @@
-import { ProductFormField } from "@/components/super-admin/product-form/atoms/ProductFormField";
+import { ProductFormField } from "@/components/super-admin/products/atoms/ProductFormField";
 import {
   ProductFormColorPicker,
   ProductFormSizePicker,
-} from "@/components/super-admin/product-form/molecules/ProductFormVariantPickers";
+} from "@/components/super-admin/products/molecules/ProductFormVariantPickers";
 import { Input } from "@/components/ui/input";
 import { Box, DollarSign } from "lucide-react";
 import type { FieldErrors, UseFormRegisterReturn } from "react-hook-form";

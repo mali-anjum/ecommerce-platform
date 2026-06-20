@@ -1,13 +1,13 @@
 "use client";
 
 import { protectProductFormAction } from "@/actions/product";
-import { ProductFormFileUpload } from "@/components/super-admin/product-form/atoms/ProductFormFileUpload";
-import { ProductFormHeader } from "@/components/super-admin/product-form/molecules/ProductFormHeader";
-import { ProductFormLoadingOverlay } from "@/components/super-admin/product-form/atoms/ProductFormLoadingOverlay";
-import { ProductFormDetailsSection } from "@/components/super-admin/product-form/organisms/ProductFormDetailsSection";
-import { ProductFormVariantsPricingSection } from "@/components/super-admin/product-form/organisms/ProductFormVariantsPricingSection";
-import { ProductFormSeoSection } from "@/components/super-admin/product-form/organisms/ProductFormSeoSection";
-import { ProductFormWorkflowSteps } from "@/components/super-admin/product-form/molecules/ProductFormWorkflowSteps";
+import { ProductFormFileUpload } from "@/components/super-admin/products/atoms/ProductFormFileUpload";
+import { ProductFormHeader } from "@/components/super-admin/products/molecules/ProductFormHeader";
+import { ProductFormLoadingOverlay } from "@/components/super-admin/products/atoms/ProductFormLoadingOverlay";
+import { ProductFormDetailsSection } from "@/components/super-admin/products/organisms/ProductFormDetailsSection";
+import { ProductFormVariantsPricingSection } from "@/components/super-admin/products/organisms/ProductFormVariantsPricingSection";
+import { ProductFormSeoSection } from "@/components/super-admin/products/organisms/ProductFormSeoSection";
+import { ProductFormWorkflowSteps } from "@/components/super-admin/products/molecules/ProductFormWorkflowSteps";
 import {
   type ProductFormValues,
   emptyProductFormValues,
