@@ -180,6 +180,7 @@ export function searchAssistantProductsFromIndex(
 export function queryRecommendationsFromIndex(
   query: string,
   filters: RecommendationFilters,
+  limit = MAX_RECOMMENDATIONS,
 ): RecommendedProduct[] | null {
   if (!isProductIndexReady()) {
     return null;
@@ -236,5 +237,5 @@ export function queryRecommendationsFromIndex(
     );
   }
 
-  return sorted.slice(0, MAX_RECOMMENDATIONS).map(toRecommendedProduct);
+  return sorted.slice(0, limit).map(toRecommendedProduct);
 }

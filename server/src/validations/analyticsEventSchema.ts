@@ -5,6 +5,7 @@ const analyticsEventTypes = [
   "PRODUCT_VIEW",
   "CART_ADD",
   "ORDER_COMPLETE",
+  "SESSION_PING",
 ] as const;
 
 export const analyticsEventSchema = z.object({

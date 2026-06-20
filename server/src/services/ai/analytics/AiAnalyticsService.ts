@@ -7,6 +7,7 @@ import {
 } from "../../analytics/period";
 import { groupTopQueries } from "./AiAnalyticsUtils";
 import { isProductSearchIntent } from "../chat/ChatResponse";
+import { fetchSalesAgentSummary } from "../sales";
 
 export type AiMetricsSummary = {
   chatUsageCount: number;
@@ -70,6 +71,8 @@ export type AiAnalyticsDashboard = {
     leadsGenerated: number;
     conversationChangePercent: number;
     leadsChangePercent: number;
+    salesOffersGenerated: number;
+    salesEmailsSent: number;
   };
   intentBreakdown: Array<{ intent: string; count: number }>;
   mostAskedQuestions: Array<{ query: string; count: number }>;
@@ -99,6 +102,7 @@ export async function fetchAiAnalyticsDashboard(
     previousLeads,
     intentGroups,
     recentConversations,
+    salesAgentSummary,
   ] = await Promise.all([
     prisma.aiConversationLog.findMany({
       where: { createdAt: { gte: start, lte: end } },
@@ -144,6 +148,7 @@ export async function fetchAiAnalyticsDashboard(
         createdAt: true,
       },
     }),
+    fetchSalesAgentSummary(start, end),
   ]);
 
   const totalConversations = currentLogs.length;
@@ -173,6 +178,8 @@ export async function fetchAiAnalyticsDashboard(
         previousLogCount,
       ),
       leadsChangePercent: percentChange(currentLeads, previousLeads),
+      salesOffersGenerated: salesAgentSummary.offersGenerated,
+      salesEmailsSent: salesAgentSummary.emailsSent,
     },
     intentBreakdown: intentGroups.map((group) => ({
       intent: group.intent,

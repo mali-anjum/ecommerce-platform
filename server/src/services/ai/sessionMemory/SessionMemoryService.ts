@@ -36,6 +36,7 @@ export function mergeSessionHistory(
   serverHistory: ChatHistoryMessage[],
   clientHistory: ChatHistoryMessage[] = [],
 ): ChatHistoryMessage[] {
+  // TODO: Is this logic is wrong because we are checking the length() 1st: Research the return type here
   if (serverHistory.length === 0) {
     return clientHistory.slice(-12);
   }

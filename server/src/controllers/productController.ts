@@ -24,6 +24,10 @@ import {
 } from "../services/product";
 import { scheduleProductIndexSync } from "../services/ai/productIndex";
 import { sentryTracker } from "../lib/monitoring";
+import {
+  parseOptionalSeoString,
+  parseSeoKeywordsInput,
+} from "../utils/parseSeoFields";
 
 // TODO: Consider cleaning up uploaded Cloudinary images if DB insert failed (use public_id to delete).
 // Use Promise.allSettled and handle partial failures gracefully.
@@ -219,12 +223,19 @@ const createProduct = asyncHandler(
         }
       }
 
+      const seoTitle = parseOptionalSeoString(req.body.seoTitle);
+      const metaDescription = parseOptionalSeoString(req.body.metaDescription);
+      const seoKeywords = parseSeoKeywordsInput(req.body.seoKeywords);
+
       const newlyCreatedProduct = await prisma.product.create({
         data: {
           name,
           brand,
           condition: parsedCondition ?? ProductCondition.NEW,
           description,
+          ...(seoTitle !== undefined ? { seoTitle } : {}),
+          ...(metaDescription !== undefined ? { metaDescription } : {}),
+          ...(seoKeywords !== undefined ? { seoKeywords } : {}),
           category: resolvedCategory,
           gender,
           sellerId: validatedSellerId,
@@ -456,12 +467,19 @@ const updateProduct = asyncHandler(
       }
     }
 
+    const seoTitle = parseOptionalSeoString(req.body.seoTitle);
+    const metaDescription = parseOptionalSeoString(req.body.metaDescription);
+    const seoKeywords = parseSeoKeywordsInput(req.body.seoKeywords);
+
     const product = await prisma.product.update({
       where: { id },
       data: {
         name,
         brand,
         description,
+        ...(seoTitle !== undefined ? { seoTitle } : {}),
+        ...(metaDescription !== undefined ? { metaDescription } : {}),
+        ...(seoKeywords !== undefined ? { seoKeywords } : {}),
         category: resolvedCategory ?? category,
         ...(subcategoryIdUpdate !== undefined
           ? { subcategoryId: subcategoryIdUpdate }

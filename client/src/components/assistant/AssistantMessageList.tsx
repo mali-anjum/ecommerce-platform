@@ -40,7 +40,7 @@ export function AssistantMessageList({
                 : "border border-border/70 bg-card/95 text-foreground",
             )}
           >
-            {message.content}
+            <span className="whitespace-pre-wrap">{message.content}</span>
             {message.role === "assistant" &&
               message.products &&
               message.products.length > 0 && (

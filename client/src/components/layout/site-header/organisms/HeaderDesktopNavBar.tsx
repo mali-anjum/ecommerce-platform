@@ -66,11 +66,16 @@ export function HeaderDesktopNavBar({ categories }: HeaderDesktopNavBarProps) {
         </Link>
         <Link
           href="/track-order"
-          className="text-muted-foreground hover:text-foreground"
+          className="text-muted-foreground transition-colors hover:text-foreground"
         >
           Track Order
         </Link>
-        <span className="font-medium text-primary">24/7 Support: 1-800-FUTURE</span>
+        <a
+          href="tel:1800388873"
+          className="rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary transition-colors hover:bg-primary/20"
+        >
+          24/7 Support: 1-800-FUTURE
+        </a>
       </div>
     </div>
   );

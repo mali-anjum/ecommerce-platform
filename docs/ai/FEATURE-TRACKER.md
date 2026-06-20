@@ -267,6 +267,82 @@ Sidebar: **AI Operations** in `SuperAdminSidebar.tsx`.
 
 ---
 
+## Priority 1 — AI Sales & Lead Generation ✅
+
+| Area | Implementation |
+|------|----------------|
+| Services | `server/src/services/ai/sales/` |
+| API | `/api/ai/sales/*`, `/api/ai/admin/sales-agent` |
+| Client | `SalesAgentShell`, `/super-admin/ai/sales-agent` |
+| Flag | `ai.salesAgent` |
+
+---
+
+## Priority 2 — AI Product / Setup Recommendations ✅
+
+| Area | Implementation |
+|------|----------------|
+| Services | `SetupRecommendationService`, product index |
+| API | `GET /api/ai/recommendations/setup` |
+| Client | `AiRecommendedSetupSection` on product page |
+| Flag | `ai.productRecommendations` |
+
+---
+
+## Priority 3 — AI Customer Support ✅
+
+| Area | Implementation |
+|------|----------------|
+| Services | `OrderSupportService`, `AssistantService`, knowledge loaders |
+| API | `POST /api/ai/chat` |
+| Client | `ShoppingAssistantWidget`, `AssistantOrderCards` |
+| Flags | `ai.chat`, `ai.orderSupport` |
+
+---
+
+## Priority 4 — AI Review Analyzer ✅
+
+| Area | Implementation |
+|------|----------------|
+| Model | `ProductReview` (rating, body, themes, sentiment) |
+| Classifier | `server/src/services/ai/reviews/ReviewThemeClassifier.ts` (rules + optional OpenAI batch) |
+| Report | `ReviewAnalyzerService.ts` — top complaints, trends, narrative |
+| Admin API | `GET/POST /api/ai/admin/review-analyzer` |
+| Storefront API | `GET /api/reviews/product/:id`, `POST /api/reviews` |
+| Admin UI | `/super-admin/ai/review-analyzer` |
+| Flag | `ai.reviewAnalyzer` |
+| Migration | `20260604200000_product_reviews_analyzer` |
+
+---
+
+## Priority 5 — AI SEO Content Generator ✅
+
+| Area | Implementation |
+|------|----------------|
+| Generator | `server/src/services/ai/seo/SeoContentGeneratorService.ts` |
+| Product fields | `seoTitle`, `metaDescription`, `seoKeywords` on `Product` |
+| Admin API | `POST /api/ai/admin/seo-generator` |
+| Admin UI | Add / Edit Product → Step 3 **SEO & discovery** (inline **Generate with AI** when `ai.seoGenerator` is on) |
+| Product form | SEO section + apply draft from generator |
+| Storefront | `generateMetadata` uses saved SEO fields |
+| Flag | `ai.seoGenerator` |
+| Migration | `20260604210000_product_seo_fields` |
+
+---
+
+## Priority 6 — AI Smart Search ✅
+
+| Area | Implementation |
+|------|----------------|
+| Intent parser | `server/src/services/ai/search/SmartSearchIntentParser.ts` |
+| Search service | `SmartSearchService.ts` (rules + optional OpenAI, relevance ranking) |
+| API | `POST /api/ai/search` |
+| Client proxy | `client/src/app/api/ai/search/route.ts` |
+| Storefront | Header search → `/products?search=...&smart=1`, intent banner on listing |
+| Flag | `ai.smartSearch` |
+
+---
+
 ## Key file map
 
 ### Server (`server/src/`)

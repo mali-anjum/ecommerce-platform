@@ -6,6 +6,13 @@ import { handleApiError } from "@/components/products/listing/utils/handleApiErr
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toApiCollection } from "@/components/products/listing/utils/products-listing.utils";
+import { isFeatureEnabled } from "@/lib/feature-flags";
+import { isSmartSearchQuery } from "@/lib/smart-search/isSmartSearchQuery";
+import {
+  smartSearchProductToListingProduct,
+  type SmartSearchResult,
+} from "@/lib/smart-search/types";
+import type { Product } from "@/components/products/types/product";
 
 /** Data fetching, URL sync, filters, and pagination for the products listing page. */
 export function useProductListingPage() {
@@ -14,6 +21,7 @@ export function useProductListingPage() {
   const mainCategoryQs = searchParams.get("mainCategory") ?? undefined;
   const subcategoryQs = searchParams.get("subcategory") ?? undefined;
   const urlSearchQs = searchParams.get("search") ?? "";
+  const smartSearchEnabled = isFeatureEnabled("ai.smartSearch");
 
   const filters = useProductFilters();
   const {
@@ -51,6 +59,17 @@ export function useProductListingPage() {
   const [searchQuery, setSearchQuery] = useState(urlSearchQs);
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [collectionTab, setCollectionTab] = useState("all");
+  const [smartSearchResult, setSmartSearchResult] = useState<SmartSearchResult | null>(
+    null,
+  );
+  const [smartProducts, setSmartProducts] = useState<Product[]>([]);
+  const [smartSearchLoading, setSmartSearchLoading] = useState(false);
+  const [smartSearchError, setSmartSearchError] = useState<string | null>(null);
+
+  const useSmartSearchMode =
+    smartSearchEnabled &&
+    debouncedSearch.length > 0 &&
+    (searchParams.get("smart") === "1" || isSmartSearchQuery(debouncedSearch));
 
   useEffect(() => {
     setSearchQuery(urlSearchQs);
@@ -115,7 +134,50 @@ export function useProductListingPage() {
     selectedSellerIds,
   ]);
 
+  const fetchSmartSearch = useCallback(async () => {
+    if (!debouncedSearch.trim()) {
+      setSmartProducts([]);
+      setSmartSearchResult(null);
+      return;
+    }
+
+    setSmartSearchLoading(true);
+    setSmartSearchError(null);
+
+    try {
+      const res = await fetch("/api/ai/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: debouncedSearch, limit: 24 }),
+      });
+      const json = (await res.json()) as {
+        success?: boolean;
+        data?: SmartSearchResult;
+        message?: string;
+      };
+
+      if (!res.ok || !json.data) {
+        throw new Error(json.message ?? "Smart search failed");
+      }
+
+      setSmartSearchResult(json.data);
+      setSmartProducts(
+        json.data.products.map(smartSearchProductToListingProduct),
+      );
+    } catch (err) {
+      setSmartSearchError(
+        err instanceof Error ? err.message : "Smart search failed",
+      );
+      setSmartProducts([]);
+      setSmartSearchResult(null);
+    } finally {
+      setSmartSearchLoading(false);
+    }
+  }, [debouncedSearch]);
+
   const fetchAllProducts = useCallback(() => {
+    if (useSmartSearchMode) return;
+
     const filterPayload = getFilters();
     fetchProductsForClient({
       ...filterPayload,
@@ -136,11 +198,18 @@ export function useProductListingPage() {
     mainCategoryQs,
     subcategoryQs,
     collectionTab,
+    useSmartSearchMode,
   ]);
 
   useEffect(() => {
+    if (useSmartSearchMode) {
+      void fetchSmartSearch();
+      return;
+    }
+    setSmartSearchResult(null);
+    setSmartProducts([]);
     fetchAllProducts();
-  }, [fetchAllProducts, currentPage]);
+  }, [fetchAllProducts, fetchSmartSearch, useSmartSearchMode, currentPage]);
 
   useEffect(() => {
     if (error) {
@@ -157,28 +226,44 @@ export function useProductListingPage() {
   );
 
   const handleRetry = useCallback(() => {
+    if (useSmartSearchMode) {
+      void fetchSmartSearch();
+      return;
+    }
     fetchAllProducts();
-  }, [fetchAllProducts]);
+  }, [fetchAllProducts, fetchSmartSearch, useSmartSearchMode]);
 
   const handleClearFilters = useCallback(() => {
     resetFilters();
     setSearchQuery("");
+    setSmartSearchResult(null);
+    setSmartProducts([]);
     router.replace("/products");
   }, [resetFilters, router]);
+
+  const displayProducts = useSmartSearchMode ? smartProducts : products;
+  const displayLoading = useSmartSearchMode ? smartSearchLoading : isLoading;
+  const displayError = useSmartSearchMode ? smartSearchError : error;
+  const displayTotal = useSmartSearchMode
+    ? smartSearchResult?.total ?? smartProducts.length
+    : totalProducts;
+  const displayTotalPages = useSmartSearchMode ? 1 : totalPages;
 
   return {
     mainCategoryQs,
     subcategoryQs,
     urlSearchQs,
+    useSmartSearchMode,
+    smartSearchResult,
     collectionTab,
     setCollectionTab,
-    products,
+    products: displayProducts,
     currentPage,
-    totalPages,
-    totalProducts,
+    totalPages: displayTotalPages,
+    totalProducts: displayTotal,
     availableSellers,
-    isLoading,
-    error,
+    isLoading: displayLoading,
+    error: displayError,
     handlePageChange,
     handleRetry,
     handleClearFilters,

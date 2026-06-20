@@ -37,7 +37,7 @@ export function MobileSheetMainMenu({
       <form onSubmit={onSearchSubmit} className="relative">
         <Input
           type="search"
-          placeholder="Search products..."
+          placeholder="Describe what you need..."
           value={searchQuery}
           onChange={(e) => onSearchQueryChange(e.target.value)}
           className="border-border bg-input pr-10"

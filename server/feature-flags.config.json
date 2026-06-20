@@ -1,5 +1,8 @@
 {
   "$comment": "Edit flags here. Server guide: server/src/config/featureFlags/README.md. Then: cd server && npm run sync:feature-flags. UI-only keys: client only. API keys: also add to SERVER_FLAG_DEFAULTS.",
+  "ai": {
+    "llmProvider": "openai"
+  },
   "flags": {
     "payments.enabled": true,
     "payments.paypal": true,
@@ -10,6 +13,10 @@
     "ai.productRecommendations": true,
     "ai.orderSupport": true,
     "ai.leadCapture": true,
-    "ai.humanHandoff": true
+    "ai.humanHandoff": true,
+    "ai.salesAgent": true,
+    "ai.reviewAnalyzer": true,
+    "ai.seoGenerator": true,
+    "ai.smartSearch": true
   }
 }

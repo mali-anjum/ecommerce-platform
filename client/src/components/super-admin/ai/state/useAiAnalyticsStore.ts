@@ -17,6 +17,8 @@ export type AiAnalyticsDashboard = {
     leadsGenerated: number;
     conversationChangePercent: number;
     leadsChangePercent: number;
+    salesOffersGenerated: number;
+    salesEmailsSent: number;
   };
   intentBreakdown: Array<{ intent: string; count: number }>;
   mostAskedQuestions: Array<{ query: string; count: number }>;

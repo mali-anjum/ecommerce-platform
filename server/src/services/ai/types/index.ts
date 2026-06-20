@@ -99,7 +99,8 @@ export type OrderSupportSubIntent =
   | "track_order"
   | "cancel_request"
   | "delivery_status"
-  | "order_list";
+  | "order_list"
+  | "refund_request";
 
 export type AssistantOrderTrackingEvent = {
   id: string;
@@ -158,6 +159,17 @@ export type ProductRecommendationResult = {
   intent: "product_recommendation";
   products: RecommendedProduct[];
   filtersApplied: RecommendationFilters;
+};
+
+export type SetupRecommendationSource = "behavior" | "product_context";
+
+export type SetupRecommendationResult = {
+  setupTitle: string;
+  intentSummary: string;
+  anchorProductId: string;
+  anchorProductName: string;
+  products: RecommendedProduct[];
+  basedOn: SetupRecommendationSource;
 };
 
 export type AssistantChatInput = {

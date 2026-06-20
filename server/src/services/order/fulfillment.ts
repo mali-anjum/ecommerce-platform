@@ -1,6 +1,7 @@
 import { prisma } from "../../lib/prisma";
 import { scheduleProductIndexSync } from "../ai/productIndex";
 import { scheduleAiChatConversion } from "../ai/analytics/ConversationLogService";
+import { scheduleSalesOfferConversion } from "../ai/sales";
 import { scheduleAnalyticsEvent } from "../analytics/analyticsEventService";
 import { AnalyticsEventType } from "@prisma/client";
 
@@ -15,7 +16,46 @@ export type FulfillmentAnalyticsContext = {
   orderId?: string;
   total?: number;
   sessionId?: string;
+  visitorId?: string;
 };
+
+export type PaymentFulfillmentMetadata = {
+  cartItemIds?: string[];
+  sessionId?: string;
+  visitorId?: string;
+};
+
+function metadataString(value: unknown, key: string): string | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  const field = (value as Record<string, unknown>)[key];
+  return typeof field === "string" && field.trim().length > 0
+    ? field.trim()
+    : undefined;
+}
+
+export function buildFulfillmentAnalyticsContext(
+  order: { id: string; total: number },
+  paymentMetadata?: unknown,
+): FulfillmentAnalyticsContext {
+  return {
+    orderId: order.id,
+    total: order.total,
+    sessionId: metadataString(paymentMetadata, "sessionId"),
+    visitorId: metadataString(paymentMetadata, "visitorId"),
+  };
+}
+
+export function parsePurchasedCartItemIds(
+  paymentMetadata?: unknown,
+): string[] | undefined {
+  if (!paymentMetadata || typeof paymentMetadata !== "object") return undefined;
+  const cartItemIds = (paymentMetadata as PaymentFulfillmentMetadata).cartItemIds;
+  if (!Array.isArray(cartItemIds)) return undefined;
+  const ids = cartItemIds.filter(
+    (item): item is string => typeof item === "string" && item.length > 0,
+  );
+  return ids.length > 0 ? ids : undefined;
+}
 
 /**
  * Decrements product stock, bumps coupon usage per line, then clears the user's cart.
@@ -27,6 +67,11 @@ export async function applyPurchaseFulfillment(
   analyticsContext?: FulfillmentAnalyticsContext,
 ): Promise<void> {
   scheduleAiChatConversion(userId);
+  scheduleSalesOfferConversion({
+    userId,
+    sessionId: analyticsContext?.sessionId,
+    visitorId: analyticsContext?.visitorId,
+  });
   scheduleAnalyticsEvent({
     type: AnalyticsEventType.ORDER_COMPLETE,
     userId,
@@ -34,6 +79,7 @@ export async function applyPurchaseFulfillment(
     metadata: {
       orderId: analyticsContext?.orderId ?? null,
       total: analyticsContext?.total ?? null,
+      visitorId: analyticsContext?.visitorId ?? null,
     },
   });
 

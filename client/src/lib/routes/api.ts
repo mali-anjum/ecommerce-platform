@@ -35,6 +35,7 @@ export const API_ROUTES = {
   ANALYTICS: `${API_BASE_URL}/analytics`,
   AI: `${API_BASE_URL}/ai`,
   LEADS: `${API_BASE_URL}/leads`,
+  REVIEWS: `${API_BASE_URL}/reviews`,
 };
 
 export const ROUTES = {

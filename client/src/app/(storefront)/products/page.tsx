@@ -1,6 +1,7 @@
 "use client";
 
 import { ProductsActiveFiltersBanner } from "@/components/products/listing/molecules/ProductsActiveFiltersBanner";
+import { ProductsSmartSearchBanner } from "@/components/products/listing/molecules/ProductsSmartSearchBanner";
 import { ProductsBackToTopFab } from "@/components/products/listing/atoms/ProductsBackToTopFab";
 import { ProductsCollectionTabs } from "@/components/products/listing/molecules/ProductsCollectionTabs";
 import { ProductsFiltersSidebar } from "@/components/products/listing/molecules/ProductsFiltersSidebar";
@@ -25,6 +26,8 @@ function ProductListingPage() {
     handlePageChange,
     handleRetry,
     handleClearFilters,
+    useSmartSearchMode,
+    smartSearchResult,
     filters,
   } = useProductListingPage();
 
@@ -38,6 +41,14 @@ function ProductListingPage() {
           subcategory={subcategoryQs}
           search={urlSearchQs}
         />
+
+        {useSmartSearchMode && smartSearchResult ? (
+          <ProductsSmartSearchBanner
+            query={smartSearchResult.query}
+            intentSummary={smartSearchResult.intentSummary}
+            maxPrice={smartSearchResult.filtersApplied?.maxPrice}
+          />
+        ) : null}
 
         <ProductsCollectionTabs
           value={collectionTab}

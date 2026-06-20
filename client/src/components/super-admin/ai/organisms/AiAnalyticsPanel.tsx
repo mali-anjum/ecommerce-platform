@@ -186,6 +186,12 @@ export function AiAnalyticsPanel() {
               icon={UserPlus}
               accent="accent"
             />
+            <KpiCard
+              title="Sales offers"
+              value={formatNumber(summary.salesOffersGenerated)}
+              hint={`${summary.salesEmailsSent} follow-up emails sent`}
+              icon={ShoppingCart}
+            />
           </div>
 
           <div className="grid gap-4 lg:grid-cols-2">

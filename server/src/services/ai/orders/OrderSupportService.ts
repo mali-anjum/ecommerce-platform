@@ -1,7 +1,12 @@
 import type { OrderStatus } from "@prisma/client";
-import { findOrdersForUser } from "../../order/query";
+import {
+  findOrderForPublicTracking,
+  findOrdersForUser,
+} from "../../order/query";
+import { loadPolicies } from "../knowledge/loaders/LoadPolicies";
 import {
   detectOrderSupportSubIntent,
+  extractEmail,
   extractOrderId,
 } from "../classification/parsers/OrderSupportParser";
 import type {
@@ -30,11 +35,36 @@ function formatDate(value: Date | string | null | undefined): string | null {
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) return null;
   return date.toLocaleDateString("en-US", {
-    weekday: "short",
     month: "short",
     day: "numeric",
     year: "numeric",
   });
+}
+
+function formatRelativeDelivery(iso: string | null): string | null {
+  if (!iso) return null;
+  const target = new Date(iso);
+  if (Number.isNaN(target.getTime())) return null;
+
+  const now = new Date();
+  const startOfToday = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+  );
+  const startOfTarget = new Date(
+    target.getFullYear(),
+    target.getMonth(),
+    target.getDate(),
+  );
+  const dayDiff = Math.round(
+    (startOfTarget.getTime() - startOfToday.getTime()) / 86_400_000,
+  );
+
+  if (dayDiff === 0) return "Today";
+  if (dayDiff === 1) return "Tomorrow";
+  if (dayDiff === -1) return "Yesterday";
+  return formatDate(target);
 }
 
 function collectTimeline(order: OrderWithTracking): AssistantOrderTrackingEvent[] {
@@ -96,61 +126,155 @@ function toOrderSummary(order: OrderWithTracking): AssistantOrderSummary {
   };
 }
 
-function buildTrackReply(
-  order: AssistantOrderSummary,
-  subIntent: OrderSupportSubIntent,
-): string {
+function findShippedDate(timeline: AssistantOrderTrackingEvent[]): string | null {
+  const shippedEvent = [...timeline]
+    .reverse()
+    .find(
+      (event) =>
+        event.status?.toUpperCase() === "SHIPPED" ||
+        /\bshipped\b/i.test(event.message),
+    );
+  return shippedEvent ? formatDate(shippedEvent.occurredAt) : null;
+}
+
+function buildStructuredTrackReply(order: AssistantOrderSummary): string {
+  const shortId = order.id.slice(0, 8);
   const statusLabel = formatStatus(order.status);
-  const eta = formatDate(order.estimatedDeliveryAt);
-  const parts: string[] = [
-    `Order ${order.id.slice(0, 8)}… is ${statusLabel}.`,
+  const shippedOn =
+    findShippedDate(order.timeline) ?? formatDate(order.createdAt);
+  const latest = order.timeline[0];
+  const currentLocation = latest?.location ?? null;
+  const eta = formatRelativeDelivery(order.estimatedDeliveryAt);
+
+  const lines = [
+    `Order #${shortId}`,
+    "",
+    `Status: ${statusLabel}`,
   ];
 
-  if (subIntent === "delivery_status" && eta) {
-    parts.push(`Estimated delivery: ${eta}.`);
-  } else if (subIntent === "delivery_status") {
-    parts.push("No estimated delivery date is set yet.");
+  if (shippedOn && order.status !== "PENDING" && order.status !== "PROCESSING") {
+    lines.push(`Shipped: ${shippedOn}`);
+  }
+
+  if (currentLocation) {
+    lines.push(`Current location: ${currentLocation}`);
+  } else if (latest?.message) {
+    lines.push(`Latest update: ${latest.message}`);
+  }
+
+  if (eta) {
+    lines.push(`Expected delivery: ${eta}`);
   }
 
   if (order.trackingNumber) {
-    parts.push(
-      `Tracking${order.carrier ? ` (${order.carrier})` : ""}: ${order.trackingNumber}.`,
+    lines.push(
+      "",
+      `Tracking${order.carrier ? ` (${order.carrier})` : ""}: ${order.trackingNumber}`,
     );
   }
 
-  if (order.timeline.length > 0) {
-    const latest = order.timeline[0];
-    parts.push(`Latest update: ${latest.message}.`);
-  }
-
-  return parts.join(" ");
+  return lines.join("\n");
 }
 
 function buildCancelReply(order: AssistantOrderSummary): string {
+  const shortId = order.id.slice(0, 8);
   const statusLabel = formatStatus(order.status);
 
   if (order.status === "CANCELLED") {
-    return `Order ${order.id.slice(0, 8)}… is already cancelled.`;
+    return `Order #${shortId}\n\nStatus: Cancelled\n\nThis order was already cancelled.`;
   }
 
   if (order.canRequestCancel) {
-    return `Order ${order.id.slice(0, 8)}… (${statusLabel}) can be cancelled. Open your Orders page, select this order, and submit a cancellation request. Our team will confirm shortly.`;
+    return [
+      `Order #${shortId}`,
+      "",
+      `Status: ${statusLabel}`,
+      "",
+      "You can cancel this order from your account: open Orders, select this order, and submit a cancellation request. Our team will confirm shortly.",
+    ].join("\n");
   }
 
   if (order.status === "SHIPPED" || order.status === "DELIVERED") {
-    return `Order ${order.id.slice(0, 8)}… has already shipped and cannot be cancelled online. You can request a return from the order details page once it arrives.`;
+    return [
+      `Order #${shortId}`,
+      "",
+      `Status: ${statusLabel}`,
+      "",
+      "This order has already shipped and cannot be cancelled online. After delivery, you can request a return from the order details page.",
+    ].join("\n");
   }
 
-  return `Order ${order.id.slice(0, 8)}… (${statusLabel}) cannot be cancelled at this stage. Contact support if you need help.`;
+  return [
+    `Order #${shortId}`,
+    "",
+    `Status: ${statusLabel}`,
+    "",
+    "This order cannot be cancelled at its current stage. Say “talk to agent” if you need help from our team.",
+  ].join("\n");
+}
+
+async function buildRefundReply(order?: AssistantOrderSummary): Promise<string> {
+  const policies = await loadPolicies();
+  const returnText =
+    policies.returnPolicy.trim() ||
+    "Contact support for return and refund eligibility.";
+
+  const lines = [
+    "Returns & refunds",
+    "",
+    returnText.slice(0, 1200),
+  ];
+
+  if (order) {
+    const shortId = order.id.slice(0, 8);
+    lines.push(
+      "",
+      `Your order #${shortId} is ${formatStatus(order.status)}.`,
+    );
+    if (order.status === "DELIVERED") {
+      lines.push(
+        "You can start a return from your order details page if the item is eligible.",
+      );
+    } else if (order.status === "SHIPPED") {
+      lines.push(
+        "If the package has not arrived yet, ask about delivery status first. Returns typically apply after delivery.",
+      );
+    }
+  }
+
+  if (policies.supportEmail) {
+    lines.push("", `Support email: ${policies.supportEmail}`);
+  }
+
+  return lines.join("\n");
 }
 
 function buildMultiOrderReply(orders: AssistantOrderSummary[]): string {
   const lines = orders.slice(0, 5).map((order) => {
-    const eta = formatDate(order.estimatedDeliveryAt);
-    return `• ${order.id.slice(0, 8)}… — ${formatStatus(order.status)}${eta ? ` (ETA ${eta})` : ""}`;
+    const eta = formatRelativeDelivery(order.estimatedDeliveryAt);
+    return `• #${order.id.slice(0, 8)} — ${formatStatus(order.status)}${eta ? ` · ETA ${eta}` : ""}`;
   });
 
-  return `You have ${orders.length} recent orders. Here are the latest:\n${lines.join("\n")}\n\nAsk about a specific order by including its ID, e.g. "Where is order ${orders[0]?.id}?".`;
+  return [
+    `You have ${orders.length} recent orders:`,
+    "",
+    ...lines,
+    "",
+    `Ask about one order by ID, e.g. "Where is order ${orders[0]?.id}?"`,
+  ].join("\n");
+}
+
+function buildGuestAuthPrompt(): string {
+  return [
+    "I can look up a specific order from our database.",
+    "",
+    "Signed in: ask “Where is my order?” and I will use your account orders.",
+    "",
+    "Guest: send your order ID and the email used at checkout, for example:",
+    "“Track order <order-id> email you@example.com”",
+    "",
+    "You can also sign in for full order history.",
+  ].join("\n");
 }
 
 async function resolveTargetOrder(
@@ -177,7 +301,38 @@ async function resolveTargetOrder(
     return { order: activeOrders[0], recentOrders };
   }
 
-  return { order: null, recentOrders: activeOrders.length > 0 ? activeOrders : recentOrders };
+  return {
+    order: null,
+    recentOrders: activeOrders.length > 0 ? activeOrders : recentOrders,
+  };
+}
+
+async function resolveGuestOrder(
+  message: string,
+  explicitOrderId?: string,
+): Promise<OrderWithTracking | null> {
+  const orderId = explicitOrderId ?? extractOrderId(message);
+  const email = extractEmail(message);
+  if (!orderId || !email) return null;
+
+  const order = await findOrderForPublicTracking(orderId, email);
+  return order as OrderWithTracking | null;
+}
+
+function buildReplyForOrder(
+  summary: AssistantOrderSummary,
+  subIntent: OrderSupportSubIntent,
+): Promise<string> | string {
+  switch (subIntent) {
+    case "refund_request":
+      return buildRefundReply(summary);
+    case "cancel_request":
+      return buildCancelReply(summary);
+    case "delivery_status":
+    case "track_order":
+    default:
+      return buildStructuredTrackReply(summary);
+  }
 }
 
 export async function runOrderSupportChat(input: {
@@ -188,12 +343,32 @@ export async function runOrderSupportChat(input: {
 }): Promise<OrderSupportResult> {
   const subIntent = detectOrderSupportSubIntent(input.message);
 
-  if (!input.userId || input.userRole !== "USER") {
+  if (subIntent === "refund_request" && (!input.userId || input.userRole !== "USER")) {
     return {
       intent: "order_support",
       orderSupportIntent: subIntent,
-      reply:
-        "To check your order status, please sign in first. Then ask again — for example: “Where is my order?” or include your order ID.",
+      reply: await buildRefundReply(),
+      orders: [],
+    };
+  }
+
+  if (!input.userId || input.userRole !== "USER") {
+    const guestOrder = await resolveGuestOrder(input.message, input.orderId);
+    if (guestOrder) {
+      const summary = toOrderSummary(guestOrder);
+      const reply = await buildReplyForOrder(summary, subIntent);
+      return {
+        intent: "order_support",
+        orderSupportIntent: subIntent,
+        reply,
+        orders: [summary],
+      };
+    }
+
+    return {
+      intent: "order_support",
+      orderSupportIntent: subIntent,
+      reply: buildGuestAuthPrompt(),
       orders: [],
       requiresAuth: true,
     };
@@ -211,7 +386,7 @@ export async function runOrderSupportChat(input: {
         intent: "order_support",
         orderSupportIntent: subIntent,
         reply:
-          "I could not find any orders on your account. Place an order first, or double-check you are signed in with the correct account.",
+          "I could not find any orders on your account. Place an order first, or confirm you are signed in with the correct email.",
         orders: [],
       };
     }
@@ -226,20 +401,7 @@ export async function runOrderSupportChat(input: {
   }
 
   const summary = toOrderSummary(order);
-  let reply: string;
-
-  switch (subIntent) {
-    case "cancel_request":
-      reply = buildCancelReply(summary);
-      break;
-    case "delivery_status":
-      reply = buildTrackReply(summary, "delivery_status");
-      break;
-    case "track_order":
-    default:
-      reply = buildTrackReply(summary, "track_order");
-      break;
-  }
+  const reply = await buildReplyForOrder(summary, subIntent);
 
   return {
     intent: "order_support",
