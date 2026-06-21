@@ -6,11 +6,11 @@ import { ProductSearchBar } from "../molecules/ProductSearchBar";
 import { ProductTable } from "../organisms/ProductTable";
 import { ProductManagementHeader } from "../organisms/ProductManagementHeader";
 import { useProductManagement } from "../hooks/useProductManagement";
+import { ADMIN_ONLY_ROLES } from "@/components/auth/types/User";
 
-type AllowedRole = "SUPER_ADMIN" | "SELLER";
 
 interface ProductManagementScreenProps {
-  allowedRole: AllowedRole;
+  allowedRole: ADMIN_ONLY_ROLES;
   title: string;
   subtitle: string;
   addHref: string;
@@ -41,7 +41,9 @@ export default function ProductManagementScreen({
 
   if (!isClient) return <ProductTableSkeleton />;
 
-  if (user?.role !== allowedRole) {
+  if (!user?.role || 
+    allowedRole.includes(user.role as ADMIN_ONLY_ROLES)
+  ) {
     return (
       <div className="p-8">
         <p className="text-muted-foreground">

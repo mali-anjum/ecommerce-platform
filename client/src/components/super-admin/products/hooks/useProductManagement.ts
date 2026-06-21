@@ -5,11 +5,10 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/hooks/use-toast";
 import { useAuthStore } from "@/components/auth/state/useAuthStore";
 import { useProductStore } from "@/components/products/state/useProductStore";
-
-type AllowedRole = "SUPER_ADMIN" | "SELLER";
+import { ADMIN_ONLY_ROLES } from "@/components/auth/types/User";
 
 interface UseProductManagementProps {
-  allowedRole: AllowedRole;
+  allowedRole: ADMIN_ONLY_ROLES;
   editHrefBase: string;
 }
 
@@ -30,7 +29,15 @@ export function useProductManagement({
 
   // Fetch products
   useEffect(() => {
-    if (!isClient || user?.role !== allowedRole || fetchedRef.current) return;
+    if (
+      !isClient ||
+      !user?.role ||
+      !allowedRole.includes(user.role as ADMIN_ONLY_ROLES) ||
+      fetchedRef.current
+    ) {
+      return;
+    }
+    
     fetchedRef.current = true;
     fetchAllProductsForAdmin();
   }, [allowedRole, fetchAllProductsForAdmin, isClient, user?.role]);

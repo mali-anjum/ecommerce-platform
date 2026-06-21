@@ -2,9 +2,10 @@
 import ProductManagementScreen from "@/components/super-admin/products/screen/ProductListScreen";
 
 export default function ProductsPage() {
+  // const roles = "SELLER", 
   return (
     <ProductManagementScreen
-      allowedRole="SELLER"
+      allowedRole="SUPER_ADMIN"
       title="My Products"
       subtitle="Manage your product catalog"
       addHref="/products/add"

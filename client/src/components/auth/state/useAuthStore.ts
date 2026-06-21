@@ -4,7 +4,7 @@ import { extractAuthErrorMessage } from "@/lib/auth/extractAuthError";
 import type { AxiosError } from "axios";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { User } from "@/components/auth/types/User";
+import type { ALL_USER_ROLES, User } from "@/components/auth/types/User";
 import type { TokenExpiryInfoBackendRes } from "@/components/auth/types/TokenExpiryInfoFromBackend";
 import type { Session } from "@/components/auth/types/Session";
 import {
@@ -28,7 +28,7 @@ interface AuthStore {
   // Actions
   setUser: (user: User | null) => void;
   isAuthenticated: () => boolean;
-  getUserRole: () => "USER" | "SELLER" | "SUPER_ADMIN" | null;
+  getUserRole: () => ALL_USER_ROLES | null;
   reset: () => void;
   clearError: () => void;
   initialize: () => Promise<void>;
