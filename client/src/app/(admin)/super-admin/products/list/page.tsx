@@ -1,15 +1,16 @@
-import ProductManagementList from "@/components/products/organisms/ProductManagementList";
 
-export default function SuperAdminProductListingPage() {
+import ProductManagementScreen from "@/components/super-admin/products/screen/ProductListScreen";
+
+export default function ProductsPage() {
   return (
-    <ProductManagementList
-      allowedRole="SUPER_ADMIN"
-      title="Product Inventory"
-      subtitle="Super admin can view and manage all products."
-      addHref="/super-admin/products/add"
-      editHrefBase="/super-admin/products/add?id="
-      emptyStateText="No products found."
-      deniedText="Super admin access required."
+    <ProductManagementScreen
+      allowedRole="SELLER"
+      title="My Products"
+      subtitle="Manage your product catalog"
+      addHref="/products/add"
+      editHrefBase="/products/edit/"
+      emptyStateText="No products found. Start by adding your first product!"
+      deniedText="You don't have permission to manage products."
     />
   );
 }
