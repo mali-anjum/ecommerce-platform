@@ -9,13 +9,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     if (!accessToken)
       return NextResponse.json(
-        { success: true, error: "Unauthenticated" },
+        { success: false, error: "Unauthenticated" },
         { status: 401 },
       );
 
-      const { id } = await request.json()
+      // GET has no body; the order id comes from the [id] route segment.
+      const { id } = await params;
 
-      const backendRes = await fetch(`${API_ROUTES.ORDER}/admin/${id}`,{
+      const backendRes = await fetch(`${API_ROUTES.ORDER}/admin/${encodeURIComponent(id)}`,{
         method: "GET", 
         headers: {
             "Content-Type": "application/json", 

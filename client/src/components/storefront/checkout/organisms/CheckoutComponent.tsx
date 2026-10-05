@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 
 // Store hooks
@@ -39,7 +39,7 @@ export function CheckoutContent() {
   const { user } = useAuthStore();
 
   // Custom hooks - DECLARE ALL HOOKS FIRST
-  const { isLoading, fetchCheckoutData } = useCheckoutData();
+  const { fetchCheckoutData } = useCheckoutData();
   const { cartItemsWithDetails } = useCheckoutCart(items);
   const {
     couponCode,

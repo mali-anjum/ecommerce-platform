@@ -1,6 +1,5 @@
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
-import { v4 as uuidv4 } from "uuid";
 import type { Response } from "express";
 import { prisma } from "../../lib/prisma";
 import { buildTokenInfo } from "../../utils/auth/tokenInfo";
@@ -84,7 +83,7 @@ export class TokenService {
     }
 
     const accessToken = this.signAccessToken(user.id, user.email, user.role);
-    const refreshToken = uuidv4();
+    const refreshToken = crypto.randomUUID();
     const hashedRefreshToken = this.hashToken(refreshToken);
 
     await prisma.user.update({

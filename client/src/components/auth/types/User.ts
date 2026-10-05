@@ -1,7 +1,7 @@
 export type ALL_USER_ROLES =
 | "SUPER_ADMIN"
 | "SELLER"
-| "BUYER";
+| "USER";
 
 export type ADMIN_ONLY_ROLES = 
 | "SUPER_ADMIN"

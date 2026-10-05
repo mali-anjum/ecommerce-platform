@@ -117,7 +117,8 @@ app.get("/", (_req: Request, res: Response) => {
 app.use(errorHandler);
 
 // 404 Handler for undefined routes
-app.use("*", (req: Request, res: Response) => {
+// Express 5 (path-to-regexp v8) rejects a bare "*" path, so match everything with no path.
+app.use((req: Request, res: Response) => {
   res.status(404).json(new ApiError(404, `Route ${req.originalUrl} not found`));
 });
 

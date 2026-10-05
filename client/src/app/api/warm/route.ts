@@ -6,7 +6,7 @@ import { sentryTracker } from "@/lib/monitoring";
 
 const TIMEOUT_MS = 10000;
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   const BACKEND_URL = getServerBackendUrl();
 
   if (!BACKEND_URL) {

@@ -1,8 +1,5 @@
 import type { AnalyticsDashboard, AnalyticsPeriod } from "@/components/super-admin/analytics/types/analytics";
-import type {
-  AnalyticsStore,
-  FetchDashboardOptions,
-} from "@/components/super-admin/analytics/types/analyticsStoreTypes";
+import type { AnalyticsStore } from "@/components/super-admin/analytics/types/analyticsStoreTypes";
 import { ApiResult } from "@/components/storefront/orders/types/orderTypes";
 import { http } from "@/lib/http";
 import { AxiosError } from "axios";

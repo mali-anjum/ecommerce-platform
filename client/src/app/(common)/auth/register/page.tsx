@@ -3,6 +3,10 @@
 import { LoginBanner } from "@/components/auth/molecules/LoginBanner"; // Reused from login
 import { RegisterForm } from "@/components/auth/organisms/RegisterForm";
 import "@/styles/login.css"; // Import animations
+import { seededRandomRows } from "@/lib/seededRandom";
+
+// Precomputed so server and client render identical particles.
+const PARTICLES = seededRandomRows(20, 6, 11);
 
 export default function RegisterPage() {
   return (
@@ -10,17 +14,17 @@ export default function RegisterPage() {
       {/* Background Effects */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="error-grid absolute inset-0 opacity-5" />
-        {[...Array(20)].map((_, i) => (
+        {PARTICLES.map((p, i) => (
           <div
             key={i}
             className="error-particle absolute animate-float"
             style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              width: `${Math.random() * 4 + 2}px`,
-              height: `${Math.random() * 4 + 2}px`,
-              animationDelay: `${Math.random() * 3}s`,
-              animationDuration: `${Math.random() * 6 + 4}s`,
+              top: `${p[0] * 100}%`,
+              left: `${p[1] * 100}%`,
+              width: `${p[2] * 4 + 2}px`,
+              height: `${p[3] * 4 + 2}px`,
+              animationDelay: `${p[4] * 3}s`,
+              animationDuration: `${p[5] * 6 + 4}s`,
               opacity: 0.15,
             }}
           />

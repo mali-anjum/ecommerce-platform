@@ -23,14 +23,14 @@ import {
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
-import { CouponHeader } from "@/components/super-admin/coupon/molecules/CouponHeader";
-import { CouponPreview } from "@/components/super-admin/coupon/molecules/CouponPreview";
-import { FormField } from "@/components/super-admin/coupon/atoms/CouponFormField";
-import { DateValidation } from "@/components/super-admin/coupon/molecules/CouponDateValidation";
+import { CouponHeader } from "@/components/super-admin/sales/coupon/molecules/CouponHeader";
+import { CouponPreview } from "@/components/super-admin/sales/coupon/molecules/CouponPreview";
+import { FormField } from "@/components/super-admin/sales/coupon/atoms/CouponFormField";
+import { DateValidation } from "@/components/super-admin/sales/coupon/molecules/CouponDateValidation";
 import {
   generateCouponCode,
   validateGeneratedCode,
-} from "@/components/super-admin/coupon/utils/couponGenerator";
+} from "@/components/super-admin/sales/coupon/utils/couponGenerator";
 import { sentryTracker } from "@/lib/monitoring";
 
 function SuperAdminManageCouponsPage() {
@@ -336,7 +336,7 @@ function SuperAdminManageCouponsPage() {
                 <li className="flex items-start gap-2">
                   <Zap className="h-4 w-4 text-secondary shrink-0 mt-0.5" />
                   <span>
-                    Use readable codes like "SUMMER25" for better brand recall
+                    Use readable codes like &ldquo;SUMMER25&rdquo; for better brand recall
                   </span>
                 </li>
                 <li className="flex items-start gap-2">

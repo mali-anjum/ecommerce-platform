@@ -26,7 +26,6 @@ export default function AuthProvider({
 
   useEffect(() => {
     let mounted = true;
-    let initTimeout: NodeJS.Timeout;
 
     const initializeAuth = async () => {
       const traceId = `provider-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -57,7 +56,7 @@ export default function AuthProvider({
       }
     };
 
-    initTimeout = setTimeout(() => {
+    const initTimeout = setTimeout(() => {
       initializeAuth();
     }, 100);
 
@@ -65,6 +64,8 @@ export default function AuthProvider({
       mounted = false;
       clearTimeout(initTimeout);
     };
+    // pathname is only logged; re-running auth init on every navigation would be wrong.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialize, isPublicAuthRoute]);
 
   if (!isInitialized && !isPublicAuthRoute) {

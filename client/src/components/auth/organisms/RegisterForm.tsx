@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import Image from "next/image";
@@ -20,7 +20,7 @@ export const RegisterForm = () => {
     register,
     handleSubmit,
     formState: { errors },
-    watch,
+    control,
     setError,
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -33,7 +33,7 @@ export const RegisterForm = () => {
     mode: "onChange",
   });
 
-  const password = watch("password");
+  const password = useWatch({ control, name: "password" });
 
   const handleFormSubmit = async (data: RegisterFormData) => {
     const result = await onSubmit(data);

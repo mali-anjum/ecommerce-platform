@@ -5,12 +5,10 @@ describe("applyProxyCookies", () => {
   it("applies cookies from backend Set-Cookie headers onto NextResponse", () => {
     const backendRes = new Response(null, {
       status: 200,
-      headers: {
-        "Set-Cookie": [
-          "accessToken=eyJhbG; Path=/; HttpOnly; SameSite=Lax; Max-Age=900",
-          "refreshToken=uuid; Domain=localhost; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800",
-        ],
-      },
+      headers: [
+        ["Set-Cookie", "accessToken=eyJhbG; Path=/; HttpOnly; SameSite=Lax; Max-Age=900"],
+        ["Set-Cookie", "refreshToken=uuid; Domain=localhost; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800"],
+      ],
     });
 
     const response = NextResponse.json({ ok: true });

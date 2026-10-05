@@ -1,7 +1,6 @@
 // app/api/auth/refresh-token/route.ts - CORRECTED
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { extractSetCookieHeaders } from "@/lib/api/extractSetCookieHeaders";
 import { applyProxyCookies } from "@/lib/api/applyProxyCookies";
 import { getServerBackendUrl } from "@/lib/api/getServerBackendUrl";
 import { proxyLogger } from "@/lib/logger";

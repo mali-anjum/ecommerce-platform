@@ -167,7 +167,7 @@ export function PaymentMethodChart({ data }: { data: PaymentBreakdown[] }) {
           </Pie>
           <Tooltip
             contentStyle={chartTooltipStyle}
-            formatter={(value: number) => formatCurrency(value)}
+            formatter={(value) => formatCurrency(Number(value ?? 0))}
           />
           <Legend />
         </PieChart>
@@ -235,7 +235,7 @@ export function GeographicChart({ data }: { data: GeographicRow[] }) {
             width={90}
             tick={{ fill: CHART_COLORS.muted, fontSize: 11 }}
           />
-          <Tooltip contentStyle={chartTooltipStyle} formatter={(v: number) => formatCurrency(v)} />
+          <Tooltip contentStyle={chartTooltipStyle} formatter={(value) => formatCurrency(Number(value ?? 0))} />
           <Bar dataKey="revenue" name="Revenue" fill={CHART_COLORS.primary} radius={[0, 6, 6, 0]} />
         </BarChart>
       </ResponsiveContainer>

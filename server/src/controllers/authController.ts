@@ -13,7 +13,7 @@ import {
   setTokens,
   signAccessToken,
 } from "../services/auth/sessionTokens";
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID } from "crypto";
 import jwt from "jsonwebtoken";
 import { mapAuthErrorResponse } from "../utils/auth/authErrors";
 import { sentryTracker } from "../lib/monitoring";
@@ -143,7 +143,7 @@ const login = async (req: Request, res: Response): Promise<void> => {
 
     // Generate tokens
     const accessToken = signAccessToken(user.id, user.email, user.role);
-    const refreshToken = uuidv4();
+    const refreshToken = randomUUID();
     const hashedRefreshToken = hashToken(refreshToken);
 
     // Update user with refresh token (optimized)
@@ -254,7 +254,7 @@ const refreshAccessToken = async (
 
     // Rotate refresh token on every refresh for replay resistance.
     const newAccessToken = signAccessToken(user.id, user.email, user.role);
-    const newRefreshToken = uuidv4();
+    const newRefreshToken = randomUUID();
     const newHashedRefreshToken = hashToken(newRefreshToken);
 
     await prisma.user.update({

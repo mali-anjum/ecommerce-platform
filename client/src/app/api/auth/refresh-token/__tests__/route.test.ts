@@ -35,14 +35,14 @@ describe("auth refresh-token route", () => {
 
   beforeEach(() => {
     jest.resetAllMocks();
-    process.env.NODE_ENV = "development";
+    Object.assign(process.env, { NODE_ENV: "development" });
     delete process.env.BACKEND_URL;
     delete process.env.DEVE_URL;
     delete process.env.DEV_URL;
   });
 
   afterAll(() => {
-    process.env.NODE_ENV = originalNodeEnv;
+    Object.assign(process.env, { NODE_ENV: originalNodeEnv });
     process.env.BACKEND_URL = originalBackendUrl;
     process.env.DEVE_URL = originalDeveUrl;
     process.env.DEV_URL = originalDevUrl;
@@ -89,9 +89,14 @@ describe("auth refresh-token route", () => {
         code: "REFRESH_FAILED_401",
       }),
     );
-    expect(res.headers.getSetCookie()).toEqual([
-      "accessToken=; Max-Age=0; Path=/; HttpOnly",
-      "refreshToken=; Max-Age=0; Path=/; HttpOnly",
-    ]);
+    // applyProxyCookies re-serializes cookies, so assert the clearing semantics, not exact strings.
+    const setCookies = res.headers.getSetCookie();
+    expect(setCookies).toHaveLength(2);
+    for (const name of ["accessToken", "refreshToken"]) {
+      const cookie = setCookies.find((value) => value.startsWith(`${name}=;`));
+      expect(cookie).toBeDefined();
+      expect(cookie).toContain("Max-Age=0");
+      expect(cookie).toContain("HttpOnly");
+    }
   });
 });

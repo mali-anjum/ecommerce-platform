@@ -38,6 +38,8 @@ export default function useSilentAuth(enabled = true) {
   const storageDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const refreshCooldownUntilRef = useRef<number>(0);
   const flowCounterRef = useRef<number>(0);
+  // performTokenRefresh and scheduleTokenRefresh call each other; the ref breaks the declaration cycle.
+  const scheduleTokenRefreshRef = useRef<() => Promise<void>>(async () => {});
 
   const calculateRefreshTime = useCallback(async (): Promise<number | null> => {
     try {
@@ -128,7 +130,7 @@ export default function useSilentAuth(enabled = true) {
         refreshCooldownUntilRef.current = 0;
         setTimeout(() => {
           authLogger.debug("Rescheduling next refresh after successful refresh");
-          scheduleTokenRefresh();
+          void scheduleTokenRefreshRef.current();
         }, 1000);
       } else {
         authLogger.warn("Token refresh failed (no success)", {
@@ -169,7 +171,7 @@ export default function useSilentAuth(enabled = true) {
           retryCount: retryCountRef.current,
         });
 
-        setTimeout(() => scheduleTokenRefresh(), backoffTime);
+        setTimeout(() => void scheduleTokenRefreshRef.current(), backoffTime);
       }
     } catch (error) {
     sentryTracker(error, { source: "useSilentAuth" });
@@ -188,11 +190,11 @@ export default function useSilentAuth(enabled = true) {
         retryCount: retryCountRef.current,
       });
 
-      setTimeout(() => scheduleTokenRefresh(), backoffTime);
+      setTimeout(() => void scheduleTokenRefreshRef.current(), backoffTime);
     } finally {
       isRefreshingRef.current = false;
     }
-  }, [refreshAccessToken]);
+  }, [checkSession, refreshAccessToken]);
 
   const scheduleTokenRefresh = useCallback(async () => {
     if (isRefreshingRef.current) {
@@ -236,6 +238,10 @@ export default function useSilentAuth(enabled = true) {
       authLogger.error("Token refresh scheduling failed", error);
     }
   }, [calculateRefreshTime, performTokenRefresh]);
+
+  useEffect(() => {
+    scheduleTokenRefreshRef.current = scheduleTokenRefresh;
+  }, [scheduleTokenRefresh]);
 
   const checkAndRefreshIfNeeded = useCallback(async () => {
     const flowId = `silent-auth-${++flowCounterRef.current}`;

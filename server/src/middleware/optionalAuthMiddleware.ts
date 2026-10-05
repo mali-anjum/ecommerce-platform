@@ -1,6 +1,6 @@
 import { NextFunction, Response } from "express";
-import { jwtVerify } from "jose";
 import { AuthenticatedRequest } from "../types/express";
+import { extractAccessToken, verifyAccessToken } from "../utils/auth/accessToken";
 
 /**
  * Attaches `req.user` when a valid access token is present.
@@ -12,25 +12,17 @@ export const optionalAuthenticateJwt = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    let accessToken = req.cookies?.accessToken;
-
-    if (!accessToken && req.headers.authorization) {
-      accessToken = req.headers.authorization.replace("Bearer ", "");
-    }
+    const accessToken = extractAccessToken(
+      req.cookies,
+      req.headers.authorization,
+    );
 
     if (!accessToken) {
       next();
       return;
     }
 
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
-    const { payload } = await jwtVerify(accessToken, secret);
-
-    req.user = {
-      userId: payload.userId as string,
-      email: payload.email as string,
-      role: payload.role as string,
-    };
+    req.user = await verifyAccessToken(accessToken);
   } catch {
     // Invalid token — treat as guest for mixed public/order chat flows.
   }

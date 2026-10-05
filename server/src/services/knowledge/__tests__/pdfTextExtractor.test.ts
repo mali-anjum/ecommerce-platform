@@ -1,8 +1,13 @@
 import { extractTextFromPlainText } from "../pdfTextExtractor";
 
-jest.mock("pdf-parse", () =>
-  jest.fn(async () => ({ text: "Extracted PDF content for testing." })),
-);
+const mockDestroy = jest.fn(async () => undefined);
+
+jest.mock("pdf-parse", () => ({
+  PDFParse: jest.fn().mockImplementation(() => ({
+    getText: jest.fn(async () => ({ text: "Extracted PDF content for testing." })),
+    destroy: mockDestroy,
+  })),
+}));
 
 import { extractDocumentText, extractTextFromPdf } from "../pdfTextExtractor";
 
@@ -17,6 +22,7 @@ describe("pdfTextExtractor", () => {
   it("extracts pdf text via pdf-parse", async () => {
     const text = await extractTextFromPdf(Buffer.from("fake-pdf"));
     expect(text).toBe("Extracted PDF content for testing.");
+    expect(mockDestroy).toHaveBeenCalled();
   });
 
   it("routes by mime type", async () => {

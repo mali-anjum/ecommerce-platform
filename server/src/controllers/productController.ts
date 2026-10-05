@@ -36,18 +36,9 @@ const logger = createLogger("PRODUCT_CONTROLLER");
 const createProduct = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     try {
-      console.log("MULTER REQ.FILES type:", typeof req.files);
-      console.log("isArray(req.files):", Array.isArray(req.files));
-      console.log(
-        "req.files length/name(s):",
-        Array.isArray(req.files)
-          ? (req.files as Express.Multer.File[]).map((f) => ({
-              name: f.originalname,
-              size: f.size,
-            }))
-          : req.files
-      );
-      console.log("req.body images keys:", req.body.image, req.body.images);
+      logger.debug("createProduct upload received", {
+        fileCount: Array.isArray(req.files) ? req.files.length : 0,
+      });
 
       const {
         name,

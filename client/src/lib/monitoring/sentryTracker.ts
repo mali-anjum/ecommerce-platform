@@ -32,7 +32,8 @@ function ensureErrorTypes(value: unknown): Error {
 }
 
 /** Report every failure to Sentry (when enabled). Use in catch blocks. */
-export function sentryTracker(
+export function 
+sentryTracker(
   error: unknown,
   context: SentryTrackerContext = {},
 ): void {

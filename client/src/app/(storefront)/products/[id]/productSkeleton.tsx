@@ -58,6 +58,10 @@
 "use client";
 
 import { Skeleton } from "@/components/ui/skeleton";
+import { seededRandomRows } from "@/lib/seededRandom";
+
+// Precomputed so server and client render identical particles.
+const PARTICLES = seededRandomRows(8, 5, 14);
 
 // Modular Skeleton Components
 const ImageGallerySkeleton = () => (
@@ -223,16 +227,16 @@ function ProductDetailsSkeleton() {
       {/* Background effects for skeleton */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="error-grid absolute inset-0 opacity-5" />
-        {[...Array(8)].map((_, i) => (
+        {PARTICLES.map((p, i) => (
           <div
             key={i}
             className="error-particle absolute animate-digital-pulse"
             style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              width: `${Math.random() * 3 + 1}px`,
-              height: `${Math.random() * 3 + 1}px`,
-              animationDelay: `${Math.random() * 2}s`,
+              top: `${p[0] * 100}%`,
+              left: `${p[1] * 100}%`,
+              width: `${p[2] * 3 + 1}px`,
+              height: `${p[3] * 3 + 1}px`,
+              animationDelay: `${p[4] * 2}s`,
               '--particle-opacity': '0.05',
               '--particle-blur': '1px',
             } as any}

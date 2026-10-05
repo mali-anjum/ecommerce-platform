@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Gift, Package, ShoppingCart, Sparkles, TrendingUp, Zap } from "lucide-react";
 
 export function CartEmptyState({ onContinueShopping }: { onContinueShopping: () => void }) {

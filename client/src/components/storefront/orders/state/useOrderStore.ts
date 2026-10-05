@@ -30,7 +30,7 @@ const getAxiosErrorMessage = (
   );
 };
 
-export const useOrderStore = create<OrderStore>((set, get) => ({
+export const useOrderStore = create<OrderStore>((set) => ({
   currentOrder: null,
   isLoading: true,
   error: null,

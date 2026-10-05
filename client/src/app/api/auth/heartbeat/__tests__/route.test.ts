@@ -21,14 +21,14 @@ describe("auth heartbeat route", () => {
 
   beforeEach(() => {
     jest.resetAllMocks();
-    process.env.NODE_ENV = "development";
+    Object.assign(process.env, { NODE_ENV: "development" });
     delete process.env.BACKEND_URL;
     delete process.env.DEVE_URL;
     delete process.env.DEV_URL;
   });
 
   afterAll(() => {
-    process.env.NODE_ENV = originalNodeEnv;
+    Object.assign(process.env, { NODE_ENV: originalNodeEnv });
     process.env.BACKEND_URL = originalBackendUrl;
     process.env.DEVE_URL = originalDeveUrl;
     process.env.DEV_URL = originalDevUrl;

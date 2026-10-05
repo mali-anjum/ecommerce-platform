@@ -28,7 +28,7 @@ import { formatDateTime } from "@/components/common/utils/formatDates";
 import {
   useLeadsStore,
   type LeadSourceFilter,
-} from "@/components/super-admin/leads/state/useLeadsStore";
+} from "@/components/super-admin/ai/leads/state/useLeadsStore";
 
 export default function SuperAdminLeadsPage() {
   const { toast } = useToast();

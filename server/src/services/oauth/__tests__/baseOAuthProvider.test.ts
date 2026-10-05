@@ -9,7 +9,7 @@ jest.mock("arctic", () => ({
   generateCodeVerifier: jest.fn(() => "generated-verifier"),
 }));
 
-jest.mock("../internal/oauthAccountService", () => ({
+jest.mock("../internal/OAuthAccountService", () => ({
   oauthAccountService: {
     findOrCreateUserFromOAuth: jest.fn().mockResolvedValue({
       userId: "user-1",

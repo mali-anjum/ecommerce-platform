@@ -1,5 +1,5 @@
 "use client";
-``
+
 import { UserManagementPanel } from "@/components/super-admin/users/organisms/UserManagementPanel";
 
 export default function SuperAdminAdminsPage() {

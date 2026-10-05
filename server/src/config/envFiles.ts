@@ -14,7 +14,7 @@ export function loadEnvFiles(baseDir = process.cwd()): void {
   for (const file of getCandidateEnvFiles()) {
     const envPath = path.resolve(baseDir, file);
     if (fs.existsSync(envPath)) {
-      dotenv.config({ path: envPath, override: false });
+      dotenv.config({ path: envPath, override: false, quiet: true });
     }
   }
 }

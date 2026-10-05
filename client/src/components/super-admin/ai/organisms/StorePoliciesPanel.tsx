@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/hooks/use-toast";
-import { useKnowledgeStore } from "@/components/super-admin/knowledge/state/useKnowledgeStore";
+import { useKnowledgeStore } from "@/components/super-admin/ai/knowledge/state/useKnowledgeStore";
 
 export function StorePoliciesPanel() {
   const { toast } = useToast();
