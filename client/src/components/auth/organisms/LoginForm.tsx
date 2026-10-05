@@ -107,7 +107,7 @@ export const LoginForm = () => {
             
             <div className="text-center">
               <p className="text-muted-foreground">
-                Don't have an account?{" "}
+                Don&apos;t have an account?{" "}
                 <Link
                   href={ROUTES.REGISTER}
                   className="text-primary hover:text-primary-light font-semibold transition-colors group"

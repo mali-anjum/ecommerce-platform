@@ -1,8 +1,8 @@
 // src/middleware/authMiddleware.ts
 import { NextFunction, Response } from "express";
-import { jwtVerify } from "jose";
 import { AuthenticatedRequest } from "../types/express";
 import { sentryTracker } from "../lib/monitoring";
+import { extractAccessToken, verifyAccessToken } from "../utils/auth/accessToken";
 
 export const authenticateJwt = async (
   req: AuthenticatedRequest,
@@ -10,13 +10,11 @@ export const authenticateJwt = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    // ✅ Check cookie first (primary method for browsers)
-    let accessToken = req.cookies?.accessToken;
-    
-    // ✅ Fallback: Authorization header (for mobile apps, Postman)
-    if (!accessToken && req.headers.authorization) {
-      accessToken = req.headers.authorization.replace('Bearer ', '');
-    }
+    // Cookie first (browsers), then Authorization header (mobile apps, Postman).
+    const accessToken = extractAccessToken(
+      req.cookies,
+      req.headers.authorization
+    );
 
     if (!accessToken) {
       res.status(401).json({ 
@@ -26,19 +24,15 @@ export const authenticateJwt = async (
       return;
     }
 
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
-    const { payload } = await jwtVerify(accessToken, secret);
-
-    req.user = {
-      userId: payload.userId as string,
-      email: payload.email as string,
-      role: payload.role as string,
-    };
+    req.user = await verifyAccessToken(accessToken);
     
     next();
   } catch (error) {
     sentryTracker(error, { source: "authMiddleware" });
-    console.error("JWT verification failed:", error);
+    console.error(
+      "JWT verification failed:",
+      error instanceof Error ? error.message : "unknown error"
+    );
     res.status(401).json({ 
       success: false, 
       error: "Invalid or expired token" 

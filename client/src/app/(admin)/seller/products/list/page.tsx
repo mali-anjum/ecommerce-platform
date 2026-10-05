@@ -1,8 +1,8 @@
-import ProductManagementList from "@/components/products/organisms/ProductManagementList";
+import ProductManagementScreen from "@/components/super-admin/products/screen/ProductListScreen";
 
 export default function SellerProductsListPage() {
   return (
-    <ProductManagementList
+    <ProductManagementScreen
       allowedRole="SELLER"
       title="Your Products"
       subtitle="Seller view is scoped to your own products only."

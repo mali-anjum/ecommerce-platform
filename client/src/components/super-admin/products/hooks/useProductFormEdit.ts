@@ -100,13 +100,7 @@ export function useProductFormEdit({
     // Reset form logic here
   }, [isEditMode, reset]);
 
-  // Align department with subcategory after catalog loads
-  useEffect(() => {
-    // This is handled in the main component via the catalog loading effect
-  }, [catalogDepartments]);
-
   return {
     isEditHydrating,
-    wasEditModeRef: wasEditModeRef.current,
   };
 }

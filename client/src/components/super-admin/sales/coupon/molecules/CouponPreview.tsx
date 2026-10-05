@@ -62,7 +62,7 @@ export function CouponPreview({
             </Badge>
             
             <div className="text-xs text-muted-foreground">
-              ID: {Math.random().toString(36).substr(2, 9).toUpperCase()}
+              ID assigned on save
             </div>
           </div>
 

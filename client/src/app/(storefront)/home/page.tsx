@@ -11,6 +11,10 @@ import type { Product } from "@/components/products/types/product";
 import { WishlistHeartButton } from "@/components/storefront/wishlist/atoms/WishlistHeartButton";
 import { buildWishlistSnapshot } from "@/components/storefront/wishlist/utils/wishlistSnapshot";
 import { sentryTracker } from "@/lib/monitoring";
+import { seededRandomRows } from "@/lib/seededRandom";
+
+// Precomputed so server and client render identical particles.
+const PARTICLES = seededRandomRows(20, 6, 12);
 
 const TILE_IMAGE_FALLBACK =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='1600' viewBox='0 0 1200 1600'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%' stop-color='%230f172a'/><stop offset='100%' stop-color='%23334155'/></linearGradient></defs><rect width='1200' height='1600' fill='url(%23g)'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23e2e8f0' font-size='62' font-family='Arial, sans-serif'>Category Image</text></svg>";
@@ -401,17 +405,17 @@ function HomePage() {
       {/* Background effects */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="error-grid absolute inset-0" />
-        {Array.from({ length: 20 }).map((_, i) => (
+        {PARTICLES.map((p, i) => (
           <div
             key={i}
             className="error-particle absolute"
             style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              width: `${Math.random() * 3 + 1}px`,
-              height: `${Math.random() * 3 + 1}px`,
-              animationDelay: `${Math.random() * 2}s`,
-              animationDuration: `${Math.random() * 3 + 2}s`,
+              top: `${p[0] * 100}%`,
+              left: `${p[1] * 100}%`,
+              width: `${p[2] * 3 + 1}px`,
+              height: `${p[3] * 3 + 1}px`,
+              animationDelay: `${p[4] * 2}s`,
+              animationDuration: `${p[5] * 3 + 2}s`,
             }}
           />
         ))}

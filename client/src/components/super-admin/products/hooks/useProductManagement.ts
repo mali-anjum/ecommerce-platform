@@ -29,12 +29,7 @@ export function useProductManagement({
 
   // Fetch products
   useEffect(() => {
-    if (
-      !isClient ||
-      !user?.role ||
-      !allowedRole.includes(user.role as ADMIN_ONLY_ROLES) ||
-      fetchedRef.current
-    ) {
+    if (!isClient || user?.role !== allowedRole || fetchedRef.current) {
       return;
     }
     

@@ -6,6 +6,10 @@ import { ShoppingAssistantWidget } from "@/components/assistant/ShoppingAssistan
 import { SalesAgentShell } from "@/components/sales-agent/SalesAgentShell";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { useEffect, useState } from "react";
+import { seededRandomRows } from "@/lib/seededRandom";
+
+// Precomputed so server and client render identical particles.
+const PARTICLES = seededRandomRows(15, 7, 15);
 
 // Modular Components
 const FloatingParticles = ({ isVisible }: { isVisible: boolean }) => {
@@ -13,19 +17,19 @@ const FloatingParticles = ({ isVisible }: { isVisible: boolean }) => {
 
   return (
     <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-      {Array.from({ length: 15 }).map((_, i) => (
+      {PARTICLES.map((p, i) => (
         <div
           key={i}
           className="error-particle absolute animate-twinkle"
           style={
             {
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              width: `${Math.random() * 3 + 1}px`,
-              height: `${Math.random() * 3 + 1}px`,
-              animationDelay: `${Math.random() * 5}s`,
-              "--particle-opacity": `${Math.random() * 0.2 + 0.05}`,
-              "--particle-blur": `${Math.random() * 2 + 1}px`,
+              top: `${p[0] * 100}%`,
+              left: `${p[1] * 100}%`,
+              width: `${p[2] * 3 + 1}px`,
+              height: `${p[3] * 3 + 1}px`,
+              animationDelay: `${p[4] * 5}s`,
+              "--particle-opacity": `${p[5] * 0.2 + 0.05}`,
+              "--particle-blur": `${p[6] * 2 + 1}px`,
             } as any
           }
         />

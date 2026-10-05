@@ -41,9 +41,7 @@ export default function ProductManagementScreen({
 
   if (!isClient) return <ProductTableSkeleton />;
 
-  if (!user?.role || 
-    allowedRole.includes(user.role as ADMIN_ONLY_ROLES)
-  ) {
+  if (user?.role !== allowedRole) {
     return (
       <div className="p-8">
         <p className="text-muted-foreground">

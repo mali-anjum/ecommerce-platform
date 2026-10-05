@@ -19,7 +19,7 @@ import {
 import { useToast } from "@/components/ui/hooks/use-toast";
 import { useOrderStore } from "@/components/storefront/orders/state/useOrderStore";
 import type { Order } from "@/components/storefront/orders/types/orderTypes";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { 
   Package, 
   Truck, 
@@ -40,7 +40,6 @@ import {
   MoreVertical,
   MapPin,
   Phone,
-  Mail,
   Calendar,
   Hash,
   Sparkles,
@@ -441,18 +440,18 @@ function SuperAdminManageOrdersPage() {
   const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    loadOrders();
-  }, []);
-
-  const loadOrders = async () => {
+  const loadOrders = useCallback(async () => {
     setIsLoading(true);
     try {
       await getAllOrdersForAdmin();
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [getAllOrdersForAdmin]);
+
+  useEffect(() => {
+    void loadOrders();
+  }, [loadOrders]);
 
   const handleStatusUpdate = async (orderId: string, newStatus: OrderStatus) => {
     try {

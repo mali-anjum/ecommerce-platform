@@ -1,5 +1,5 @@
 // components/user/checkout/PaymentProcessing.tsx
-import { Zap, Shield, CreditCard, Loader2 } from "lucide-react";
+import { Zap, Shield, CreditCard } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
 interface PaymentProcessingProps {

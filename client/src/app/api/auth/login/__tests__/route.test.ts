@@ -31,13 +31,11 @@ describe("POST /api/auth/login proxy", () => {
         }),
         {
           status: 200,
-          headers: {
-            "Content-Type": "application/json",
-            "Set-Cookie": [
-              "accessToken=access-abc; Path=/; HttpOnly; SameSite=Lax; Max-Age=900",
-              "refreshToken=refresh-xyz; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800",
-            ],
-          },
+          headers: [
+            ["Content-Type", "application/json"],
+            ["Set-Cookie", "accessToken=access-abc; Path=/; HttpOnly; SameSite=Lax; Max-Age=900"],
+            ["Set-Cookie", "refreshToken=refresh-xyz; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800"],
+          ],
         },
       ),
     );

@@ -152,7 +152,6 @@ function ErrorCodeDisplay() {
 // 3. Search Recovery Component
 function SearchRecovery() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [suggestions, setSuggestions] = useState<string[]>([]);
   const router = useRouter();
 
   const popularPages = [
@@ -178,7 +177,7 @@ function SearchRecovery() {
           </div>
           <div>
             <h3 className="text-xl font-bold text-foreground">Navigation Recovery</h3>
-            <p className="text-sm text-muted-foreground">Let's get you back on track</p>
+            <p className="text-sm text-muted-foreground">Let&apos;s get you back on track</p>
           </div>
         </div>
 
@@ -237,7 +236,7 @@ function SearchRecovery() {
 
 // 4. System Diagnostics Component
 function SystemDiagnostics() {
-  const [diagnostics, setDiagnostics] = useState([
+  const [diagnostics] = useState([
     { name: "Network Connection", status: "online", progress: 100 },
     { name: "Server Status", status: "optimal", progress: 95 },
     { name: "Database", status: "connected", progress: 90 },
@@ -258,7 +257,7 @@ function SystemDiagnostics() {
         </div>
 
         <div className="space-y-4">
-          {diagnostics.map((diag, index) => (
+          {diagnostics.map((diag) => (
             <div key={diag.name} className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">{diag.name}</span>
@@ -290,7 +289,7 @@ function SystemDiagnostics() {
 
 // 5. Error Details Component
 function ErrorDetails() {
-  const [errorDetails, setErrorDetails] = useState({
+  const [errorDetails] = useState({
     timestamp: new Date().toISOString(),
     path: typeof window !== "undefined" ? window.location.pathname : "/",
     userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "",
@@ -343,8 +342,8 @@ export default function GlobalNotFound() {
               Lost in the Digital Cosmos
             </h2>
             <p className="text-lg text-muted-foreground mb-6">
-              The gravitational coordinates you're searching for have drifted into the void. 
-              Our quantum navigation systems couldn't locate this page.
+              The gravitational coordinates you&apos;re searching for have drifted into the void. 
+              Our quantum navigation systems couldn&apos;t locate this page.
             </p>
             
             {/* Primary Actions */}

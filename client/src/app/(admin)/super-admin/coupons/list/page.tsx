@@ -35,7 +35,6 @@ import {
   XCircle,
   TrendingUp,
   Clock,
-  Users,
   Shield
 } from "lucide-react";
 import { useToast } from "@/components/ui/hooks/use-toast";
@@ -62,7 +61,6 @@ function CouponStatusBadge({ coupon }: CouponStatusBadgeProps) {
   const endDate = new Date(coupon.endDate);
   const isExpired = isAfter(now, endDate);
   const isUpcoming = isBefore(now, startDate);
-  const isActive = !isExpired && !isUpcoming;
   const usagePercentage = coupon.usageLimit > 0 
     ? (coupon.usageCount / coupon.usageLimit) * 100 
     : 0;

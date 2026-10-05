@@ -35,7 +35,6 @@ export function UserRowActions({
 
   const handleStatusToggle = async () => {
     const nextActive = !user.isActive;
-    const action = nextActive ? "reactivate" : "deactivate";
     const confirmed = window.confirm(
       nextActive
         ? `Reactivate ${user.email}? They will be marked active in the system.`

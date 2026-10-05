@@ -21,7 +21,7 @@ interface ProductState {
   setCurrentPage: (page: number) => void;
 }
 
-export const useProductStore = create<ProductState>((set, get) => ({
+export const useProductStore = create<ProductState>((set) => ({
   products: [],
   // List views set this when fetching; default false so add-product form is not stuck in "loading"
   isLoading: false,

@@ -28,8 +28,8 @@ export function ProductFormContainer({
 }: ProductFormContainerProps) {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [selectedSubcategoryId, setSelectedSubcategoryId] = useState("");
-  const [selectedDepartmentId, setSelectedDepartmentId] = useState("");
-  const [categoryAutoLocked, setCategoryAutoLocked] = useState(true);
+  const [, setSelectedDepartmentId] = useState("");
+  const [, setCategoryAutoLocked] = useState(true);
   
   const { catalogDepartments, catalogLoading, catalogError } = useProductCatalog();
   const searchParams = useSearchParams();

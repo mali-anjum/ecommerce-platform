@@ -1,6 +1,5 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { Shield } from "lucide-react";
 
 interface LogoProps {

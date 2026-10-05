@@ -1,3 +1,19 @@
-import { initSentryServer } from "./src/lib/monitoring/initSentry";
+// This file configures the initialization of Sentry on the server.
+// The config you add here will be used whenever the server handles a request.
+// https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
-initSentryServer();
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "https://7a065e63fb119dd30dfc3bf6e6ad68e6@o4511505699766272.ingest.de.sentry.io/4511603003490384",
+
+  // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
+  tracesSampleRate: 1,
+
+  // Enable logs to be sent to Sentry
+  enableLogs: true,
+
+  // Enable sending user PII (Personally Identifiable Information)
+  // https://docs.sentry.io/platforms/javascript/guides/nextjs/configuration/options/#sendDefaultPii
+  sendDefaultPii: true,
+});

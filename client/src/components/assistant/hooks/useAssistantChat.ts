@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type {
   AssistantChatResponse,
   AssistantMessage,
-  ClassifiedIntent,
   LeadSession,
 } from "@/lib/assistant/types";
 import {

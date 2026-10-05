@@ -26,7 +26,7 @@ const defaultMeta: AdminUsersMeta = {
   totalPages: 1,
 };
 
-export const useAdminUsersStore = create<AdminUsersStore>((set, get) => ({
+export const useAdminUsersStore = create<AdminUsersStore>((set) => ({
   items: [],
   meta: defaultMeta,
   isLoading: false,

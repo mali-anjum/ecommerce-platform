@@ -16,7 +16,7 @@ interface CouponStore {
   deleteCoupon: (id: string) => Promise<boolean>;
 }
 
-export const useCouponStore = create<CouponStore>((set, get) => ({
+export const useCouponStore = create<CouponStore>((set) => ({
   couponList: [],
   isLoading: false,
   error: null,

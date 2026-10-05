@@ -12,7 +12,7 @@ import {
   PayPalItem,
 } from "../../interfaces/paypal.interface.response";
 import axios, { AxiosResponse, AxiosError } from "axios";
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID } from "crypto";
 import { getErrorMessage } from "../../../utils/catchError";
 import { BasePaymentService } from "../base.payment.service";
 import { sentryTracker } from "../../../lib/monitoring";
@@ -97,7 +97,7 @@ export class PayPalService extends BasePaymentService {
   ): Promise<AxiosResponse<T>> {
     const accessToken = await this.getAccessToken();
     const startTime = Date.now();
-    const requestId = uuidv4();
+    const requestId = randomUUID();
 
     try {
       const response = await axios({

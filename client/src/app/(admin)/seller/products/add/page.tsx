@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
-import ProductForm from "@/components/super-admin/products/screen/ProductForm";
+import { ProductAddScreen } from "@/components/super-admin/products/screen/ProductAddScreen";
 import { Loader2 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -18,7 +18,7 @@ function Loading() {
 export default function SellerAddProductPage() {
   return (
     <Suspense fallback={<Loading />}>
-      <ProductForm listPath="/seller/products/list" />
+      <ProductAddScreen listPath="/seller/products/list" />
     </Suspense>
   );
 }

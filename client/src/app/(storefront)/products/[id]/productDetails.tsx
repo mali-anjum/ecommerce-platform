@@ -17,6 +17,10 @@ import { buildWishlistSnapshot } from "@/components/storefront/wishlist/utils/wi
 import { trackProductView } from "@/lib/analytics/trackEvent";
 import { AiRecommendedSetupSection } from "@/components/recommendations/AiRecommendedSetupSection";
 import { ProductReviewsPanel } from "@/components/products/molecules/ProductReviewsPanel";
+import { seededRandomRows } from "@/lib/seededRandom";
+
+// Precomputed so server and client render identical particles.
+const PARTICLES = seededRandomRows(15, 6, 13);
 
 // Modular Components
 const ProductImageGallery = memo(({ 
@@ -519,17 +523,17 @@ function ProductDetailsContent({ id }: { id: string }) {
       {/* Background Effects */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="error-grid absolute inset-0 opacity-10" />
-        {Array.from({ length: 15 }).map((_, i) => (
+        {PARTICLES.map((p, i) => (
           <div
             key={i}
             className="error-particle absolute animate-twinkle"
             style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              width: `${Math.random() * 4 + 1}px`,
-              height: `${Math.random() * 4 + 1}px`,
-              animationDelay: `${Math.random() * 3}s`,
-              '--particle-opacity': `${Math.random() * 0.3 + 0.1}`,
+              top: `${p[0] * 100}%`,
+              left: `${p[1] * 100}%`,
+              width: `${p[2] * 4 + 1}px`,
+              height: `${p[3] * 4 + 1}px`,
+              animationDelay: `${p[4] * 3}s`,
+              '--particle-opacity': `${p[5] * 0.3 + 0.1}`,
             } as any}
           />
         ))}

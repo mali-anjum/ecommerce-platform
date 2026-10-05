@@ -34,3 +34,6 @@ Thumbs.db
 .cache/
 .next/cache/
 **/.turbo
+
+# Sentry Config File
+.env.sentry-build-plugin
