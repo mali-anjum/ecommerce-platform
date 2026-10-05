@@ -24,6 +24,7 @@ A production-oriented, full-stack marketplace: a **Next.js** storefront and admi
 - [Deployment](#deployment)
 - [Troubleshooting](#troubleshooting)
 - [Contributing](#contributing)
+- [AI agent workflow (skills and guardrails)](#ai-agent-workflow-skills-and-guardrails)
 - [Security](#security)
 
 ---
@@ -64,6 +65,9 @@ A production-oriented, full-stack marketplace: a **Next.js** storefront and admi
 | **Transactions** | Payment/transaction views for finance ops |
 | **Analytics** | Dashboard plus focused views: global, sales, products, customers, marketing, operations |
 | **Settings** | Feature banners and featured product configuration |
+| **AI tools** | `/super-admin/ai/*`: analytics, FAQ, knowledge base, support tickets, sales agent, review analyzer, SEO generator |
+| **Knowledge** | Store policies and knowledge documents used by the assistant (`/super-admin/knowledge`) |
+| **Leads** | Leads captured by the assistant and lead forms (`/super-admin/leads`) |
 
 ### Backend capabilities
 
@@ -292,6 +296,9 @@ Base path: **`/api`**. Responses use `{ success, message, data, statusCode }` on
 | `/api/order` | Create/capture payment, user orders, admin order ops, seller sales, transactions, webhooks (`/webhooks/stripe`, `/webhooks/paypal`) |
 | `/api/analytics` | Super-admin dashboard metrics |
 | `/api/warm` | Warmup / health-style endpoint |
+| `/api/reviews` | Product reviews: public list by product, authenticated customer submit (`ai.reviewAnalyzer` flag) |
+| `/api/leads` | Public lead capture; super-admin lead list |
+| `/api/ai` | AI commerce module (chat, recommendations, admin AI tools); mounted only when `ai.enabled` — see [docs/ai/FEATURE-TRACKER.md](./docs/ai/FEATURE-TRACKER.md) |
 
 Payment webhooks are mounted **without** JWT — they validate provider signatures instead.
 
@@ -422,6 +429,29 @@ See **`CLAUDE.md`** for verification expectations on contributions.
 ## Contributing
 
 Read **`CLAUDE.md`** for project laws: test discipline, env safety, route boundaries, and required checks before claiming a change is done.
+
+---
+
+## AI agent workflow (skills and guardrails)
+
+AI coding agents (Claude Code and compatible tools) use the agent skills in **`.claude/skills/`**. `CLAUDE.md` makes this workflow mandatory: **`ecom-preflight` first → area skills → `ecom-verify` last**.
+
+**Project skills** (written for this codebase):
+
+| Skill | Use for |
+|-------|---------|
+| `ecom-preflight` | First step of every task: classify change, load skills, hard boundaries, test plan |
+| `ecom-backend-feature` | Express route → zod → controller → service → Prisma conventions and tests |
+| `ecom-frontend-feature` | Next.js pages, atomic components, Zustand stores, BFF routes, `proxy.ts` |
+| `ecom-prisma-change` | Schema edits, migrations, seed, client generation |
+| `ecom-payments` | Checkout, orders, coupons, Stripe, PayPal, webhooks |
+| `ecom-security-review` | Auth, roles, ownership, input, uploads, secrets checklist |
+| `ecom-ai-module` | AI commerce module, LLM output handling, feature flags |
+| `ecom-verify` | Final quality gate: memory-safe checks, test strength, change report |
+
+**Vendor skills** (installed from upstream, versions pinned in `skills-lock.json`): `prisma-cli`, `prisma-client-api`, `prisma-upgrade-v7`, `stripe-best-practices`, `upgrade-stripe`, `sentry-nextjs-sdk`, `sentry-fix-issues`, `vercel-react-best-practices`, `vercel-composition-patterns`, `web-design-guidelines`.
+
+**Guardrail hooks** (`.claude/settings.json` → `.claude/hooks/guard.sh`, requires `jq`) run automatically on every agent session and tool call. They block reading/editing real `.env*` files, destructive database commands, force-push / `reset --hard`, staging env files, Jest without `--runInBand`, and client builds without a memory cap.
 
 ---
 

@@ -14,6 +14,30 @@ This file defines the project laws for AI agents working in this repository.
 3. Protect secrets.
    - Never commit real credentials or tokens.
    - Keep `.env.local` and production secrets out of git.
+4. Respect machine limits.
+   - The dev machine has ~7.5 GB RAM; heavy parallel jobs freeze the editor.
+   - Run Jest with `--runInBand`, cap the client build with `NODE_OPTIONS=--max-old-space-size=3072`, and run one heavy command at a time.
+
+## Mandatory AI Workflow (Agent Skills)
+
+Every task follows this order. Skills live in `.claude/skills/` and are loaded with the Skill tool.
+
+1. **Start:** load `ecom-preflight` before the first edit. It classifies the change, sets the hard boundaries, and plans tests.
+2. **Build:** load the project skill for each area touched, plus the vendor skills it names:
+
+   | Area | Project skill | Vendor skills |
+   |------|---------------|---------------|
+   | Express routes/controllers/services | `ecom-backend-feature` | `prisma-client-api` |
+   | Next.js pages/components/stores/BFF routes | `ecom-frontend-feature` | `vercel-react-best-practices`, `vercel-composition-patterns`, `web-design-guidelines` |
+   | Prisma schema/migrations/seed | `ecom-prisma-change` | `prisma-cli`, `prisma-client-api`, `prisma-upgrade-v7` |
+   | Checkout, orders, coupons, Stripe, PayPal, webhooks | `ecom-payments` | `stripe-best-practices`, `upgrade-stripe` |
+   | Auth, roles, cookies, input, uploads, secrets | `ecom-security-review` | — |
+   | AI module and feature flags | `ecom-ai-module` | — |
+   | Sentry setup / production errors | — | `sentry-nextjs-sdk`, `sentry-fix-issues` |
+
+3. **Finish:** load `ecom-verify` before saying a task is done, then report in the Change Reporting Format below.
+
+Guardrail hooks (`.claude/settings.json` → `.claude/hooks/guard.sh`) run automatically and block: reading/editing real `.env*` files, destructive DB commands (`migrate reset`, `--force-reset`), force-push / `reset --hard`, staging env files, Jest without `--runInBand`, and uncapped client builds. Do not work around a block; ask the user.
 
 ## Project Stack
 
@@ -41,7 +65,7 @@ This file defines the project laws for AI agents working in this repository.
   - Prefer reading validated env vars in config modules.
 - `server/src/lib/prisma.ts` uses a global singleton pattern in development.
   - Keep this pattern to avoid multiple clients/pools during hot reload.
-- `client/src/middleware.ts` handles auth and role redirects at the edge.
+- `client/src/proxy.ts` (Next.js 16 replacement for `middleware.ts`) handles auth and role redirects at the edge.
   - Keep logic explicit, deterministic, and defensive on invalid/expired tokens.
 - AI commerce module docs: `docs/ai/` (feature tracker, architecture, API map).
 
@@ -77,10 +101,12 @@ This file defines the project laws for AI agents working in this repository.
 For every non-trivial change, run the closest relevant checks and include results:
 
 - Frontend:
-  - `cd client && npm run lint`
-  - `cd client && npm run build` (for route/type/build verification on substantial UI changes)
+  - `cd client && npx eslint <changed files> --max-warnings 0` (full `npm run lint` has a pre-existing backlog; touched files must be clean)
+  - `cd client && npx jest --runInBand`
+  - `cd client && NODE_OPTIONS=--max-old-space-size=3072 npm run build` (for route/type/build verification on substantial UI changes)
 - Backend:
   - `cd server && npm run build`
+  - `cd server && npx jest --runInBand`
   - Run impacted runtime flows manually (auth, cart, order, payment, media upload), especially when no automated tests exist.
 - Prisma/Data changes:
   - `cd server && npm run prisma:generate`
