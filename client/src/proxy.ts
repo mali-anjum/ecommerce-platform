@@ -172,7 +172,9 @@ export const config = {
      * Skip API routes, Next internals, and public/static assets (e.g. /images/logo.webp).
      * Without excluding /images/, unauthenticated requests get redirected to login and
      * next/image receives HTML instead of image bytes.
+     * /monitoring is the Sentry tunnel (next.config.ts tunnelRoute); redirecting it would
+     * drop browser error reports from guests and expired sessions.
      */
-    "/((?!api|_next/static|_next/image|favicon.ico|images/|.*\\..*).*)",
+    "/((?!api|monitoring|_next/static|_next/image|favicon.ico|images/|.*\\..*).*)",
   ],
 };

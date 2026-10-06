@@ -106,17 +106,21 @@ export const errorHandler = (
     }
   }
 
-  sentryTracker(error, {
-    source: "errorHandler",
-    route: req.path,
-    method: req.method,
-    userId: authReq.user?.userId ?? null,
-    extra: {
-      processedStatus: processedError.statusCode,
-      processedName: processedError.name,
-      isOperational: processedError.isOperational,
-    },
-  });
+  // 4xx are expected client outcomes (validation, auth, not found); only server failures
+  // go to Sentry so real incidents are not buried in noise.
+  if ((processedError.statusCode || 500) >= 500) {
+    sentryTracker(error, {
+      source: "errorHandler",
+      route: req.path,
+      method: req.method,
+      userId: authReq.user?.userId ?? null,
+      extra: {
+        processedStatus: processedError.statusCode,
+        processedName: processedError.name,
+        isOperational: processedError.isOperational,
+      },
+    });
+  }
 
   // compose response payload
   const payload: any = {
