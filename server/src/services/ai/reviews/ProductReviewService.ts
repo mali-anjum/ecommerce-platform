@@ -18,6 +18,15 @@ export async function createProductReview(input: {
     throw new ApiError(404, "Product not found");
   }
 
+  // One review per customer per product, so repeated posts cannot skew the rating.
+  const existingReview = await prisma.productReview.findFirst({
+    where: { userId: input.userId, productId: input.productId },
+    select: { id: true },
+  });
+  if (existingReview) {
+    throw new ApiError(409, "You have already reviewed this product");
+  }
+
   if (input.orderId) {
     const order = await prisma.order.findFirst({
       where: {

@@ -15,7 +15,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       const {id} = await params;
       const status = await request.json();
 
-      const backendRes = await fetch(`${API_ROUTES.ORDER}/${id}/status`,{
+      const backendRes = await fetch(`${API_ROUTES.ORDER}/${encodeURIComponent(id)}/status`,{
         method: "PUT", 
         headers: {
             "Content-Type": "application/json", 

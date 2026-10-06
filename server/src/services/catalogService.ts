@@ -19,13 +19,21 @@ const CATALOG_CACHE_TTL_MS = 2 * 60 * 1000;
 let cachedCatalogTree: CatalogDepartmentDTO[] | null = null;
 let cachedCatalogTreeAt = 0;
 
+/** Only products shoppers can actually see are counted in the navigation. */
+const VISIBLE_PRODUCT: Prisma.ProductWhereInput = { isActive: true, isArchived: false };
+
+/** Call after any department/subcategory change so the storefront tree refreshes. */
+export function invalidateCatalogTreeCache(): void {
+  cachedCatalogTree = null;
+  cachedCatalogTreeAt = 0;
+}
+
 // App-level: keeps DB catalog synced with the canonical category constants.
 export async function upsertCatalogFromConstants(): Promise<{
   departmentsUpserted: number;
   subcategoriesUpserted: number;
 }> {
-  cachedCatalogTree = null;
-  cachedCatalogTreeAt = 0;
+  invalidateCatalogTreeCache();
   let departmentsUpserted = 0;
   let subcategoriesUpserted = 0;
 
@@ -92,8 +100,7 @@ export async function linkOrphanProductsToSubcategories(): Promise<number> {
     });
     updated += r.count;
   }
-  cachedCatalogTree = null;
-  cachedCatalogTreeAt = 0;
+  invalidateCatalogTreeCache();
   return updated;
 }
 
@@ -103,6 +110,7 @@ async function countLegacyBySubcategoryTitle(
 ): Promise<number> {
   return prisma.product.count({
     where: {
+      ...VISIBLE_PRODUCT,
       category: { equals: title, mode: "insensitive" },
       ...(excludeLinked ? { subcategoryId: null } : {}),
     },
@@ -135,7 +143,7 @@ export async function getCatalogTreeWithCounts(): Promise<CatalogDepartmentDTO[]
     const subDtos = await Promise.all(
       dept.subcategories.map(async (sub) => {
         const byFk = await prisma.product.count({
-          where: { subcategoryId: sub.id },
+          where: { ...VISIBLE_PRODUCT, subcategoryId: sub.id },
         });
         const legacyOnly = await countLegacyBySubcategoryTitle(sub.title, true);
         const subTotal = byFk + legacyOnly;
@@ -150,6 +158,7 @@ export async function getCatalogTreeWithCounts(): Promise<CatalogDepartmentDTO[]
 
     const legacyDeptName = await prisma.product.count({
       where: {
+        ...VISIBLE_PRODUCT,
         subcategoryId: null,
         category: { equals: dept.title, mode: "insensitive" },
       },

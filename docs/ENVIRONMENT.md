@@ -108,10 +108,16 @@ Client: **`NEXT_PUBLIC_PAYPAL_CLIENT_ID`** = same client id as server.
 
 ### Email (optional)
 
+Needed for password reset, email verification, and AI sales follow-ups. When unset, those emails are skipped (resend-verification returns 503).
+
 | Variable | Where to get it |
 |----------|-----------------|
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | Gmail App Password, SendGrid, Resend SMTP, etc. |
-| `EMAIL_FROM` | Verified sender address |
+| `RESEND_API_KEY` | **Recommended.** Resend → API Keys → "Sending access" key (`re_...`). Sent over HTTPS, so it works on hosts that block SMTP ports. |
+| `SMTP_FROM` | Sender address, e.g. `Ecommerce Store <no-reply@yourdomain.com>` (legacy name `EMAIL_FROM` also accepted) |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | Any SMTP provider; used only when `RESEND_API_KEY` is empty |
+
+- Development: `SMTP_FROM="Ecommerce Store <onboarding@resend.dev>"` works without a domain, but Resend only delivers to the Resend account owner's address.
+- Production: add and verify your domain in Resend (SPF/DKIM DNS records), use a separate production API key, and set `FRONTEND_URL` to the live site URL so email links open the right host.
 
 ### OAuth (optional)
 
@@ -148,6 +154,7 @@ Active vendor: `client/feature-flags.config.json` → `ai.llmProvider` (`openai`
 | Variable | Where to get it |
 |----------|-----------------|
 | `COOKIE_DOMAIN` | Leading dot + API host, e.g. `.your-api.onrender.com` when API sets cookies on that domain |
+| `TRUST_PROXY` | Optional. Number of proxy hops in front of the API (Render = `1`, the production default). Rate limits use the client IP only when this is right. |
 
 **Leave unset in local dev** so cookies work on `localhost:3012` via the Next proxy.
 

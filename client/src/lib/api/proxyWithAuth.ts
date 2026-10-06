@@ -22,7 +22,7 @@ export async function proxyWithAuth(
   }
 
   const accessToken = request.cookies.get("accessToken")?.value;
-  const refreshToken = request.cookies.get("refreshToken")?.value;
+  const refreshToken = request.cookies.get("refreshToken")?.value ?? "";
 
   if (!accessToken) {
     return NextResponse.json(

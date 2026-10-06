@@ -157,12 +157,15 @@ export interface CheckoutOrderItemInput {
   price: number;
 }
 
+/** Body of `POST /order/create-order`. The server prices lines from the DB; `total` is informational only. */
 export interface CreateOrderInput {
-  items: CheckoutOrderItemInput[];
-  total: number;
+  cartItemIds: string[];
+  total?: number;
   paymentMethod: "PAYPAL" | "STRIPE" | "CARD";
   addressId: string;
   couponId?: string;
+  sessionId?: string;
+  visitorId?: string;
 }
 
 export interface CaptureOrderInput {

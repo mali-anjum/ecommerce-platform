@@ -26,10 +26,7 @@ export function mapAuthErrorResponse(error: unknown): {
     }
   }
 
-  if (error instanceof Error && error.message.trim()) {
-    return { status: 500, error: error.message };
-  }
-
+  // Never echo raw error messages: they can expose SQL, hostnames, or stack details.
   return { status: 500, error: "Something went wrong. Please try again." };
 }
 

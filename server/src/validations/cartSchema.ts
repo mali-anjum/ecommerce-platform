@@ -2,7 +2,10 @@ import { z } from 'zod';
 
 // Base schemas for reusability
 export const productIdSchema = z.string().min(1, "Product ID is required");
-export const quantitySchema = z.number().min(1, "Quantity must be at least 1");
+export const quantitySchema = z
+  .number()
+  .int("Quantity must be a whole number")
+  .min(1, "Quantity must be at least 1");
 export const optionalStringSchema = z.string().optional().nullable();
 
 // Add to Cart Schema

@@ -52,15 +52,16 @@ export class GitHubOAuthProvider extends BaseOAuthProvider {
     const tokens = await github.validateAuthorizationCode(code);
     const accessToken = tokens.accessToken();
     const profile = await this.fetchGitHubUser(accessToken);
-    const email =
-      profile.email ?? (await this.fetchPrimaryEmail(accessToken));
+    // Only an address GitHub marks verified may link to an existing account.
+    const verifiedEmail = await this.fetchPrimaryEmail(accessToken);
+    const email = verifiedEmail ?? profile.email ?? null;
 
     return {
       providerUserId: String(profile.id),
       email: email ?? "",
       name: profile.name ?? profile.login,
       image: profile.avatar_url ?? null,
-      emailVerified: Boolean(email),
+      emailVerified: Boolean(verifiedEmail),
     };
   }
 

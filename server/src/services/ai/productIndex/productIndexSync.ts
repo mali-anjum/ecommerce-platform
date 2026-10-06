@@ -41,6 +41,11 @@ export async function warmProductIndex(): Promise<number> {
     console.error("[product-index] Failed to load persisted index", error);
   }
 
+  return rebuildProductIndex();
+}
+
+/** Always rebuilds from the products table; the persisted snapshot may be stale. */
+export async function rebuildProductIndex(): Promise<number> {
   const products = await prisma.product.findMany();
   const entries = products.map(mapProductToIndexEntry);
   productIndexStore.replaceAll(entries);
@@ -53,10 +58,6 @@ export async function warmProductIndex(): Promise<number> {
   }
 
   return entries.length;
-}
-
-export async function rebuildProductIndex(): Promise<number> {
-  return warmProductIndex();
 }
 
 export async function syncProductIndexEntry(productId: string): Promise<void> {

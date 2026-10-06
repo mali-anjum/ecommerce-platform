@@ -25,3 +25,21 @@ export const oauthStartLimiter = rateLimit({
   legacyHeaders: false,
   message: { success: false, error: "Too many OAuth attempts. Try again later." },
 });
+
+/** Endpoints that send email (forgot password, resend verification): tight to prevent mail flooding. */
+export const accountEmailLimiter = rateLimit({
+  windowMs,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: "Too many email requests. Try again later." },
+});
+
+/** Endpoints that redeem one-time tokens (reset password, verify email). */
+export const accountTokenLimiter = rateLimit({
+  windowMs,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: "Too many attempts. Try again later." },
+});

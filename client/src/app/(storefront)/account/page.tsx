@@ -53,6 +53,7 @@ import {
   XCircle
 } from "lucide-react";
 import { format } from "date-fns";
+import { EmailVerificationNotice } from "@/components/auth/molecules/EmailVerificationNotice";
 import {
   Tooltip,
   TooltipContent,
@@ -489,21 +490,24 @@ function UserAccountPage() {
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [editingAddress, setEditingAddress] = useState<string | null>(null);
   const [formData, setFormData] = useState(initialAddressFormState);
-  const [activeTab, setActiveTab] = useState<"orders" | "addresses">("orders");
+  const searchParams = useSearchParams();
+  const tabFromUrl: "orders" | "addresses" =
+    searchParams.get("tab") === "addresses" ? "addresses" : "orders";
+  const [activeTab, setActiveTab] = useState<"orders" | "addresses">(tabFromUrl);
+  // Re-sync when the URL changes (back/forward, links) without a setState-in-effect cascade.
+  const [syncedTab, setSyncedTab] = useState(tabFromUrl);
+  if (syncedTab !== tabFromUrl) {
+    setSyncedTab(tabFromUrl);
+    setActiveTab(tabFromUrl);
+  }
   const { toast } = useToast();
   const { userOrders, getAllOrders, isLoading: ordersLoading } = useOrderStore();
-  const searchParams = useSearchParams();
   const router = useRouter();
 
   useEffect(() => {
     fetchAddresses();
     getAllOrders();
   }, [fetchAddresses, getAllOrders]);
-
-  useEffect(() => {
-    const requestedTab = searchParams.get("tab");
-    setActiveTab(requestedTab === "addresses" ? "addresses" : "orders");
-  }, [searchParams]);
 
   const handleTabChange = (value: string) => {
     const nextTab = value === "addresses" ? "addresses" : "orders";
@@ -522,31 +526,44 @@ function UserAccountPage() {
     router.replace(nextQuery ? `/account?${nextQuery}` : "/account");
   };
 
+  // Keep the form open with the server's reason (e.g. invalid phone) so input is not lost.
+  const showAddressSaveError = () => {
+    toast({
+      title: "Could not save address",
+      description: useAddressStore.getState().error ?? "Please check the details and try again.",
+      variant: "destructive",
+    });
+  };
+
   const handleAddressSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
     try {
       if (editingAddress) {
         const result = await updateAddress(editingAddress, formData);
-        if (result) {
-          toast({
-            title: "Address Updated",
-            description: "Your address has been updated successfully",
-            className: "bg-success/10 border-success/20 text-success",
-          });
-          fetchAddresses();
-          setEditingAddress(null);
+        if (!result) {
+          showAddressSaveError();
+          return;
         }
+        toast({
+          title: "Address Updated",
+          description: "Your address has been updated successfully",
+          className: "bg-success/10 border-success/20 text-success",
+        });
+        fetchAddresses();
+        setEditingAddress(null);
       } else {
         const result = await createAddress(formData);
-        if (result) {
-          toast({
-            title: "Address Created",
-            description: "New address has been added successfully",
-            className: "bg-success/10 border-success/20 text-success",
-          });
-          fetchAddresses();
+        if (!result) {
+          showAddressSaveError();
+          return;
         }
+        toast({
+          title: "Address Created",
+          description: "New address has been added successfully",
+          className: "bg-success/10 border-success/20 text-success",
+        });
+        fetchAddresses();
       }
 
       setShowAddressForm(false);
@@ -591,6 +608,12 @@ function UserAccountPage() {
             className: "bg-success/10 border-success/20 text-success",
           });
           fetchAddresses();
+        } else {
+          toast({
+            title: "Could not delete address",
+            description: useAddressStore.getState().error ?? "Please try again.",
+            variant: "destructive",
+          });
         }
       } catch (e) {
     sentryTracker(e, { source: "page" });
@@ -647,6 +670,10 @@ function UserAccountPage() {
             </div>
           </div>
         </header>
+
+        <div className="mb-6">
+          <EmailVerificationNotice />
+        </div>
 
         {/* User Stats */}
         <UserStats orderCount={userOrders.length} totalSpent={totalSpent} />

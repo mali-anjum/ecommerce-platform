@@ -143,10 +143,8 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
         set((state) => ({ // update wishlist with new item
           items: [
             result.item!,
-            ...state.items.filter(
-              (item) =>
-                item.productId !== productId && !item.id.startsWith("optimistic-")
-            ),
+            // Drop only this product's optimistic row; other in-flight toggles keep theirs.
+            ...state.items.filter((item) => item.productId !== productId),
           ],
           productIds: new Set([...state.productIds, productId]),
         }));
@@ -213,6 +211,8 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
   isInWishlist: (productId) => get().productIds.has(productId),
 
   clearWishlist: () => {
+    // Reset the cooldown so the next signed-in user fetches their own list immediately.
+    lastWishlistFetchAt = 0;
     set({ items: [], productIds: new Set(), error: null });
   },
 }));

@@ -1,51 +1,32 @@
 import { useState, useCallback } from 'react';
 import { useToast } from '@/components/ui/hooks/use-toast';
-import type { Coupon } from '@/components/storefront/checkout/types/Coupon';
+import type { AppliedCoupon } from '@/components/storefront/checkout/types/Coupon';
+import { validateCouponCode } from '@/components/storefront/checkout/utils/couponApi';
 
-export const useCheckoutCoupon = (couponList: Coupon[]) => {
+export const useCheckoutCoupon = () => {
   const { toast } = useToast();
   const [couponCode, setCouponCode] = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
   const [couponError, setCouponError] = useState('');
 
-  const handleApplyCoupon = useCallback(() => {
+  // The server checks dates and usage limits; coupon codes are never sent to the browser in bulk.
+  const handleApplyCoupon = useCallback(async () => {
     setCouponError('');
 
-    if (!couponCode.trim()) {
-      setCouponError("Please enter a coupon code");
-      return;
-    }
-
-    const coupon = couponList.find((c) => c.code === couponCode.trim());
-    if (!coupon) {
-      setCouponError("Invalid coupon code");
+    const result = await validateCouponCode(couponCode);
+    if (!result.coupon) {
+      setCouponError(result.error);
       setAppliedCoupon(null);
       return;
     }
 
-    const now = new Date();
-    const startDate = new Date(coupon.startDate);
-    const endDate = new Date(coupon.endDate);
-
-    if (now < startDate || now > endDate) {
-      setCouponError("Coupon is not currently valid");
-      setAppliedCoupon(null);
-      return;
-    }
-
-    if (coupon.usageCount >= coupon.usageLimit) {
-      setCouponError("Coupon has reached its usage limit");
-      setAppliedCoupon(null);
-      return;
-    }
-
-    setAppliedCoupon(coupon);
+    setAppliedCoupon(result.coupon);
     toast({
       title: "Coupon Applied!",
-      description: `You saved ${coupon.discountPercent}%`,
+      description: `You saved ${result.coupon.discountPercent}%`,
       variant: "default",
     });
-  }, [couponCode, couponList, toast]);
+  }, [couponCode, toast]);
 
   const handleRemoveCoupon = useCallback(() => {
     setAppliedCoupon(null);

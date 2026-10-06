@@ -208,7 +208,7 @@ See `.env.example` for the full list. Critical groups:
 | Cloudinary | `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` |
 | PayPal | `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID`, return/cancel URLs |
 | Stripe | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, checkout base URL |
-| Email | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `EMAIL_FROM` |
+| Email | `RESEND_API_KEY` (recommended) or `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`; plus `SMTP_FROM` |
 
 PayPal/Stripe return URLs must point at the **Next.js** origin (e.g. `http://localhost:3012/...`), not the API port.
 

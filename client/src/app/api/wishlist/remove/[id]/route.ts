@@ -8,6 +8,6 @@ export async function DELETE(
   const { id } = await context.params;
   return proxyWithAuth(request, {
     method: "DELETE",
-    backendPath: `/api/wishlist/remove/${id}`,
+    backendPath: `/api/wishlist/remove/${encodeURIComponent(id)}`,
   });
 }

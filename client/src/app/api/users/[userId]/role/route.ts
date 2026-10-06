@@ -19,7 +19,7 @@ export async function PATCH(
     const { userId } = await context.params;
     const body = await request.json();
 
-    const backendRes = await fetch(`${API_ROUTES.USERS}/${userId}/role`, {
+    const backendRes = await fetch(`${API_ROUTES.USERS}/${encodeURIComponent(userId)}/role`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",

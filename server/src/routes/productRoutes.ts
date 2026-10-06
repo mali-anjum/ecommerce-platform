@@ -52,15 +52,4 @@ router.delete(
   attachSellerProfile,
   deleteProduct
 );
-import { upload } from "../middleware/uploadMiddleware"; // the upload object
-
-router.post('/debug-multer', authenticateJwt, isSuperAdmin, upload.any(), (req, res) => {
-  res.json({
-    contentType: req.headers['content-type'],
-    filesInfo: Array.isArray(req.files) ? req.files.map(f => ({ fieldname: f.fieldname, originalname: f.originalname, mimetype: f.mimetype, size: f.size })) : req.files,
-    bodyKeys: Object.keys(req.body || {}),
-    body: req.body
-  });
-});
-
 export default router;

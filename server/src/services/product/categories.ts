@@ -11,6 +11,7 @@ export async function getProductCategoriesPayload() {
 
   const productCountByCategory = await prisma.product.groupBy({
     by: ["category"],
+    where: { isActive: true, isArchived: false },
     _count: {
       _all: true,
     },

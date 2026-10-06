@@ -37,10 +37,10 @@ export async function GET(req: NextRequest) {
       return NextResponse.redirect(new URL(`/auth/login?oauth_error=${message}`, req.url));
     }
 
-    const redirectPath =
-      typeof data.redirectTo === "string"
-        ? new URL(data.redirectTo).pathname + new URL(data.redirectTo).search
-        : "/home";
+    // Keep only path + query so a backend-supplied host can never become an open redirect.
+    const target =
+      typeof data.redirectTo === "string" ? new URL(data.redirectTo, req.url) : null;
+    const redirectPath = target ? target.pathname + target.search : "/home";
 
     const response = NextResponse.redirect(new URL(redirectPath, req.url));
 

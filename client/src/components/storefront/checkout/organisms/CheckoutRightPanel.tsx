@@ -1,6 +1,6 @@
 import { OrderSummary } from "@/components/storefront/checkout/molecules/CheckoutOrderSummary";
 import { CartItemWithProduct } from "@/components/storefront/cart/types/cartItemStore";
-import type { Coupon } from "@/components/storefront/checkout/types/Coupon";
+import type { AppliedCoupon } from "@/components/storefront/checkout/types/Coupon";
 
 interface CheckoutRightPanelProps {
   cartItems: CartItemWithProduct[];
@@ -8,7 +8,7 @@ interface CheckoutRightPanelProps {
   discountAmount: number;
   total: number;
   couponCode: string;
-  appliedCoupon: Coupon | null;
+  appliedCoupon: AppliedCoupon | null;
   couponError: string;
   onCouponChange: (code: string) => void;
   onApplyCoupon: () => void;

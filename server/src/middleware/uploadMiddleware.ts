@@ -1,26 +1,37 @@
 // src/middleware/uploadMiddleware.ts
 import multer, { FileFilterCallback } from 'multer';
 import { Request } from 'express';
+import { ValidationError } from '../utils/ApiError';
 
 const storage = multer.memoryStorage();
 
-const fileFilter = (
+// SVG is excluded on purpose: it can embed scripts.
+export const ALLOWED_IMAGE_MIMES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'image/avif',
+]);
+
+export const imageFileFilter = (
   req: Request,
   file: Express.Multer.File,
   cb: FileFilterCallback
 ): void => {
-  if (file.mimetype.startsWith('image/')) {
+  if (ALLOWED_IMAGE_MIMES.has(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Only image files are allowed!'));
+    // ValidationError maps to 400 in the error handler (a plain Error became a 500).
+    cb(new ValidationError('Only JPEG, PNG, WebP, GIF or AVIF images are allowed'));
   }
 };
 
 const upload = multer({
   storage,
-  fileFilter,
+  fileFilter: imageFileFilter,
   limits: {
-    fileSize: 15 * 1024 * 1024, // 5MB
+    fileSize: 15 * 1024 * 1024, // 15MB
     files: 10
   },
 });

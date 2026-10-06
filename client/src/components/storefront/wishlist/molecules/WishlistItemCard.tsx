@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -105,11 +106,12 @@ export function WishlistItemCard({ item }: WishlistItemCardProps) {
         className="relative mx-auto h-28 w-28 shrink-0 overflow-hidden rounded-xl border border-glass-border bg-muted/50 sm:mx-0 sm:h-32 sm:w-32"
       >
         {item.thumbnail ? (
-          <img
+          <Image
             src={item.thumbnail}
             alt={item.name}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-            loading="lazy"
+            fill
+            sizes="128px"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
           <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
@@ -117,7 +119,7 @@ export function WishlistItemCard({ item }: WishlistItemCardProps) {
           </div>
         )}
         {hasDiscount && item.discountPercent !== null && (
-          <span className="absolute left-2 top-2 rounded-md bg-accent px-1.5 py-0.5 text-[10px] font-bold text-accent-foreground">
+          <span className="absolute left-2 top-2 rounded-md bg-accent px-1.5 py-0.5 text-[11px] font-bold text-accent-foreground">
             -{item.discountPercent}%
           </span>
         )}

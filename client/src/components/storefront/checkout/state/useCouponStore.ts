@@ -46,7 +46,8 @@ export const useCouponStore = create<CouponStore>((set) => ({
       return response.data.coupon;
     } catch (e) {
     sentryTracker(e, { source: "useCouponStore" });
-      set({ isLoading: false, error: "Failed to fetch coupons" });
+      const serverMessage = axios.isAxiosError(e) ? e.response?.data?.message : undefined;
+      set({ isLoading: false, error: serverMessage ?? "Failed to create coupon" });
       return null;
     }
   },
@@ -56,12 +57,16 @@ export const useCouponStore = create<CouponStore>((set) => ({
       const response = await axios.delete(`${API_ROUTES.COUPON}/${id}`, {
         withCredentials: true,
       });
-      set({ isLoading: false });
-      return response.data.success;
+      set((state) => ({
+        isLoading: false,
+        couponList: state.couponList.filter((coupon) => coupon.id !== id),
+      }));
+      return Boolean(response.data.success);
     } catch (error) {
     sentryTracker(error, { source: "useCouponStore" });
-      set({ isLoading: false, error: "Failed to fetch coupons" });
-      return null;
+      const serverMessage = axios.isAxiosError(error) ? error.response?.data?.message : undefined;
+      set({ isLoading: false, error: serverMessage ?? "Failed to delete coupon" });
+      return false;
     }
   },
 }));

@@ -13,7 +13,6 @@ import { sentryTracker } from "../lib/monitoring";
 
 const addToCart = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
-    console.log("Entered successfully.");
     const userId = requireUserId(req);
 
     const { productId, quantity, size, color, sessionId } = req.body;
@@ -31,10 +30,27 @@ const addToCart = asyncHandler(
         .status(404)
         .json(new ApiError(404, "Product does not exist in the database"));
     }
-    if (quantity <= 0) {
+    if (!productExisted.isActive || productExisted.isArchived) {
       return res
         .status(400)
-        .json(new ApiError(400, "Quantity must be greater than 0"));
+        .json(new ApiError(400, "This product is no longer available"));
+    }
+    if (!Number.isInteger(quantity) || quantity <= 0) {
+      return res
+        .status(400)
+        .json(new ApiError(400, "Quantity must be a whole number greater than 0"));
+    }
+    if (productExisted.stock < quantity) {
+      return res
+        .status(400)
+        .json(
+          new ApiError(
+            400,
+            productExisted.stock > 0
+              ? `Only ${productExisted.stock} left in stock`
+              : "This product is out of stock"
+          )
+        );
     }
 
     const normalizedSize =
@@ -100,8 +116,6 @@ const addToCart = asyncHandler(
       update: {},
     });
 
-    console.log("This is cart: ", cart);
-
     const cartItem = await prisma.cartItem.upsert({
       where: {
         cartId_productId_size_color: {
@@ -123,7 +137,6 @@ const addToCart = asyncHandler(
       },
     });
 
-    console.log("My cart item", cartItem);
     const product = await prisma.product.findUnique({
       where: { id: productId },
       select: { name: true, price: true, images: true },
@@ -244,10 +257,23 @@ const updateCartItemQuantity = asyncHandler(
       return res.status(400).json(new ApiError(400, "Item id is required"));
     }
 
-    if (typeof quantity !== "number" || quantity < 1) {
+    if (typeof quantity !== "number" || !Number.isInteger(quantity) || quantity < 1) {
       return res
         .status(400)
         .json(new ApiError(400, "Valid quantity is required"));
+    }
+
+    const existingItem = await prisma.cartItem.findFirst({
+      where: { id, cart: { userId } },
+      select: { product: { select: { stock: true } } },
+    });
+    if (!existingItem) {
+      return res.status(404).json(new ApiError(404, "Cart item not found"));
+    }
+    if (existingItem.product && quantity > existingItem.product.stock) {
+      return res
+        .status(400)
+        .json(new ApiError(400, `Only ${existingItem.product.stock} left in stock`));
     }
 
     const updatedCartItem = await prisma.cartItem.update({

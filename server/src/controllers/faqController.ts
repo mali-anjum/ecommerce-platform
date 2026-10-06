@@ -12,6 +12,7 @@ import {
   updateStorePolicies,
 } from "../services/knowledge/knowledgeService";
 import { NotFoundError } from "../utils/ApiError";
+import { isPrismaNotFound } from "../utils/prismaErrors";
 import { sentryTracker } from "../lib/monitoring";
 
 export const getPublicFaqs = asyncHandler(
@@ -42,8 +43,10 @@ export const updateAdminFaq = asyncHandler(
       const faq = await updateFaqItem(id, req.validatedData);
       res.json(new ApiResponse(200, { faq }, "FAQ updated"));
     } catch (error) {
+      // Only a missing row is a 404; anything else is a real failure for the error handler.
+      if (isPrismaNotFound(error)) throw new NotFoundError("FAQ not found");
       sentryTracker(error, { source: "faqController" });
-      throw new NotFoundError("FAQ not found");
+      throw error;
     }
   },
 );
@@ -55,8 +58,10 @@ export const deleteAdminFaq = asyncHandler(
       await deleteFaqItem(id);
       res.json(new ApiResponse(200, { id }, "FAQ deleted"));
     } catch (error) {
+      // Only a missing row is a 404; anything else is a real failure for the error handler.
+      if (isPrismaNotFound(error)) throw new NotFoundError("FAQ not found");
       sentryTracker(error, { source: "faqController" });
-      throw new NotFoundError("FAQ not found");
+      throw error;
     }
   },
 );

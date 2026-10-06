@@ -16,7 +16,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const { productId } = await context.params;
     const backendRes = await fetch(
-      `${API_ROUTES.REVIEWS}/product/${productId}`,
+      `${API_ROUTES.REVIEWS}/product/${encodeURIComponent(productId)}`,
       { cache: "no-store" },
     );
     const data = await backendRes.json();

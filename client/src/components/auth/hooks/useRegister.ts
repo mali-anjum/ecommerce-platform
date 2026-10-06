@@ -35,7 +35,8 @@ export const useRegister = () => {
 
       toast({
         title: "Account created",
-        description: "Your account is ready. Redirecting to login...",
+        description:
+          "Your account is ready. We sent a verification link to your email. Redirecting to login...",
         className: "bg-primary/10 border-primary/20",
       });
 

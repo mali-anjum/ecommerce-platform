@@ -14,6 +14,8 @@ declare global {
       /** Set by `attachSellerProfile` for users with role SELLER */
       sellerProfile?: { id: string };
       files?: Express.Multer.File[];
+      /** Raw JSON bytes, captured only for payment webhook routes (signature verification). */
+      rawBody?: Buffer;
     }
 
     namespace Multer {
@@ -50,11 +52,13 @@ declare global {
       PAYPAL_MODE: string;
       STRIPE_SECRET_KEY: string;
       STRIPE_WEBHOOK_SECRET: string;
-      SMTP_HOST: string;
+      SMTP_HOST?: string;
       SMTP_PORT: string;
       SMTP_USER: string;
       SMTP_PASS: string;
-      EMAIL_FROM: string;
+      RESEND_API_KEY?: string;
+      SMTP_FROM?: string;
+      EMAIL_FROM?: string;
       LOG_ENABLED: string;
       LOG_LEVEL: string;
       OPENAI_API_KEY?: string;

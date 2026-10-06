@@ -20,7 +20,7 @@ async function proxyAction(
     }
 
     const backendRes = await fetch(
-      `${API_ROUTES.AI}/sales/offers/${offerId}/${action}`,
+      `${API_ROUTES.AI}/sales/offers/${encodeURIComponent(offerId)}/${encodeURIComponent(action)}`,
       {
         method: "POST",
         headers,
