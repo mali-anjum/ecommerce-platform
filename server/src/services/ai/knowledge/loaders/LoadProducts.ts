@@ -1,9 +1,10 @@
 import { prisma } from "../../../../lib/prisma";
 import { searchAssistantProductsFromIndex } from "../../productIndex";
 import type { AssistantProductSnippet } from "../../types";
+import { extractSearchTerms, rankByScore } from "../relevance";
 import {
-  extractSearchTerms,
   MAX_CONTEXT_PRODUCTS,
+  scoreProductRelevance,
   toProductSnippet,
 } from "./ProductSnippets";
 
@@ -19,11 +20,21 @@ const productSelect = {
   discountPercent: true,
 } as const;
 
+// Fetch a wider candidate pool than we keep, so relevance ranking (not just sales) decides.
+const CANDIDATE_POOL = MAX_CONTEXT_PRODUCTS * 3;
+
+export type LoadProductsOptions = {
+  /** Top up with featured products when few match. Off for help/FAQ questions (pure noise there). */
+  padWithFeatured?: boolean;
+};
+
 export async function loadRelevantProducts(
   message: string,
   productId?: string,
+  options: LoadProductsOptions = {},
 ): Promise<AssistantProductSnippet[]> {
-  const indexed = searchAssistantProductsFromIndex(message, productId);
+  const padWithFeatured = options.padWithFeatured ?? true;
+  const indexed = searchAssistantProductsFromIndex(message, productId, { padWithFeatured });
   if (indexed) {
     return indexed;
   }
@@ -59,22 +70,25 @@ export async function loadRelevantProducts(
       ]),
     };
 
-    const matched = await prisma.product.findMany({
+    const candidates = await prisma.product.findMany({
       where: searchWhere,
-      take: MAX_CONTEXT_PRODUCTS,
+      take: CANDIDATE_POOL,
       orderBy: [{ soldCount: "desc" }, { createdAt: "desc" }],
       select: productSelect,
     });
 
-    for (const product of matched) {
-      if (seen.has(product.id)) continue;
+    const ranked = rankByScore(
+      candidates.filter((product) => !seen.has(product.id)),
+      (product) => scoreProductRelevance(product, terms),
+      MAX_CONTEXT_PRODUCTS - snippets.length,
+    );
+    for (const product of ranked) {
       snippets.push(toProductSnippet(product));
       seen.add(product.id);
-      if (snippets.length >= MAX_CONTEXT_PRODUCTS) break;
     }
   }
 
-  if (snippets.length < 3) {
+  if (padWithFeatured && snippets.length < 3) {
     const featured = await prisma.product.findMany({
       where: { isActive: true, isArchived: false },
       take: MAX_CONTEXT_PRODUCTS,

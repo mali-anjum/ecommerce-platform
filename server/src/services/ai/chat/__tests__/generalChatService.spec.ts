@@ -1,17 +1,22 @@
 const completeChat = jest.fn();
 const isAiConfigured = jest.fn();
 const loadAssistantKnowledgeContext = jest.fn();
+const sentryTracker = jest.fn();
 
 jest.mock("../../../../config/ai", () => ({
   completeChat: (...a: unknown[]) => completeChat(...a),
   isAiConfigured: () => isAiConfigured(),
   getLlmProviderId: () => "openai",
 }));
+jest.mock("../../../../lib/monitoring", () => ({
+  sentryTracker: (...a: unknown[]) => sentryTracker(...a),
+}));
 jest.mock("../../knowledge/KnowledgeContextLoader", () => ({
   loadAssistantKnowledgeContext: (...a: unknown[]) => loadAssistantKnowledgeContext(...a),
 }));
 
-import { runGeneralChat } from "../GeneralChatService";
+import { GENERAL_CHAT_FALLBACK_REPLY, runGeneralChat } from "../GeneralChatService";
+import { isAssistantFailureReply } from "../../classification/parsers/HandoffParser";
 
 const context = {
   faqs: [],
@@ -45,7 +50,7 @@ describe("runGeneralChat", () => {
       history: [{ role: "user", content: "hello" }],
       classifiedIntent: "GENERAL_CHAT",
     });
-    expect(loadAssistantKnowledgeContext).toHaveBeenCalledWith("need a lamp", "p1");
+    expect(loadAssistantKnowledgeContext).toHaveBeenCalledWith("need a lamp", "p1", "GENERAL_CHAT");
     const { messages, temperature, maxTokens } = completeChat.mock.calls[0][0];
     expect(messages[0].role).toBe("system");
     expect(messages.at(-1)).toEqual({ role: "user", content: "need a lamp" });
@@ -60,14 +65,39 @@ describe("runGeneralChat", () => {
     });
   });
 
-  it("adds an FAQ focus to the system prompt", async () => {
+  it("passes the FAQ intent to context loading and uses the FAQ task in the prompt", async () => {
     completeChat.mockResolvedValueOnce("Returns within 30 days.");
     await runGeneralChat({ message: "return policy?", history: [], classifiedIntent: "FAQ" });
-    expect(completeChat.mock.calls[0][0].messages[0].content).toContain("Answer using FAQs, store policies, and help content first.");
+    expect(loadAssistantKnowledgeContext).toHaveBeenCalledWith("return policy?", undefined, "FAQ");
+    expect(completeChat.mock.calls[0][0].messages[0].content).toContain(
+      "Answer from the store policies, FAQ, and knowledge base first."
+    );
   });
 
-  it("propagates provider failures", async () => {
-    completeChat.mockRejectedValueOnce(new Error("rate limited"));
-    await expect(runGeneralChat({ message: "hi", history: [], classifiedIntent: "GENERAL_CHAT" })).rejects.toThrow("rate limited");
+  it("returns a failure-flagged fallback and reports to Sentry when the provider fails", async () => {
+    const error = new Error("rate limited");
+    completeChat.mockRejectedValueOnce(error);
+    const result = await runGeneralChat({ message: "hi", history: [], classifiedIntent: "GENERAL_CHAT" });
+    expect(result).toEqual({
+      intent: "general",
+      reply: GENERAL_CHAT_FALLBACK_REPLY,
+      products: [],
+      productIdsReferenced: [],
+      orders: [],
+    });
+    // Must be recognised so repeated failures escalate to a human.
+    expect(isAssistantFailureReply(result.reply)).toBe(true);
+    expect(sentryTracker).toHaveBeenCalledWith(
+      error,
+      expect.objectContaining({ source: "ai.generalChat", extra: { provider: "openai", intent: "GENERAL_CHAT" } })
+    );
+  });
+
+  it("falls back on a blank completion without referencing products", async () => {
+    completeChat.mockResolvedValueOnce("   ");
+    const result = await runGeneralChat({ message: "lamp?", history: [], classifiedIntent: "GENERAL_CHAT" });
+    expect(result.reply).toBe(GENERAL_CHAT_FALLBACK_REPLY);
+    expect(result.productIdsReferenced).toEqual([]);
+    expect(sentryTracker).not.toHaveBeenCalled();
   });
 });

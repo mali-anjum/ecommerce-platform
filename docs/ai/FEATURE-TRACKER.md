@@ -24,6 +24,8 @@ Legend: ✅ Done · ⚠️ Partial (documented gap) · ➖ Optional / not built
 
 **Env:** `OPENAI_API_KEY` required for LLM-backed general/FAQ replies.
 
+**Context engineering (issue #24):** Intent-specific context plans and prompt tasks, relevance-ranked products/FAQs/KB paragraphs (`knowledge/relevance.ts`), coupons only on request, a token budget for KB docs and history, and a graceful LLM-failure fallback. Details: [ARCHITECTURE.md → Knowledge injection](./ARCHITECTURE.md#knowledge-injection).
+
 **Optional:** Streaming responses ➖ not implemented (marked optional in ticket).
 
 ---

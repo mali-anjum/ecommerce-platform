@@ -7,6 +7,8 @@ import {
   listSellableProductIndexEntries,
 } from "./productIndexSync";
 import type { AiProductIndexEntry } from "./types";
+import { extractSearchTerms } from "../knowledge/relevance";
+import { scoreProductRelevance } from "../knowledge/loaders/ProductSnippets";
 
 const MAX_PRODUCTS = 8;
 const MAX_RECOMMENDATIONS = 6;
@@ -38,47 +40,6 @@ function toRecommendedProduct(entry: AiProductIndexEntry): RecommendedProduct {
     stock: entry.stock,
     rating: entry.rating,
   };
-}
-
-function extractSearchTerms(message: string): string[] {
-  const stopWords = new Set([
-    "a",
-    "an",
-    "the",
-    "is",
-    "are",
-    "what",
-    "how",
-    "do",
-    "you",
-    "we",
-    "i",
-    "my",
-    "this",
-    "that",
-    "about",
-    "for",
-    "and",
-    "or",
-    "can",
-    "please",
-    "tell",
-    "me",
-    "ship",
-    "shipping",
-    "return",
-    "policy",
-    "product",
-    "explain",
-  ]);
-
-  return message
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, " ")
-    .split(/\s+/)
-    .map((word) => word.trim())
-    .filter((word) => word.length > 2 && !stopWords.has(word))
-    .slice(0, 6);
 }
 
 function matchesTerms(entry: AiProductIndexEntry, terms: string[]): boolean {
@@ -130,6 +91,7 @@ function sortEntries(
 export function searchAssistantProductsFromIndex(
   message: string,
   productId?: string,
+  options: { padWithFeatured?: boolean } = {},
 ): AssistantProductSnippet[] | null {
   if (!isProductIndexReady()) {
     return null;
@@ -148,16 +110,20 @@ export function searchAssistantProductsFromIndex(
 
   const terms = extractSearchTerms(message);
   if (terms.length > 0) {
-    for (const entry of listSellableProductIndexEntries()) {
-      if (seen.has(entry.id)) continue;
-      if (!matchesTerms(entry, terms)) continue;
+    // Rank by relevance (name > brand/category > description), then popularity.
+    const scored = listSellableProductIndexEntries()
+      .filter((entry) => !seen.has(entry.id))
+      .map((entry) => ({ entry, score: scoreProductRelevance(entry, terms) }))
+      .filter(({ score }) => score > 0)
+      .sort((a, b) => b.score - a.score || b.entry.soldCount - a.entry.soldCount)
+      .slice(0, MAX_PRODUCTS - snippets.length);
+    for (const { entry } of scored) {
       snippets.push(toAssistantSnippet(entry));
       seen.add(entry.id);
-      if (snippets.length >= MAX_PRODUCTS) break;
     }
   }
 
-  if (snippets.length < 3) {
+  if ((options.padWithFeatured ?? true) && snippets.length < 3) {
     const featured = listSellableProductIndexEntries()
       .sort((a, b) => {
         const featuredDelta = Number(b.isFeatured) - Number(a.isFeatured);
