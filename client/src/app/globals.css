@@ -92,12 +92,12 @@
   --accent-foreground: 0 0% 100%;
   --accent-subtle: 340 100% 65% / 0.15;
   --muted: 240 5% 95%;
-  --muted-foreground: 240 4% 46%;
-  --destructive: 0 84% 60%;
+  --muted-foreground: 240 5% 38%;
+  --destructive: 0 72% 51%;
   --destructive-foreground: 0 0% 98%;
-  --success: 142 76% 45%;
-  --warning: 38 92% 55%;
-  --border: 240 5% 90% / 0.8;
+  --success: 142 72% 32%;
+  --warning: 32 95% 40%;
+  --border: 240 6% 87%;
   --input: 240 5% 90% / 0.6;
   --ring: 230 100% 60%;
   --glass: 0 0% 100% / 0.6;
@@ -106,7 +106,20 @@
   --hologram: 190 100% 50% / 0.1;
 }
 
+/* Type scale: small sizes are nudged up 1px for readability (used ~480x across the app). */
+@theme {
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.25rem;
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.5rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.65rem;
+}
+
 @theme inline {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: var(--font-space-grotesk), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
   --color-card: hsl(var(--card));
@@ -349,10 +362,43 @@
     border-color: var(--color-border);
   }
 
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: 1.65;
+    font-feature-settings: "rlig" 1, "calt" 1, "cv11" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    background-color: hsl(var(--primary) / 0.3);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
   }
 
   ::-webkit-scrollbar {

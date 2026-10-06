@@ -33,7 +33,12 @@ Every task follows this order. Skills live in `.claude/skills/` and are loaded w
    | Checkout, orders, coupons, Stripe, PayPal, webhooks | `ecom-payments` | `stripe-best-practices`, `upgrade-stripe` |
    | Auth, roles, cookies, input, uploads, secrets | `ecom-security-review` | — |
    | AI module and feature flags | `ecom-ai-module` | — |
+   | Debugging bugs, errors, failing tests | `ecom-debug` | `sentry-fix-issues` |
+   | Writing/strengthening tests | `ecom-testing` | — |
+   | Package updates, deprecations, audit | `ecom-dependency-upgrade` | `prisma-upgrade-v7`, `upgrade-stripe`, `vercel:next-upgrade` |
+   | Release, env vars, hosting | `ecom-deploy` | `vercel:deploy`, `vercel:env` |
    | Sentry setup / production errors | — | `sentry-nextjs-sdk`, `sentry-fix-issues` |
+   | Reviewing a diff/PR | `ecom-security-review` | built-in `/code-review`, `/security-review`, `/simplify` |
 
 3. **Finish:** load `ecom-verify` before saying a task is done, then report in the Change Reporting Format below.
 

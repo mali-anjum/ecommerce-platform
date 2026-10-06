@@ -1,7 +1,9 @@
 import { useCallback, useEffect } from 'react';
 import { useToast } from '@/components/ui/hooks/use-toast';
-import { CartItemWithProduct } from '@/components/storefront/cart/types/cartItemStore';
-import type { Coupon } from '@/components/storefront/checkout/types/Coupon';
+import type { CartItem, CartItemWithProduct } from '@/components/storefront/cart/types/cartItemStore';
+import type { User } from '@/components/auth/types/User';
+import type { OrderStore } from '@/components/storefront/orders/types/orderTypes';
+import type { AppliedCoupon } from '@/components/storefront/checkout/types/Coupon';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { calculateTotals } from '@/components/storefront/checkout/utils/checkoutUtils';
 import { useCartSelectionStore } from '@/components/storefront/cart/state/useCartSelectionStore';
@@ -10,16 +12,17 @@ import type { CheckoutPaymentMethodId } from './usePaymentMethods';
 import { getAnalyticsSessionId } from "@/lib/analytics/sessionId";
 import { getAnalyticsVisitorId } from "@/lib/analytics/visitorId";
 import { sentryTracker } from "@/lib/monitoring";
+import { getApiErrorMessage } from "@/components/auth/utils/accountApi";
 
 interface UseCheckoutPaymentProps {
-  user: any;
+  user: User | null;
   cartItemsWithDetails: CartItemWithProduct[];
   selectedAddress: string;
-  appliedCoupon: Coupon | null;
-  items: any[];
+  appliedCoupon: AppliedCoupon | null;
+  items: CartItem[];
   availablePaymentMethods: CheckoutPaymentMethodId[];
-  createOrder: (orderRequest: any) => Promise<any>;
-  captureOrder: (captureRequest: any) => Promise<any>;
+  createOrder: OrderStore["createOrder"];
+  captureOrder: OrderStore["captureOrder"];
   fetchCart: () => Promise<void>;
   router: AppRouterInstance;
 }
@@ -109,9 +112,9 @@ export const useCheckoutPayment = ({
 
       const paymentData = response.data;
       const redirectUrl =
-        paymentData.approvalUrl ?? paymentData.url ?? null;
+        paymentData?.approvalUrl ?? paymentData?.url ?? null;
 
-      if (!redirectUrl) {
+      if (!paymentData || !redirectUrl) {
         throw new Error("No payment redirect URL provided by the server");
       }
 
@@ -129,14 +132,13 @@ export const useCheckoutPayment = ({
       localStorage.setItem("cartBackup", JSON.stringify(items));
 
       window.location.href = redirectUrl;
-    } catch (error: any) {
+    } catch (error) {
     sentryTracker(error, { source: "useCheckoutPayment" });
       console.error("Payment initiation error:", error);
-      const description =
-        error?.response?.data?.message ??
-        error?.response?.data?.error ??
-        error?.message ??
-        "Failed to process payment";
+      const description = getApiErrorMessage(
+        error,
+        error instanceof Error && error.message ? error.message : "Failed to process payment"
+      );
       toast({
         title: "Payment Failed",
         description,
@@ -212,14 +214,14 @@ export const useCheckoutPayment = ({
         });
 
         setTimeout(() => {
-          router.push(`/checkout/success?orderId=${response.data.order?.id}`);
+          router.push(`/checkout/success?orderId=${response.data?.order?.id ?? ""}`);
         }, 1500);
       } else {
         throw new Error(
           response?.message ?? response?.error ?? "Payment capture failed"
         );
       }
-    } catch (error: any) {
+    } catch (error) {
     sentryTracker(error, { source: "useCheckoutPayment" });
       console.error("Payment capture error:", error);
 
@@ -229,7 +231,10 @@ export const useCheckoutPayment = ({
 
       toast({
         title: "Payment Failed",
-        description: error.message || "Failed to complete payment",
+        description: getApiErrorMessage(
+          error,
+          error instanceof Error && error.message ? error.message : "Failed to complete payment"
+        ),
         variant: "destructive",
       });
 

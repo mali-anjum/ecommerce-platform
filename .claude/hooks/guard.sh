@@ -82,7 +82,8 @@ case "$tool" in
     fi
     cwd="$(printf '%s' "$input" | jq -r '.cwd // empty')"
     if printf '%s' "$cmd" | grep -qE 'next[[:space:]]+build|npm[[:space:]]+run[[:space:]]+build' \
-      && { printf '%s' "$cmd" | grep -qE 'client|next[[:space:]]+build' || [[ "$cwd" == */client* ]]; } \
+      && { printf '%s' "$cmd" | grep -qE 'client|next[[:space:]]+build' \
+           || { [[ "$cwd" == */client* ]] && ! printf '%s' "$cmd" | grep -qE 'cd[[:space:]]+[^;&|]*server'; }; } \
       && ! printf '%s' "$cmd" | grep -q 'max-old-space-size'; then
       block "cap Next.js build memory: prefix with NODE_OPTIONS=--max-old-space-size=3072."
     fi

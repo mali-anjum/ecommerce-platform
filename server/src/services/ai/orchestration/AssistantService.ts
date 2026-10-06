@@ -66,7 +66,7 @@ export async function runAssistantChat(
   input: AssistantChatInput,
 ): Promise<AssistantChatResult> {
   const message = input.message.trim();
-  const sessionHistory = await loadSessionHistory(input.sessionId);
+  const sessionHistory = await loadSessionHistory(input.sessionId, input.userId);
   const history = mergeSessionHistory(sessionHistory, input.history ?? []);
 
   const openTicketResult = isFeatureEnabled("ai.humanHandoff")

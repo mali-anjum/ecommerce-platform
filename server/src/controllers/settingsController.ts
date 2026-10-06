@@ -1,8 +1,7 @@
 import { Response } from "express";
 import { AuthenticatedRequest } from "../types/express";
-import cloudinary from "../config/cloudinary";
 import { prisma } from "../lib/prisma";
-import fs from "fs";
+import { uploadImageBuffer } from "../services/media/uploadImage";
 import { scheduleProductIndexRebuild } from "../services/ai/productIndex";
 import { sentryTracker } from "../lib/monitoring";
 
@@ -14,32 +13,24 @@ const addFeatureBanners = async (
     const files = req.files as Express.Multer.File[];
 
     if (!files || files.length === 0) {
-      res.status(404).json({
+      res.status(400).json({
         success: false,
         message: "No files provided",
       });
       return;
     }
 
-    const uploadPromises = files.map((file) =>
-      cloudinary.uploader.upload(file.path, {
-        folder: "ecommerce-prisma/ecommerce-feature-banners",
-      })
-    );
-
-    const uploadResults = await Promise.all(uploadPromises);
-
-    const banners = await Promise.all(
-      uploadResults.map((res) =>
-        prisma.featureBanner.create({
-          data: {
-            imageUrl: res.secure_url,
-          },
-        })
+    // Uploads use multer memoryStorage, so files have a buffer and no disk path.
+    const imageUrls = await Promise.all(
+      files.map((file) =>
+        uploadImageBuffer(file.buffer, "ecommerce-prisma/ecommerce-feature-banners")
       )
     );
 
-    files.forEach((file) => fs.unlinkSync(file.path));
+    const banners = await prisma.$transaction(
+      imageUrls.map((imageUrl) => prisma.featureBanner.create({ data: { imageUrl } }))
+    );
+
     res.status(201).json({
       success: true,
       banners,
@@ -84,7 +75,11 @@ const updateFeaturedProducts = async (
   try {
     const { productIds } = req.body;
 
-    if (!Array.isArray(productIds) || productIds.length > 8) {
+    if (
+      !Array.isArray(productIds) ||
+      productIds.length > 8 ||
+      !productIds.every((id) => typeof id === "string" && id.trim().length > 0)
+    ) {
       res.status(400).json({
         success: false,
         message: `Invalid product Id's or too many requests`,
@@ -92,16 +87,17 @@ const updateFeaturedProducts = async (
       return;
     }
 
-    //reset all products to not featured
-    await prisma.product.updateMany({
-      data: { isFeatured: false },
-    });
-
-    //set selected product as featured
-    await prisma.product.updateMany({
-      where: { id: { in: productIds } },
-      data: { isFeatured: true },
-    });
+    // One transaction so a failure never leaves the storefront with no featured products.
+    await prisma.$transaction([
+      prisma.product.updateMany({
+        where: { isFeatured: true },
+        data: { isFeatured: false },
+      }),
+      prisma.product.updateMany({
+        where: { id: { in: productIds } },
+        data: { isFeatured: true },
+      }),
+    ]);
 
     scheduleProductIndexRebuild();
 
@@ -125,7 +121,7 @@ const getFeaturedProducts = async (
 ): Promise<void> => {
   try {
     const featuredProducts = await prisma.product.findMany({
-      where: { isFeatured: true },
+      where: { isFeatured: true, isActive: true, isArchived: false },
     });
 
     res.status(200).json({

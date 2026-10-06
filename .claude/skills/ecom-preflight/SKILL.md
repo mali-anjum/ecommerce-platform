@@ -25,7 +25,12 @@ Load every row that applies (use the Skill tool):
 | Checkout, Stripe, PayPal, webhooks, orders/payments | `ecom-payments` | `stripe-best-practices`, `upgrade-stripe` (version bumps) |
 | Auth, cookies, JWT, roles, secrets, uploads, user input | `ecom-security-review` | — |
 | AI module, LLM, feature flags | `ecom-ai-module` | — |
+| Bug, error, failing test, "it doesn't work" | `ecom-debug` | `sentry-fix-issues` (production errors) |
+| Writing or strengthening tests | `ecom-testing` | — |
+| Package updates, deprecations, npm audit | `ecom-dependency-upgrade` | `prisma-upgrade-v7`, `upgrade-stripe`, `vercel:next-upgrade`, `sentry-nextjs-sdk` |
+| Release, env vars, hosting, production-only issue | `ecom-deploy` | `vercel:deploy`, `vercel:env`, `vercel:deployments-cicd` |
 | Sentry setup or production errors | — | `sentry-nextjs-sdk`, `sentry-fix-issues` |
+| Reviewing a diff or PR | `ecom-security-review` | built-in `/code-review`, `/security-review`, `/simplify` |
 | **Always, before claiming done** | `ecom-verify` | — |
 
 ## 3. Hard boundaries (never cross without explicit user approval)

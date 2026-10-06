@@ -3,13 +3,15 @@ import { AuthenticatedRequest } from "../types/express";
 import { prisma } from "../lib/prisma";
 import { asyncHandler } from "../utils/asyncHandler";
 import { requireUserId } from "../utils/requireUserId";
+import type { AddressInput } from "../validations/addressSchema";
 
 const createAddress = asyncHandler(
   async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     const userId = requireUserId(req, "Unauthenticated user");
 
+    // Validated and trimmed by `validate(addressSchema)` on the route.
     const { name, address, city, country, postalCode, phone, isDefault } =
-      req.body;
+      req.validatedData as AddressInput;
 
     if (isDefault) {
       await prisma.address.updateMany({
@@ -29,7 +31,7 @@ const createAddress = asyncHandler(
         country,
         postalCode,
         phone,
-        isDefault: isDefault || false,
+        isDefault,
       },
     });
 
@@ -74,8 +76,9 @@ const updateAddress = asyncHandler(
       return;
     }
 
+    // Validated and trimmed by `validate(addressSchema)` on the route.
     const { name, address, city, country, postalCode, phone, isDefault } =
-      req.body;
+      req.validatedData as AddressInput;
 
     if (isDefault) {
       await prisma.address.updateMany({
@@ -95,7 +98,7 @@ const updateAddress = asyncHandler(
         country,
         postalCode,
         phone,
-        isDefault: isDefault || false,
+        isDefault,
       },
     });
 
@@ -121,6 +124,17 @@ const deleteAddress = asyncHandler(
         message: "Address not found!",
       });
 
+      return;
+    }
+
+    // Orders cascade-delete with their address (schema onDelete: Cascade),
+    // so an address used by any order must never be deleted.
+    const linkedOrders = await prisma.order.count({ where: { addressId: id } });
+    if (linkedOrders > 0) {
+      res.status(409).json({
+        success: false,
+        message: "This address is linked to existing orders and cannot be deleted.",
+      });
       return;
     }
 

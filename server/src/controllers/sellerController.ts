@@ -3,7 +3,7 @@ import { prisma } from "../lib/prisma";
 import { AuthenticatedRequest } from "../types/express";
 import { asyncHandler } from "../utils/asyncHandler";
 import { ApiResponse } from "../utils/ApiResponse";
-import { UnauthorizedError, ValidationError } from "../utils/ApiError";
+import { NotFoundError, UnauthorizedError, ValidationError } from "../utils/ApiError";
 import { issueSessionForUser } from "./authController";
 
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -97,7 +97,7 @@ const getMySellerProfile = asyncHandler(
       },
     });
     if (!seller) {
-      throw new ValidationError("Seller profile not found");
+      throw new NotFoundError("Seller profile not found");
     }
 
     const productCount = await prisma.product.count({

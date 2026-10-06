@@ -35,11 +35,11 @@ export function AssistantOrderCards({ orders }: AssistantOrderCardsProps) {
               <span className="text-xs font-medium text-muted-foreground">
                 Order {order.id.slice(0, 8)}…
               </span>
-              <Badge variant="outline" className="text-[10px]">
+              <Badge variant="outline" className="text-[11px]">
                 {formatOrderStatus(order.status)}
               </Badge>
               {order.canRequestCancel && (
-                <Badge variant="secondary" className="text-[10px]">
+                <Badge variant="secondary" className="text-[11px]">
                   Cancellable
                 </Badge>
               )}
@@ -81,7 +81,7 @@ export function AssistantOrderCards({ orders }: AssistantOrderCardsProps) {
                       <p className="text-xs text-muted-foreground">
                         {event.message}
                       </p>
-                      <p className="text-[10px] text-muted-foreground">
+                      <p className="text-[11px] text-muted-foreground">
                         {formatTimelineDate(event.occurredAt)}
                         {event.location ? ` · ${event.location}` : ""}
                       </p>

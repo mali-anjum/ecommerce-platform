@@ -387,16 +387,19 @@ Configure return URLs in server env to match your Next.js origin (default port *
 
 ## Testing
 
+Run one command at a time; `--runInBand` keeps Jest in a single process so low-RAM machines stay responsive.
+
 ```bash
-cd server && npm test
-cd client && npm test
+cd server && npx jest --runInBand
+cd client && npx jest --runInBand
 ```
 
-Run lint/build before merging substantial changes:
+Run build checks before merging substantial changes:
 
 ```bash
-cd client && npm run lint && npm run build
 cd server && npm run build
+cd client && NODE_OPTIONS=--max-old-space-size=3072 npm run build
+cd client && npx eslint <changed files> --max-warnings 0
 ```
 
 See **`CLAUDE.md`** for verification expectations on contributions.
@@ -447,6 +450,10 @@ AI coding agents (Claude Code and compatible tools) use the agent skills in **`.
 | `ecom-payments` | Checkout, orders, coupons, Stripe, PayPal, webhooks |
 | `ecom-security-review` | Auth, roles, ownership, input, uploads, secrets checklist |
 | `ecom-ai-module` | AI commerce module, LLM output handling, feature flags |
+| `ecom-debug` | Reproduce → locate failing layer → root cause → fix with regression test |
+| `ecom-testing` | Strict Jest patterns for server and client, mocking, mutation checks |
+| `ecom-dependency-upgrade` | Package updates, deprecations, audit — one major at a time |
+| `ecom-deploy` | Release checklist: env vars in host, migrations, webhooks, smoke test, rollback |
 | `ecom-verify` | Final quality gate: memory-safe checks, test strength, change report |
 
 **Vendor skills** (installed from upstream, versions pinned in `skills-lock.json`): `prisma-cli`, `prisma-client-api`, `prisma-upgrade-v7`, `stripe-best-practices`, `upgrade-stripe`, `sentry-nextjs-sdk`, `sentry-fix-issues`, `vercel-react-best-practices`, `vercel-composition-patterns`, `web-design-guidelines`.

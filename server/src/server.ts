@@ -1,4 +1,5 @@
 import "./config/loadEnv";
+import { resolveTrustProxyHops } from "./config/trustProxy";
 import { initSentry, registerProcessErrorHandlers, sentryTracker } from "./lib/monitoring";
 import express, { Request, Response } from "express";
 import cors from "cors";
@@ -72,9 +73,24 @@ const corsOptions: cors.CorsOptions = {
   maxAge: 86400, // 24 hours
 };
 
+const trustProxyHops = resolveTrustProxyHops();
+if (trustProxyHops > 0) {
+  app.set("trust proxy", trustProxyHops);
+}
+
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
-app.use(express.json());
+// Express 5 (path-to-regexp v8) needs a named wildcard; a bare "*" crashes startup.
+app.options("/{*splat}", cors(corsOptions));
+// Keep exact bytes for payment webhooks: signature checks fail on re-serialised JSON.
+app.use(
+  express.json({
+    verify: (req, _res, buf) => {
+      if (req.url?.includes("/webhooks/")) {
+        (req as express.Request).rawBody = Buffer.from(buf);
+      }
+    },
+  })
+);
 app.use(cookieParser());
 export { prisma };
 

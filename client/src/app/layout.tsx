@@ -1,11 +1,23 @@
 // app/layout.tsx - CORRECTED
 import type { Metadata } from "next";
+import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import CommonLayout from "@/components/common/organisms/AppShell";
 import AuthProvider from "@/components/providers/AuthProvider";
 import ThemeInitializer from "@/components/layout/ThemeInitializer";
 
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-space-grotesk",
+});
 
 export const metadata: Metadata = {
   title: "Futuristic E-Commerce | Next-Gen Shopping",
@@ -18,16 +30,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${inter.variable} ${spaceGrotesk.variable}`}
+      suppressHydrationWarning
+    >
       <head>
         {/* Add futuristic favicon and meta tags */}
         <link rel="icon" href="/favicon.ico" />
         <meta name="theme-color" content="#ffffff" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
-        
-        {/* Futuristic font preloads */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+
       </head>
       <body className="antialiased">
         <ThemeInitializer />

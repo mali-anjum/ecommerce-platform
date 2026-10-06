@@ -35,7 +35,14 @@ export async function proxyAdminAiRequest(
     );
   }
 
-  const path = `/api/ai/admin/${pathSegments.join("/")}`;
+  // Dot segments would be normalised by fetch and climb out of /api/ai/admin.
+  if (pathSegments.some((segment) => segment === "." || segment === "..")) {
+    return NextResponse.json(
+      { success: false, error: "Invalid path" },
+      { status: 400 },
+    );
+  }
+  const path = `/api/ai/admin/${pathSegments.map(encodeURIComponent).join("/")}`;
   const search = request.nextUrl.search;
   const isUpload = pathSegments.join("/").endsWith(UPLOAD_PATH_SUFFIX);
 

@@ -1,10 +1,10 @@
 import { CartItemWithProduct } from '@/components/storefront/cart/types/cartItemStore';
-import type { Coupon } from '@/components/storefront/checkout/types';
+import type { AppliedCoupon } from '@/components/storefront/checkout/types/Coupon';
 import { calculateCartPricingTotals } from '@/components/storefront/cart/utils/cartTotals';
 
 export const calculateTotals = (
   cartItems: CartItemWithProduct[],
-  appliedCoupon: Coupon | null
+  appliedCoupon: AppliedCoupon | null
 ) => {
   const pricing = calculateCartPricingTotals(
     cartItems.map((item) => ({

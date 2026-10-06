@@ -8,12 +8,18 @@ import {
   getCatalogTreeWithCounts,
 } from "../catalogService";
 
+export const MAX_LISTING_LIMIT = 100;
+
 /**
  * Public storefront listing: filters, sort, catalog tree, and active sellers.
  */
 export async function fetchClientProductListing(query: Request["query"]) {
-  const page = parseInt(String(query.page ?? ""), 10) || 1;
-  const limit = parseInt(String(query.limit ?? ""), 10) || 10;
+  // Clamp paging: a huge limit would load the whole table, a page < 1 a negative skip.
+  const page = Math.max(1, parseInt(String(query.page ?? ""), 10) || 1);
+  const limit = Math.min(
+    MAX_LISTING_LIMIT,
+    Math.max(1, parseInt(String(query.limit ?? ""), 10) || 10)
+  );
 
   const categories = String(query.categories ?? "")
     .split(",")
@@ -52,9 +58,8 @@ export async function fetchClientProductListing(query: Request["query"]) {
     parseFloat(String(query.maxPrice ?? "")) || Number.MAX_SAFE_INTEGER;
 
   let sortBy = String(query.sortBy ?? "createdAt");
-  let sortOrder = (String(query.sortOrder ?? "desc") || "desc") as
-    | "asc"
-    | "desc";
+  let sortOrder: "asc" | "desc" =
+    String(query.sortOrder ?? "").toLowerCase() === "asc" ? "asc" : "desc";
 
   const skip = (page - 1) * limit;
 

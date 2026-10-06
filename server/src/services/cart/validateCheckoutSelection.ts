@@ -45,6 +45,8 @@ export async function validateCheckoutSelection(
           category: true,
           price: true,
           stock: true,
+          isActive: true,
+          isArchived: true,
         },
       },
     },
@@ -63,7 +65,7 @@ export async function validateCheckoutSelection(
 
   for (const id of ids) {
     const item = byId.get(id);
-    if (!item?.product) {
+    if (!item?.product || !item.product.isActive || item.product.isArchived) {
       throw new ApiError(400, "A selected product is no longer available");
     }
 

@@ -6,23 +6,13 @@ import {
   upsertCatalogFromConstants,
   linkOrphanProductsToSubcategories,
 } from "../services/catalogService";
+import {
+  BANNER_IMAGE_IDS,
+  imageIdsForProduct,
+  unsplashUrl,
+} from "../constants/catalogImages";
 
-const BANNER_IMAGE_URLS = [
-  "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1920&q=80",
-  "https://images.unsplash.com/photo-1556742049-0cfe3b1a2b88?auto=format&fit=crop&w=1920&q=80",
-  "https://images.unsplash.com/photo-1607082349566-187342175e2f?auto=format&fit=crop&w=1920&q=80",
-];
-
-const IMAGE_BY_FAMILY: Record<string, string> = {
-  Electronics:
-    "https://images.unsplash.com/photo-1498049794561-8590a66e234a?auto=format&fit=crop&w=1200&q=80",
-  Fashion:
-    "https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=1200&q=80",
-  "Home & Living":
-    "https://images.unsplash.com/photo-1484101403633-562f891dc89a?auto=format&fit=crop&w=1200&q=80",
-  Beauty:
-    "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1200&q=80",
-};
+const BANNER_IMAGE_URLS = BANNER_IMAGE_IDS.map((id) => unsplashUrl(id, 1920));
 
 /** Two products per subcategory: realistic titles, brands, sizes where it matters */
 function seedsForSubcategory(
@@ -441,7 +431,6 @@ async function seedBannersIfEmpty() {
 
 async function seedCatalogProducts() {
   for (const cat of PRODUCT_CATEGORY_CATALOG) {
-    const hero = IMAGE_BY_FAMILY[cat.title] ?? IMAGE_BY_FAMILY.Electronics;
     for (const sub of cat.subcategories) {
       const rows = seedsForSubcategory(cat.title, sub.title);
       for (const row of rows) {
@@ -475,7 +464,9 @@ async function seedCatalogProducts() {
             stock: row.stock,
             soldCount: row.soldCount,
             rating: Math.round(row.rating * 10) / 10,
-            images: [hero],
+            images: (imageIdsForProduct(row.name, sub.title) ?? []).map((id) =>
+              unsplashUrl(id)
+            ),
             isFeatured: false,
           },
         });

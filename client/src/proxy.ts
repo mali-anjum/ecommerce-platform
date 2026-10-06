@@ -4,7 +4,15 @@ import { jwtVerify } from "jose";
 import { proxyLogger } from "@/lib/logger";
 import { sentryTracker } from "@/lib/monitoring";
 
-const publicRoutes = ["/auth/register", "/auth/login", "/help"];
+// Account recovery pages stay public even for signed-in users (links arrive by email).
+const publicRoutes = [
+  "/auth/register",
+  "/auth/login",
+  "/auth/forgot-password",
+  "/auth/reset-password",
+  "/auth/verify-email",
+  "/help",
+];
 const authRoutes = ["/auth/register", "/auth/login"];
 const superAdminRoutes = ["/super-admin"];
 const userRoutes = ["/home"];

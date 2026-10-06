@@ -1,4 +1,5 @@
 // types/checkout/index.ts
+import type { AppliedCoupon } from "./Coupon";
 
 // Address type based on your AddressSelection component
 export interface Address {
@@ -95,7 +96,7 @@ export interface OrderSummaryProps {
   discountAmount: number;
   total: number;
   couponCode: string;
-  appliedCoupon: Coupon | null;
+  appliedCoupon: AppliedCoupon | null;
   couponError: string;
   onCouponChange: (code: string) => void;
   onApplyCoupon: () => void;
@@ -144,7 +145,7 @@ export interface CartStore {
 
 export interface OrderStore {
   createOrder: (data: PaymentOrderRequest) => Promise<PaymentOrderResponse>;
-  captureOrder: (data: CapturePaymentRequest) => Promise<any>;
+  captureOrder: (data: CapturePaymentRequest) => Promise<unknown>;
   isPaymentProcessing: boolean;
   // ... other order store methods
 }

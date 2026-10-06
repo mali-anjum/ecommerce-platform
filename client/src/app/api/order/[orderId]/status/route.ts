@@ -19,7 +19,7 @@ export async function PUT(
     const { orderId } = await context.params;
     const body = await request.json();
 
-    const backendRes = await fetch(`${API_ROUTES.ORDER}/${orderId}/status`, {
+    const backendRes = await fetch(`${API_ROUTES.ORDER}/${encodeURIComponent(orderId)}/status`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

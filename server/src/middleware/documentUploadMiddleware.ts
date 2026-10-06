@@ -1,5 +1,6 @@
 import multer, { FileFilterCallback } from "multer";
 import { Request } from "express";
+import { ValidationError } from "../utils/ApiError";
 
 const storage = multer.memoryStorage();
 
@@ -8,7 +9,7 @@ const ALLOWED_MIMES = new Set([
   "text/plain",
 ]);
 
-function documentFileFilter(
+export function documentFileFilter(
   _req: Request,
   file: Express.Multer.File,
   cb: FileFilterCallback,
@@ -17,7 +18,7 @@ function documentFileFilter(
     cb(null, true);
     return;
   }
-  cb(new Error("Only PDF and plain-text documents are allowed."));
+  cb(new ValidationError("Only PDF and plain-text documents are allowed."));
 }
 
 export const uploadDocument = multer({

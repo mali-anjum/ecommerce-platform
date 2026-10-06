@@ -11,7 +11,6 @@ export const validate = (schema: z.ZodSchema) => {
             req.validatedData = validatedData;
             next();
         } catch (error) {
-            sentryTracker(error, { source: "validation" });
             if (error instanceof z.ZodError) {
                 const errors = error.issues.map((issue) => ({
                     field: issue.path.join('.'),
@@ -26,6 +25,8 @@ export const validate = (schema: z.ZodSchema) => {
                 return;
             }
 
+            // Only unexpected failures are reported; bad user input is not an error.
+            sentryTracker(error, { source: "validation" });
             res.status(500).json({
                 success: false,
                 message: 'Internal server error',

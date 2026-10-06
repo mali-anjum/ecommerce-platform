@@ -13,6 +13,7 @@ import {
   updateKnowledgeBaseEntry,
 } from "../services/knowledge/knowledgeBaseService";
 import { sentryTracker } from "../lib/monitoring";
+import { isPrismaNotFound } from "../utils/prismaErrors";
 
 export const getAdminKnowledgeBase = asyncHandler(
   async (_req: AuthenticatedRequest, res: Response, _next: NextFunction) => {
@@ -99,8 +100,11 @@ export const updateAdminKnowledgeBase = asyncHandler(
       const document = await updateKnowledgeBaseEntry(id, req.validatedData);
       res.json(new ApiResponse(200, { document }, "Knowledge entry updated"));
     } catch (error) {
+      if (isPrismaNotFound(error)) {
+        return next(new NotFoundError("Knowledge entry not found"));
+      }
       sentryTracker(error, { source: "knowledgeBaseController" });
-      return next(new NotFoundError("Knowledge entry not found"));
+      return next(error);
     }
   },
 );
@@ -112,8 +116,11 @@ export const deleteAdminKnowledgeBase = asyncHandler(
       await deleteKnowledgeBaseEntry(id);
       res.json(new ApiResponse(200, { id }, "Knowledge entry deleted"));
     } catch (error) {
+      if (isPrismaNotFound(error)) {
+        return next(new NotFoundError("Knowledge entry not found"));
+      }
       sentryTracker(error, { source: "knowledgeBaseController" });
-      return next(new NotFoundError("Knowledge entry not found"));
+      return next(error);
     }
   },
 );

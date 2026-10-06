@@ -13,17 +13,37 @@ import {
   startGoogleOAuthHandler,
 } from "../controllers/oauthProviderController";
 import { exchangeOAuthCode } from "../controllers/oauthController";
+import {
+  forgotPassword,
+  resendVerificationEmail,
+  resetPassword,
+  verifyEmail,
+} from "../controllers/accountController";
 import { authenticateJwt } from "../middleware/authMiddleware";
 import {
+  accountEmailLimiter,
+  accountTokenLimiter,
   authLoginLimiter,
   authRegisterLimiter,
   oauthStartLimiter,
 } from "../middleware/authRateLimiter";
+import { validate } from "../middleware/validation";
+import {
+  forgotPasswordSchema,
+  resetPasswordSchema,
+  verifyEmailSchema,
+} from "../validations/accountSchema";
 
 const router = express.Router();
 
 router.post("/register", authRegisterLimiter, register);
 router.post("/login", authLoginLimiter, login);
+
+// Password reset and email verification (single-use emailed tokens)
+router.post("/forgot-password", accountEmailLimiter, validate(forgotPasswordSchema), forgotPassword);
+router.post("/reset-password", accountTokenLimiter, validate(resetPasswordSchema), resetPassword);
+router.post("/verify-email", accountTokenLimiter, validate(verifyEmailSchema), verifyEmail);
+router.post("/resend-verification", accountEmailLimiter, authenticateJwt, resendVerificationEmail);
 
 // Google OAuth (Arctic on Express — source of truth)
 router.get("/google", oauthStartLimiter, startGoogleOAuthHandler);

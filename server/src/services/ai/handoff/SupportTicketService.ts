@@ -1,5 +1,6 @@
 import type { Prisma, SupportTicketStatus } from "@prisma/client";
 import { prisma } from "../../../lib/prisma";
+import { NotFoundError } from "../../../utils/ApiError";
 
 export type SupportTicketMessage = {
   role: "user" | "assistant" | "agent" | "system";
@@ -56,7 +57,7 @@ export async function appendSupportTicketMessage(
     where: { id: ticketId },
   });
   if (!ticket) {
-    throw new Error("Support ticket not found");
+    throw new NotFoundError("Support ticket not found");
   }
 
   const messages = [

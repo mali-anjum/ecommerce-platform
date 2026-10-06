@@ -30,3 +30,23 @@ export async function updateOrderStatusById(
     data: { status },
   });
 }
+
+/** Orders in these states already had stock/coupon fulfillment applied. */
+export const FULFILLED_ORDER_STATUSES: OrderStatus[] = ["PROCESSING", "SHIPPED", "DELIVERED"];
+
+/**
+ * Atomically marks an order paid (PROCESSING / COMPLETED).
+ * Returns false when another request (webhook retry or return-page capture) already did,
+ * so the caller must skip fulfillment — this prevents double stock decrements.
+ */
+export async function claimOrderForFulfillment(orderId: string): Promise<boolean> {
+  const { count } = await prisma.order.updateMany({
+    where: {
+      id: orderId,
+      status: { notIn: FULFILLED_ORDER_STATUSES },
+      paymentStatus: { notIn: ["COMPLETED", "REFUNDED"] },
+    },
+    data: { status: "PROCESSING", paymentStatus: "COMPLETED" },
+  });
+  return count === 1;
+}

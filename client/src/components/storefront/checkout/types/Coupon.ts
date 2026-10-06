@@ -14,3 +14,6 @@ export interface Coupon {
   maxDiscount?: number;
   minOrderValue?: number;
 }
+
+/** What checkout keeps after the server accepts a code (`POST /coupon/validate`). */
+export type AppliedCoupon = Pick<Coupon, "id" | "code" | "discountPercent">;

@@ -1,5 +1,6 @@
 // components/user/checkout/OrderSummary.tsx
-import { Coupon } from "@/components/storefront/checkout/types/Coupon";
+import Image from "next/image";
+import type { AppliedCoupon } from "@/components/storefront/checkout/types/Coupon";
 import { CartItemWithProduct } from "@/components/storefront/checkout/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +16,7 @@ export interface CheckoutOrderSummaryProps {
   discountAmount: number;
   total: number;
   couponCode: string;
-  appliedCoupon: Coupon | null;
+  appliedCoupon: AppliedCoupon | null;
   couponError: string;
   onCouponChange: (code: string) => void;
   onApplyCoupon: () => void;
@@ -73,9 +74,11 @@ console.log(total);
               <div className="relative">
                 <div className="w-16 h-16 rounded-lg overflow-hidden bg-linear-to-br from-primary/10 to-secondary/10">
                   {item.product.images?.[0] ? (
-                    <img
+                    <Image
                       src={item.product.images[0]}
                       alt={item.product.name}
+                      width={64}
+                      height={64}
                       className="w-full h-full object-cover"
                     />
                   ) : (

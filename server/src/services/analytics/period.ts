@@ -9,7 +9,8 @@ const PERIOD_DAYS: Record<AnalyticsPeriod, number> = {
 
 export function parseAnalyticsPeriod(raw: unknown): AnalyticsPeriod {
   const value = String(raw ?? "30d").trim() as AnalyticsPeriod;
-  if (value in PERIOD_DAYS) {
+  // Own-property check: `in` would also accept inherited keys like "constructor".
+  if (Object.prototype.hasOwnProperty.call(PERIOD_DAYS, value)) {
     return value;
   }
   return "30d";

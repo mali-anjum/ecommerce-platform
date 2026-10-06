@@ -26,6 +26,15 @@ interface SettingsState {
   updateFeaturedProducts: (productIds: string[]) => Promise<boolean>;
 }
 
+/** Prefer the server's reason (e.g. rejected file type) over a generic message. */
+function settingsErrorMessage(error: unknown, fallback: string): string {
+  if (axios.isAxiosError(error)) {
+    const message = (error.response?.data as { message?: unknown } | undefined)?.message;
+    if (typeof message === "string" && message) return message;
+  }
+  return fallback;
+}
+
 export const useSettingsStore = create<SettingsState>((set) => ({
   banners: [],
   featuredProducts: [],
@@ -60,7 +69,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
     } catch (e) {
     sentryTracker(e, { source: "useSettingsStore" });
       console.error(e);
-      set({ error: "Failed to fetch banners", isLoading: false });
+      set({ error: "Failed to fetch featured products", isLoading: false });
     }
   },
   addBanners: async (files: File[]) => {
@@ -82,11 +91,12 @@ export const useSettingsStore = create<SettingsState>((set) => ({
         isLoading: false,
       });
 
-      return response.data.success;
+      return Boolean(response.data.success);
     } catch (e) {
     sentryTracker(e, { source: "useSettingsStore" });
       console.error(e);
-      set({ error: "Failed to fetch banners", isLoading: false });
+      set({ error: settingsErrorMessage(e, "Failed to upload banners"), isLoading: false });
+      return false;
     }
   },
   updateFeaturedProducts: async (productIds: string[]) => {
@@ -102,11 +112,12 @@ export const useSettingsStore = create<SettingsState>((set) => ({
       set({
         isLoading: false,
       });
-      return response.data.success;
+      return Boolean(response.data.success);
     } catch (e) {
     sentryTracker(e, { source: "useSettingsStore" });
       console.error(e);
-      set({ error: "Failed to fetch banners", isLoading: false });
+      set({ error: settingsErrorMessage(e, "Failed to update featured products"), isLoading: false });
+      return false;
     }
   },
 }));
