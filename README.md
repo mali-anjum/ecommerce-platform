@@ -33,9 +33,10 @@ A production-oriented, full-stack marketplace: a **Next.js** storefront and admi
 - [Testing](#testing)
 - [Deployment](#deployment)
 - [Troubleshooting](#troubleshooting)
-- [Contributing](#contributing)
+- [Development conventions](#development-conventions)
 - [AI agent workflow (skills and guardrails)](#ai-agent-workflow-skills-and-guardrails)
 - [Security](#security)
+- [License](#license)
 
 ---
 
@@ -445,9 +446,9 @@ See **`CLAUDE.md`** for verification expectations on contributions.
 
 ---
 
-## Contributing
+## Development conventions
 
-Read **`CLAUDE.md`** for project laws: test discipline, env safety, route boundaries, and required checks before claiming a change is done.
+This is a proprietary project; outside contributions are not accepted. Authorized developers should read **`CLAUDE.md`** for project laws: test discipline, env safety, route boundaries, and required checks before claiming a change is done.
 
 ---
 
@@ -493,3 +494,11 @@ AI coding agents (Claude Code and compatible tools) use the agent skills in **`.
 - **[server/README.md](./server/README.md)** — API layers, Prisma, services, webhooks, Docker
 - **[docs/ENVIRONMENT.md](./docs/ENVIRONMENT.md)** — environment variables and deployment checklists
 - **[docs/ai/README.md](./docs/ai/README.md)** — AI commerce module
+
+---
+
+## License
+
+**Proprietary — all rights reserved.** Copyright © 2025–2026 Ali Anjum.
+
+This code is not open source. No use, copying, modification, or distribution is permitted without prior written permission. See [`LICENSE`](./LICENSE). For licensing or purchase inquiries, contact the owner.
