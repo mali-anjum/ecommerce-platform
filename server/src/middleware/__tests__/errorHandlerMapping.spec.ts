@@ -83,11 +83,33 @@ describe("errorHandler status mapping", () => {
     expect(typeof result.body.stack).toBe("string");
   });
 
-  it("reports every error to Sentry with the processed status", () => {
-    run(new NotFoundError());
+  it("reports 5xx errors to Sentry with request context and the processed status", () => {
+    const error = new Error("db down");
+    run(error);
+    expect(sentryTracker).toHaveBeenCalledTimes(1);
     expect(sentryTracker).toHaveBeenCalledWith(
-      expect.any(NotFoundError),
-      expect.objectContaining({ route: "/api/x", method: "POST", extra: expect.objectContaining({ processedStatus: 404 }) })
+      error,
+      expect.objectContaining({
+        source: "errorHandler",
+        route: "/api/x",
+        method: "POST",
+        extra: expect.objectContaining({ processedStatus: 500 }),
+      })
+    );
+  });
+
+  it("does not report expected 4xx errors to Sentry", () => {
+    run(new NotFoundError());
+    run(new ApiError(400, "Invalid input"));
+    run(new ApiError(401, "Unauthorized"));
+    expect(sentryTracker).not.toHaveBeenCalled();
+  });
+
+  it("reports ApiErrors with a 5xx status", () => {
+    run(new ApiError(503, "Upstream unavailable"));
+    expect(sentryTracker).toHaveBeenCalledWith(
+      expect.any(ApiError),
+      expect.objectContaining({ extra: expect.objectContaining({ processedStatus: 503 }) })
     );
   });
 

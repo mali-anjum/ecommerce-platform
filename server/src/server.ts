@@ -1,6 +1,7 @@
 import "./config/loadEnv";
+import "./instrument";
 import { resolveTrustProxyHops } from "./config/trustProxy";
-import { initSentry, registerProcessErrorHandlers, sentryTracker } from "./lib/monitoring";
+import { registerProcessErrorHandlers, sentryTracker } from "./lib/monitoring";
 import express, { Request, Response } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -28,7 +29,6 @@ import { warmProductIndex } from "./services/ai/productIndex";
 import { startSalesEmailQueueProcessor } from "./services/ai/sales";
 
 const app = express();
-initSentry();
 registerProcessErrorHandlers();
 
 const PORT = process.env.PORT || 3001;

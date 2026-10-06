@@ -1,4 +1,5 @@
 import { completeChat, getLlmProviderId, isAiConfigured } from "../../../config/ai";
+import { sentryTracker } from "../../../lib/monitoring";
 import { ApiError } from "../../../utils/ApiError";
 import { loadAssistantKnowledgeContext } from "../knowledge/KnowledgeContextLoader";
 import {
@@ -10,6 +11,10 @@ import type {
   AssistantChatResult,
   ClassifiedIntent,
 } from "../types";
+
+// Matches isAssistantFailureReply, so repeated provider failures escalate to a human.
+export const GENERAL_CHAT_FALLBACK_REPLY =
+  "Sorry, I could not generate a response right now. Please try again later, or visit the Help Center to contact support.";
 
 export async function runGeneralChat(input: {
   message: string;
@@ -27,13 +32,11 @@ export async function runGeneralChat(input: {
   const context = await loadAssistantKnowledgeContext(
     input.message,
     input.productId,
+    input.classifiedIntent,
   );
 
   const systemPrompt = buildAssistantSystemPrompt(context, {
-    focus:
-      input.classifiedIntent === "FAQ"
-        ? "Answer using FAQs, store policies, and help content first."
-        : undefined,
+    intent: input.classifiedIntent,
   });
   const messages = buildChatMessages(
     systemPrompt,
@@ -41,11 +44,33 @@ export async function runGeneralChat(input: {
     input.history ?? [],
   );
 
-  const reply = await completeChat({
-    messages,
-    temperature: 0.3,
-    maxTokens: 800,
-  });
+  let reply: string;
+  try {
+    reply = (
+      await completeChat({
+        messages,
+        temperature: 0.3,
+        maxTokens: 800,
+      })
+    ).trim();
+  } catch (error) {
+    // Provider outage, rate limit, or timeout: degrade gracefully instead of a raw 500.
+    sentryTracker(error, {
+      source: "ai.generalChat",
+      extra: { provider: getLlmProviderId(), intent: input.classifiedIntent },
+    });
+    reply = "";
+  }
+
+  if (!reply) {
+    return {
+      intent: "general",
+      reply: GENERAL_CHAT_FALLBACK_REPLY,
+      products: [],
+      productIdsReferenced: [],
+      orders: [],
+    };
+  }
 
   const productIdsReferenced = context.products
     .filter(

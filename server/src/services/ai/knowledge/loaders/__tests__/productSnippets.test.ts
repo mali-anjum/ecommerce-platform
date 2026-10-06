@@ -1,9 +1,8 @@
-import { extractSearchTerms } from "../ProductSnippets";
+import { extractSearchTerms } from "../../relevance";
 
 describe("extractSearchTerms", () => {
   it("filters stop words and short tokens", () => {
     expect(extractSearchTerms("What is the best laptop for gaming?")).toEqual([
-      "best",
       "laptop",
       "gaming",
     ]);

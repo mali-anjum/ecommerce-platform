@@ -142,3 +142,21 @@ describe("proxy account recovery routes", () => {
     expect(res.headers.get("location")).toContain("/auth/login");
   });
 });
+
+describe("proxy matcher", () => {
+  const matches = async (pathname: string) => {
+    const { config } = await import("@/proxy");
+    return config.matcher.some((pattern) => new RegExp(`^${pattern}$`).test(pathname));
+  };
+
+  it.each(["/monitoring", "/api/auth/login", "/_next/static/chunk.js", "/images/logo.webp"])(
+    "skips %s",
+    async (pathname) => {
+      expect(await matches(pathname)).toBe(false);
+    }
+  );
+
+  it.each(["/home", "/super-admin", "/auth/login", "/account"])("guards %s", async (pathname) => {
+    expect(await matches(pathname)).toBe(true);
+  });
+});

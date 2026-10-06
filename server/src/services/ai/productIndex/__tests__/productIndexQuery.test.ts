@@ -78,4 +78,44 @@ describe("productIndexQuery", () => {
       queryRecommendationsFromIndex("laptop", { sortBy: "popular" }),
     ).toBeNull();
   });
+
+  describe("assistant search ranking", () => {
+    const entry = (overrides: Partial<AiProductIndexEntry>): AiProductIndexEntry => ({
+      ...sampleEntries[0],
+      isFeatured: false,
+      ...overrides,
+      searchText: [overrides.name, overrides.brand, overrides.description, overrides.category]
+        .join(" ")
+        .toLowerCase(),
+    });
+
+    beforeEach(() => {
+      productIndexStore.replaceAll([
+        // Best seller, but "lamp" only appears in its description.
+        entry({ id: "desc", name: "Desk Organizer", brand: "Tidy", description: "Fits under a lamp", category: "Office", soldCount: 999 }),
+        entry({ id: "name", name: "Halo Floor Lamp", brand: "Halo", description: "Warm light", category: "Lighting", soldCount: 1 }),
+        entry({ id: "none", name: "Chef Knife", brand: "Nova", description: "Sharp", category: "Kitchen", soldCount: 500, isFeatured: true }),
+      ]);
+    });
+
+    it("ranks name matches above description-only matches, regardless of sales", () => {
+      const results = searchAssistantProductsFromIndex("floor lamp", undefined, { padWithFeatured: false });
+      expect(results?.map((p) => p.id)).toEqual(["name", "desc"]);
+    });
+
+    it("matches plural queries against singular product names", () => {
+      const results = searchAssistantProductsFromIndex("lamps", undefined, { padWithFeatured: false });
+      expect(results?.[0]?.id).toBe("name");
+    });
+
+    it("does not pad with unrelated featured products when padding is off", () => {
+      const results = searchAssistantProductsFromIndex("what is your return policy", undefined, { padWithFeatured: false });
+      expect(results).toEqual([]);
+    });
+
+    it("pads with featured products by default when few match", () => {
+      const results = searchAssistantProductsFromIndex("hello there");
+      expect(results?.[0]?.id).toBe("none");
+    });
+  });
 });

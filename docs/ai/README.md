@@ -8,6 +8,7 @@ This folder documents the **AI Sales + Support Automation System** built on top 
 |----------|---------|
 | [FEATURE-TRACKER.md](./FEATURE-TRACKER.md) | Ticket-by-ticket status, APIs, models, and file map |
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | Request flow, intent routing, analytics, and data relationships |
+| [RAG-UPGRADE-STRATEGY.md](./RAG-UPGRADE-STRATEGY.md) | When to move from keyword retrieval to full-text / pgvector RAG |
 
 ## What this module is
 

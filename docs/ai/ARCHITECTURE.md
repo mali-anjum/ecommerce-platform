@@ -54,15 +54,21 @@ Every `POST /api/ai/chat` follows this pipeline:
 
 ## Knowledge injection
 
-`contextLoader.ts` assembles context for LLM paths:
+`knowledge/KnowledgeContextLoader.ts` assembles context for the LLM paths (`FAQ`, `GENERAL_CHAT`) with an intent-specific plan:
 
-- Active products (product index first, Prisma fallback)
-- Public FAQs
-- Store policies (`StorePolicySettings`)
-- Active coupons
-- Knowledge base documents (PDF text + manual entries)
+| Source | FAQ intent | General chat |
+|--------|-----------|--------------|
+| Store policies (`StorePolicySettings`) | Always | Always |
+| FAQs (ranked by keyword relevance) | Top 8 | Top 5 |
+| Knowledge base docs (ranked, relevant paragraphs only, ≤ 8,000 chars total) | Top 3 | Top 2 |
+| Products (product index first, Prisma fallback; ranked name > brand/category > description) | Matches only | Matches, padded with featured items |
+| Active coupons | Only when the message mentions savings | Same |
 
-`promptBuilder.ts` formats this into the system prompt.
+`knowledge/PromptBuilder.ts` formats this into the system prompt. It sets an intent-specific task, leaves out empty sections, gives each product its final price and stock status, and tells the model to treat store knowledge as data, not instructions. History is capped at 8 messages × 1,000 chars.
+
+When the LLM provider fails or returns an empty reply, `GeneralChatService` reports the error to Sentry and returns a fallback reply that `isAssistantFailureReply` recognises, so repeated failures escalate to human handoff.
+
+Retrieval is keyword-based (`knowledge/relevance.ts`). See [RAG-UPGRADE-STRATEGY.md](./RAG-UPGRADE-STRATEGY.md) for when to upgrade it.
 
 ## Product index (ADMIN-AI-003)
 

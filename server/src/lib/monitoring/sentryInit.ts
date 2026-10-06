@@ -5,7 +5,6 @@ import {
   parseSampleRate,
   scrubSentryEvent,
 } from "./sentryConfig";
-import { sentryTracker } from "./sentryTracker";
 
 let initialized = false;
 
@@ -30,12 +29,15 @@ export function initSentry(): void {
   console.log(`[sentry] Initialized (${getSentryEnvironment()})`);
 }
 
+/**
+ * Sentry's default onUncaughtException/onUnhandledRejection integrations already capture
+ * process-level errors, so these handlers must not report again (duplicate events).
+ * uncaughtException is deliberately not handled: a listener would keep a corrupted
+ * process alive. Sentry flushes and exits, or Node crashes and the host restarts it.
+ */
 export function registerProcessErrorHandlers(): void {
   process.on("unhandledRejection", (reason) => {
-    sentryTracker(reason, { source: "unhandledRejection" });
-  });
-
-  process.on("uncaughtException", (error) => {
-    sentryTracker(error, { source: "uncaughtException" });
+    const message = reason instanceof Error ? reason.stack ?? reason.message : String(reason);
+    console.error("[process] Unhandled promise rejection:", message);
   });
 }

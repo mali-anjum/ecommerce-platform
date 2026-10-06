@@ -7,12 +7,12 @@ import {
   scrubSentryEvent,
 } from "./sentryConfig";
 
-let browserInitialized = false;
-
-/** Shared Sentry.init() settings for browser and Next server. */
-function baseInitOptions() {
+/**
+ * Single source of Sentry.init() settings for every runtime (browser, Node, Edge).
+ * Do not call Sentry.init() anywhere else — use initSentryBrowser/initSentryServer.
+ */
+export function baseInitOptions() {
   return {
-    // Where to send events (your Sentry project URL)
     dsn: getSentryDsn(),
     environment: getSentryEnvironment(),
     release: process.env.SENTRY_RELEASE ?? process.env.NEXT_PUBLIC_SENTRY_RELEASE,
@@ -22,25 +22,32 @@ function baseInitOptions() {
         process.env.SENTRY_TRACES_SAMPLE_RATE,
       0.1
     ),
-    // Before sending the event to Sentry, scrub sensitive data
+    enableLogs: true,
+    // Scrub tokens/cookies/passwords before anything leaves the process
     beforeSend: scrubSentryEvent,
     enabled: isSentryEnabled(),
   };
 }
 
+/** Called once from instrumentation-client.ts. */
 export function initSentryBrowser(): void {
-  if (browserInitialized || typeof window === "undefined" || !isSentryEnabled()) {
+  if (typeof window === "undefined" || !isSentryEnabled() || Sentry.isInitialized()) {
     return;
   }
 
-  Sentry.init({ ...baseInitOptions() });
-  browserInitialized = true;
+  Sentry.init({
+    ...baseInitOptions(),
+    integrations: [Sentry.replayIntegration()],
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1.0,
+  });
 }
 
+/** Called once per server runtime (nodejs and edge) from instrumentation.ts. */
 export function initSentryServer(): void {
-  if (!isSentryEnabled()) {
+  if (!isSentryEnabled() || Sentry.isInitialized()) {
     return;
   }
 
-  Sentry.init({ ...baseInitOptions() });
+  Sentry.init(baseInitOptions());
 }
