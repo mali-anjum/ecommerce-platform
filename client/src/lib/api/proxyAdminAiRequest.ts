@@ -46,10 +46,10 @@ export async function proxyAdminAiRequest(
   const search = request.nextUrl.search;
   const isUpload = pathSegments.join("/").endsWith(UPLOAD_PATH_SUFFIX);
 
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
 
+  try {
     const headers: Record<string, string> = { Cookie: cookieHeader };
     let body: BodyInit | undefined;
 
@@ -94,5 +94,7 @@ export async function proxyAdminAiRequest(
       { success: false, error: "Admin AI request failed" },
       { status: 500 },
     );
+  } finally {
+    clearTimeout(timeoutId);
   }
 }

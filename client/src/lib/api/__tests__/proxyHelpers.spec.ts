@@ -39,6 +39,7 @@ describe("BFF proxy helpers", () => {
   });
 
   afterEach(() => {
+    jest.useRealTimers();
     jest.restoreAllMocks();
   });
 
@@ -98,6 +99,18 @@ describe("BFF proxy helpers", () => {
       expect(failed.status).toBe(500);
       expect(await failed.json()).toEqual({ success: false, error: "Proxy request failed" });
       expect(sentryTracker).toHaveBeenCalledWith(expect.any(Error), expect.objectContaining({ route: "/api/x" }));
+    });
+
+    it("clears its timeout when the backend request rejects", async () => {
+      jest.useFakeTimers();
+      fetchMock.mockRejectedValueOnce(new Error("ECONNREFUSED"));
+
+      await proxyWithAuth(request("/api/x", { cookies: { accessToken: "a" } }), {
+        method: "GET",
+        backendPath: "/api/x",
+      });
+
+      expect(jest.getTimerCount()).toBe(0);
     });
   });
 
@@ -197,6 +210,15 @@ describe("BFF proxy helpers", () => {
       expect((await proxyAdminAiRequest(request("/x", { cookies: { accessToken: "a" } }), ["faqs"], "GET")).status).toBe(504);
       fetchMock.mockRejectedValueOnce(new Error("down"));
       expect((await proxyAdminAiRequest(request("/x", { cookies: { accessToken: "a" } }), ["faqs"], "GET")).status).toBe(500);
+    });
+
+    it("clears its timeout when the backend request rejects", async () => {
+      jest.useFakeTimers();
+      fetchMock.mockRejectedValueOnce(new Error("down"));
+
+      await proxyAdminAiRequest(request("/x", { cookies: { accessToken: "a" } }), ["faqs"], "GET");
+
+      expect(jest.getTimerCount()).toBe(0);
     });
   });
 });

@@ -5,6 +5,8 @@ jest.mock("jose", () => ({
   jwtVerify: jest.fn(),
 }));
 
+jest.mock("@/lib/monitoring", () => ({ sentryTracker: jest.fn() }));
+
 function makeRequest(pathname: string, cookies: Record<string, string> = {}) {
   return {
     url: `http://localhost:3012${pathname}`,

@@ -31,10 +31,10 @@ export async function proxyWithAuth(
     );
   }
 
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
 
+  try {
     const backendRes = await fetch(`${BACKEND_URL}${backendPath}`, {
       method,
       headers: {
@@ -65,5 +65,7 @@ export async function proxyWithAuth(
       { success: false, error: "Proxy request failed" },
       { status: 500 }
     );
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
