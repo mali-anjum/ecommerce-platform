@@ -150,13 +150,17 @@ Route Handlers proxy to Express so cookies and secrets stay server-side. Example
 | `/api/order/*` | `/api/order/*` |
 | `/api/users/*` | `/api/users/*` |
 | `/api/analytics/dashboard` | `/api/analytics/dashboard` |
-| `/api/catalog/tree`, `structure` | `/api/catalog/*` |
 | `/api/warm` | `/api/warm` |
 
 **Local direct call:** browser → `localhost:4001` → cookies on API host.  
 **Production proxy:** browser → `yourapp.com/api/auth/login` → Next.js → backend → cookies rewritten for `yourapp.com`.
 
 Use `DEV_URL` / `BACKEND_URL` in `.env.local` for server-side fetch targets.
+
+Public catalog reads (`/api/catalog/tree` and `/api/catalog/structure`) call the
+Express API directly using `API_ROUTES.CATALOG`; they contain no user-specific
+data and need no Next.js proxy. Set `NEXT_PUBLIC_API_URL` to the same API origin
+used by the client deployment and allow the frontend origin in Express CORS.
 
 ---
 

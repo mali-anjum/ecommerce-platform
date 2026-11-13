@@ -1,6 +1,7 @@
 "use client";
 
 import type { AdminCatalogDepartment } from "@/components/products/utils/inferSubcategoryFromTitle";
+import { API_ROUTES } from "@/lib/routes/api";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { sentryTracker } from "@/lib/monitoring";
@@ -19,9 +20,7 @@ export function useProductCatalog() {
       setCatalogLoading(true);
       setCatalogError(null);
       try {
-        const response = await axios.get("/api/catalog/structure", {
-          withCredentials: true,
-        });
+        const response = await axios.get(`${API_ROUTES.CATALOG}/structure`);
         const rows = response.data?.data ?? [];
         if (!cancelled && Array.isArray(rows)) {
           setCatalogDepartments(rows as AdminCatalogDepartment[]);

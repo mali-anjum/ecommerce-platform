@@ -26,7 +26,7 @@ flowchart LR
   Express["Express API :4001"]
   DB["PostgreSQL"]
 
-  Browser -->|"NEXT_PUBLIC_API_URL (optional direct)"| Express
+  Browser -->|"NEXT_PUBLIC_API_URL (public catalog reads)"| Express
   Browser --> Next
   Next --> BFF
   BFF -->|"BACKEND_URL prod / DEV_URL dev"| Express

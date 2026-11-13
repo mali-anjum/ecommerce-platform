@@ -1,6 +1,7 @@
 import "./config/loadEnv";
 import "./instrument";
 import { resolveTrustProxyHops } from "./config/trustProxy";
+import { createCorsOptions } from "./config/cors";
 import { registerProcessErrorHandlers, sentryTracker } from "./lib/monitoring";
 import express, { Request, Response } from "express";
 import cors from "cors";
@@ -33,45 +34,7 @@ registerProcessErrorHandlers();
 
 const PORT = process.env.PORT || 3001;
 
-const corsOptions: cors.CorsOptions = {
-  origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
-    // Allow requests with no origin (mobile apps, Postman, server-to-server)
-    if (!origin) {
-      console.log("🌐 CORS: Allowing request with no origin");
-      return callback(null, true);
-    }
-
-    const allowedOrigins = [
-      process.env.FRONTEND_URL,
-      "http://localhost:3000",
-      "http://localhost:3012",
-      "https://www.postman.com", // added postman for testing endpoints
-      "https://postman.com"
-    ];
-
-    if (allowedOrigins.some(allowed => origin.includes(allowed.replace(/https?:\/\//, '')))) {
-      console.log("✅ CORS: Allowed origin:", origin);
-      callback(null, true);
-    } else {
-      console.log("🚫 CORS Blocked origin:", origin);
-      console.log("📋 Allowed origins:", allowedOrigins);
-      callback(new Error("CORS policy violation"), false);
-    }
-  },
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-  allowedHeaders: [
-    "Content-Type", 
-    "Authorization", 
-    "Cookie",
-    "X-Requested-With",
-    "Accept",
-    "Origin"
-  ],
-  exposedHeaders: ["Set-Cookie", "Date", "ETag"],
-  optionsSuccessStatus: 200,
-  maxAge: 86400, // 24 hours
-};
+const corsOptions = createCorsOptions();
 
 const trustProxyHops = resolveTrustProxyHops();
 if (trustProxyHops > 0) {
