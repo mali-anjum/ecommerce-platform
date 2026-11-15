@@ -1,6 +1,6 @@
-# Server — Express API & data layer
+# Meridian Commerce API — Express & PostgreSQL
 
-The **server** package is a TypeScript **Express** application that exposes a REST API under `/api/*`, persists data with **Prisma 7** and **PostgreSQL**, and integrates **Cloudinary**, **Stripe**, **PayPal**, and optional **Nodemailer**.
+The **Meridian Commerce API** is a TypeScript **Express** application that exposes a REST API under `/api/*`, persists data with **Prisma 7** and **PostgreSQL**, and integrates **Cloudinary**, **Stripe**, **PayPal**, and optional **Nodemailer**.
 
 **Monorepo root:** see [../README.md](../README.md) for full-stack setup and feature overview.
 

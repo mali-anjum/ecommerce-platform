@@ -1,6 +1,6 @@
-# Client — Next.js storefront & admin
+# Meridian Commerce — Storefront & Admin
 
-The **client** package is a [Next.js 16](https://nextjs.org) application (App Router) that powers the public storefront, customer account flows, seller hub, and super-admin console. It talks to the Express API in `../server` through browser requests and through **Route Handlers** under `src/app/api/` that proxy auth-sensitive traffic and normalize cookies for the app origin.
+The **Meridian Commerce** client is a [Next.js 16](https://nextjs.org) application (App Router) that powers the public storefront, customer account flows, seller hub, and super-admin console. It talks to the Express API in `../server` through browser requests and through **Route Handlers** under `src/app/api/` that proxy auth-sensitive traffic and normalize cookies for the app origin.
 
 **Monorepo root:** see [../README.md](../README.md) for full-stack setup, env vars, and deployment.
 

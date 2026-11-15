@@ -17,7 +17,7 @@ const authRoutes = ["/auth/register", "/auth/login"];
 const superAdminRoutes = ["/super-admin"];
 const userRoutes = ["/home"];
 
-const jwtSecret = process.env.JWT_SECRET;
+const jwtSecret = process.env.JWT_SECRET!;
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;

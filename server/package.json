@@ -1,7 +1,7 @@
 {
   "name": "server",
   "version": "1.0.0",
-  "description": "Ecommerce backend using Express, Prisma, and TypeScript",
+  "description": "Meridian Commerce API built with Express, Prisma, and TypeScript",
   "main": "src/server.ts",
   "scripts": {
     "dev": "npm run sync:feature-flags && tsx watch src/server.ts",

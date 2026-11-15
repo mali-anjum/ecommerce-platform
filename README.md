@@ -1,4 +1,4 @@
-# Ecommerce Platform
+# Meridian Commerce
 
 ![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs)
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
@@ -8,7 +8,7 @@
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)
 ![Stripe](https://img.shields.io/badge/Stripe-635BFF?logo=stripe&logoColor=white)
 
-A production-oriented, full-stack marketplace: a **Next.js** storefront and admin consoles backed by an **Express** API, **Prisma**, and **PostgreSQL**. The platform supports multi-role users (shoppers, sellers, super admins), catalog management, cart and wishlist, coupons, checkout with **Stripe** and **PayPal**, order tracking, operational analytics, and an AI sales and support assistant.
+**Meridian Commerce** is an enterprise-ready, full-stack marketplace platform: a **Next.js** storefront and admin consoles backed by an **Express** API, **Prisma**, and **PostgreSQL**. It supports shoppers, sellers, and administrators with unified catalog and order management, secure checkout, operational analytics, and AI-powered sales and customer support.
 
 **Live demo:** [ecommerce-platform-with-prisma.vercel.app](https://ecommerce-platform-with-prisma.vercel.app)
 
@@ -157,7 +157,7 @@ The platform includes an **AI Sales + Support Automation** layer (assistant widg
 ## Repository layout
 
 ```text
-ecommerce-platform/
+meridian-commerce-platform/
 ├── client/                      # Next.js storefront + admin UIs
 │   ├── src/app/                 # App Router (route groups: storefront, admin, common)
 │   ├── src/app/api/             # BFF proxies to Express (auth, cart, orders, …)
@@ -208,8 +208,8 @@ ecommerce-platform/
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/mali-anjum/ecommerce-platform.git
-cd ecommerce-platform
+git clone https://github.com/mali-anjum/meridian-commerce-platform.git
+cd meridian-commerce-platform
 
 cd server && npm install
 cd ../client && npm install
