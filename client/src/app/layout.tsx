@@ -20,8 +20,9 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Futuristic E-Commerce | Next-Gen Shopping",
-  description: "Experience the future of shopping with cutting-edge design and lightning-fast performance",
+  title: "Meridian",
+  description:
+    "A marketplace for shoppers, sellers, and administrators.",
 };
 
 export default function RootLayout({

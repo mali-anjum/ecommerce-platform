@@ -8,7 +8,7 @@
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)
 ![Stripe](https://img.shields.io/badge/Stripe-635BFF?logo=stripe&logoColor=white)
 
-**Meridian Commerce** is an enterprise-ready, full-stack marketplace platform: a **Next.js** storefront and admin consoles backed by an **Express** API, **Prisma**, and **PostgreSQL**. It supports shoppers, sellers, and administrators with unified catalog and order management, secure checkout, operational analytics, and AI-powered sales and customer support.
+**Meridian Commerce** is a full-stack marketplace with a **Next.js** storefront and admin consoles backed by an **Express** API, **Prisma**, and **PostgreSQL**. It supports shoppers, sellers, and administrators with unified catalog and order management, secure checkout, operational analytics, and AI-powered sales and customer support.
 
 **Live demo:** [ecommerce-platform-with-prisma.vercel.app](https://ecommerce-platform-with-prisma.vercel.app)
 
