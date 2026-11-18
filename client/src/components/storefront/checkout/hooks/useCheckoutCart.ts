@@ -1,12 +1,9 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 import { CartItem, CartItemWithProduct } from '@/components/storefront/cart/types/cartItemStore';
 import { useCartSelectionStore } from '@/components/storefront/cart/state/useCartSelectionStore';
 
-export const useCheckoutCart = (items: CartItem[]) => {
-  const [cartItemsWithDetails, setCartItemsWithDetails] = useState<CartItemWithProduct[]>([]);
-  const selectedIds = useCartSelectionStore((state) => state.selectedIds);
-
-  const convertToCartItemWithProduct = useCallback((item: CartItem): CartItemWithProduct => ({
+export function toCartItemWithProduct(item: CartItem): CartItemWithProduct {
+  return {
     id: item.id,
     productId: item.productId,
     quantity: item.quantity,
@@ -19,29 +16,29 @@ export const useCheckoutCart = (items: CartItem[]) => {
       category: item.category || "General",
       images: item.image ? [item.image] : [],
     },
-  }), []);
+  };
+}
 
-  useEffect(() => {
-    if (!Array.isArray(items)) {
-      setCartItemsWithDetails([]);
-      return;
-    }
+export function selectCheckoutItems(
+  items: CartItemWithProduct[],
+  selectedIds: string[]
+): CartItemWithProduct[] {
+  if (selectedIds.length === 0) return [];
 
-    if (items.length === 0) {
-      setCartItemsWithDetails([]);
-      return;
-    }
+  const selected = new Set(selectedIds);
+  return items.filter((item) => selected.has(item.id));
+}
 
-    const convertedItems = items.map(convertToCartItemWithProduct);
-    setCartItemsWithDetails(convertedItems);
-  }, [items, convertToCartItemWithProduct]);
+export const useCheckoutCart = (items: CartItem[]) => {
+  const selectedIds = useCartSelectionStore((state) => state.selectedIds);
+
+  const cartItemsWithDetails = useMemo(
+    () => (Array.isArray(items) ? items.map(toCartItemWithProduct) : []),
+    [items]
+  );
 
   const selectedCartItemsWithDetails = useMemo(() => {
-    if (selectedIds.length === 0) {
-      return [];
-    }
-    const selected = new Set(selectedIds);
-    return cartItemsWithDetails.filter((item) => selected.has(item.id));
+    return selectCheckoutItems(cartItemsWithDetails, selectedIds);
   }, [cartItemsWithDetails, selectedIds]);
 
   return {

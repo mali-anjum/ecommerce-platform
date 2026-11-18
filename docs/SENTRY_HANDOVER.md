@@ -28,10 +28,11 @@ Production error monitoring uses **Sentry** with a shared `sentryTracker()` util
 |----------|----------|--------|
 | `NEXT_PUBLIC_SENTRY_DSN` | Yes (staging/prod) | Browser + must be public |
 | `NEXT_PUBLIC_SENTRY_ENVIRONMENT` | Yes | Match server environment name |
+| `NEXT_PUBLIC_SENTRY_ENABLED` | Optional | Set `true` to enable Sentry in the browser when a DSN is configured |
 | `SENTRY_RELEASE` | Recommended | Same value as server release |
 | `SENTRY_ORG` / `SENTRY_PROJECT` / `SENTRY_AUTH_TOKEN` | Optional | Source map upload on build |
 
-**Local development:** Sentry is **off** when `NODE_ENV=development` and `SENTRY_ENABLED` is not `true`.
+**Local development:** Sentry is **off** when `NODE_ENV=development` and neither `SENTRY_ENABLED` nor `NEXT_PUBLIC_SENTRY_ENABLED` is `true`. `SENTRY_ENABLED` takes precedence.
 
 ## 3. What is wired automatically
 

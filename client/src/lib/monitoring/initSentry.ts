@@ -10,7 +10,7 @@ import {
 let browserInitialized = false;
 
 /** Shared Sentry.init() settings for browser and Next server. */
-function baseInitOptions() {
+export function baseInitOptions() {
   return {
     // Where to send events (your Sentry project URL)
     dsn: getSentryDsn(),
@@ -29,16 +29,26 @@ function baseInitOptions() {
 }
 
 export function initSentryBrowser(): void {
-  if (browserInitialized || typeof window === "undefined" || !isSentryEnabled()) {
+  if (
+    browserInitialized ||
+    typeof window === "undefined" ||
+    !isSentryEnabled() ||
+    Sentry.isInitialized()
+  ) {
     return;
   }
 
-  Sentry.init({ ...baseInitOptions() });
+  Sentry.init({
+    ...baseInitOptions(),
+    integrations: [Sentry.replayIntegration()],
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1,
+  });
   browserInitialized = true;
 }
 
 export function initSentryServer(): void {
-  if (!isSentryEnabled()) {
+  if (!isSentryEnabled() || Sentry.isInitialized()) {
     return;
   }
 

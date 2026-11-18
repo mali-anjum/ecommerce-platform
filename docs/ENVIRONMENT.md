@@ -140,8 +140,10 @@ Active vendor: `client/feature-flags.config.json` → `ai.llmProvider` (`openai`
 | Variable | Where to get it |
 |----------|-----------------|
 | `SENTRY_DSN` | [Sentry](https://sentry.io) → Project → Client Keys (DSN) — **separate project for API recommended** |
+| `NEXT_PUBLIC_SENTRY_DSN` | Sentry client DSN for the browser; this value is public |
 | `SENTRY_ENVIRONMENT` | e.g. `production`, `staging` |
 | `SENTRY_ENABLED` | `true` to force on in dev |
+| `NEXT_PUBLIC_SENTRY_ENABLED` | `true` to force on in the browser when the client DSN is configured |
 | `SENTRY_RELEASE` | Git SHA or deploy id |
 | `SENTRY_TRACES_SAMPLE_RATE` | `0`–`1`, default `0.1` |
 

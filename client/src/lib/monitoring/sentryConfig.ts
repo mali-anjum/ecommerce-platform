@@ -48,13 +48,13 @@ export function parseSampleRate(raw: string | undefined, fallback: number): numb
 }
 
 export function isSentryEnabled(): boolean {
-  const dsn =
-    process.env.NEXT_PUBLIC_SENTRY_DSN?.trim() ??
-    process.env.SENTRY_DSN?.trim();
+  const dsn = getSentryDsn();
   if (!dsn) return false;
 
-  if (process.env.SENTRY_ENABLED === "true") return true;
-  if (process.env.SENTRY_ENABLED === "false") return false;
+  const enabledOverride =
+    process.env.SENTRY_ENABLED ?? process.env.NEXT_PUBLIC_SENTRY_ENABLED;
+  if (enabledOverride === "true") return true;
+  if (enabledOverride === "false") return false;
 
   const env = (
     process.env.NEXT_PUBLIC_SENTRY_ENVIRONMENT ??
@@ -78,8 +78,6 @@ export function getSentryEnvironment(): string {
 }
 
 export function getSentryDsn(): string | undefined {
-  return (
-    process.env.NEXT_PUBLIC_SENTRY_DSN?.trim() ??
-    process.env.SENTRY_DSN?.trim()
-  );
+  const publicDsn = process.env.NEXT_PUBLIC_SENTRY_DSN?.trim();
+  return publicDsn || process.env.SENTRY_DSN?.trim() || undefined;
 }

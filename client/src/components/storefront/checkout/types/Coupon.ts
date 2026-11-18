@@ -14,3 +14,5 @@ export interface Coupon {
   maxDiscount?: number;
   minOrderValue?: number;
 }
+
+export type AppliedCoupon = Pick<Coupon, "id" | "code" | "discountPercent">;
