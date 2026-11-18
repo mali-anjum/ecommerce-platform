@@ -74,6 +74,8 @@ flowchart LR
 | `JWT_SECRET` | Generate: `openssl rand -base64 32` | **Must match `client` `JWT_SECRET`** |
 | `FRONTEND_URL` | Your Next origin | e.g. `http://localhost:3012` or Vercel URL; CORS + redirects |
 
+Use `sslmode=verify-full` in the production `DATABASE_URL` to keep strict TLS verification explicit.
+
 ### Media (required for uploads)
 
 | Variable | Where to get it |
