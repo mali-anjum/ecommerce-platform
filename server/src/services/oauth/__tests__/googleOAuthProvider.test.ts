@@ -1,15 +1,12 @@
-const mockCreateAuthorizationURL = jest.fn();
-const mockValidateAuthorizationCode = jest.fn();
-const mockAccessToken = jest.fn(() => "google-access-token");
+const mockCreateOAuthAuthorizationUrl = jest.fn(
+  (options: { authorizationEndpoint: string }) =>
+    new URL(options.authorizationEndpoint),
+);
+const mockExchangeOAuthAuthorizationCode = jest.fn();
 
-jest.mock("arctic", () => ({
-  Google: jest.fn().mockImplementation(() => ({
-    createAuthorizationURL: mockCreateAuthorizationURL,
-    validateAuthorizationCode: mockValidateAuthorizationCode,
-  })),
-  OAuth2RequestError: class OAuth2RequestError extends Error {},
-  generateState: jest.fn(),
-  generateCodeVerifier: jest.fn(),
+jest.mock("../internal/oauthClient", () => ({
+  createOAuthAuthorizationUrl: mockCreateOAuthAuthorizationUrl,
+  exchangeOAuthAuthorizationCode: mockExchangeOAuthAuthorizationCode,
 }));
 
 import { GoogleOAuthProvider } from "../providers/googleOAuthProvider";
@@ -26,11 +23,9 @@ describe("GoogleOAuthProvider", () => {
     delete process.env.GOOGLE_REDIRECT_URI;
     process.env.BACKEND_PUBLIC_URL = "http://localhost:4001";
 
-    mockCreateAuthorizationURL.mockReturnValue(
-      new URL("https://accounts.google.com/o/oauth2/v2/auth"),
-    );
-    mockValidateAuthorizationCode.mockResolvedValue({
-      accessToken: mockAccessToken,
+    mockExchangeOAuthAuthorizationCode.mockResolvedValue({
+      accessToken: "google-access-token",
+      idTokenClaims: { sub: "google-sub-1" },
     });
 
     global.fetch = jest.fn().mockResolvedValue({
@@ -65,18 +60,27 @@ describe("GoogleOAuthProvider", () => {
   it("buildAuthorizationUrl requires PKCE verifier", () => {
     const provider = new GoogleOAuthProvider();
     expect(() => provider.buildAuthorizationUrl("state")).toThrow(
-      "requires PKCE code verifier",
+      "requires PKCE code verifier and nonce",
     );
   });
 
   it("buildAuthorizationUrl sets Google OAuth params", () => {
     const provider = new GoogleOAuthProvider();
-    const url = provider.buildAuthorizationUrl("state-123", "verifier-456");
-
-    expect(mockCreateAuthorizationURL).toHaveBeenCalledWith(
+    const url = provider.buildAuthorizationUrl(
       "state-123",
       "verifier-456",
-      ["openid", "profile", "email"],
+      "nonce-789",
+    );
+
+    expect(mockCreateOAuthAuthorizationUrl).toHaveBeenCalledWith(
+      expect.objectContaining({
+        authorizationEndpoint: "https://accounts.google.com/o/oauth2/v2/auth",
+        clientId: "google-client-id",
+        scopes: ["openid", "profile", "email"],
+        state: "state-123",
+        codeVerifier: "verifier-456",
+        nonce: "nonce-789",
+      }),
     );
     expect(url.searchParams.get("access_type")).toBe("online");
     expect(url.searchParams.get("prompt")).toBe("select_account");
@@ -84,11 +88,17 @@ describe("GoogleOAuthProvider", () => {
 
   it("fetchProfile normalizes Google userinfo", async () => {
     const provider = new GoogleOAuthProvider();
-    const profile = await provider.fetchProfile("auth-code", "verifier");
+    const profile = await provider.fetchProfile("auth-code", "verifier", "nonce");
 
-    expect(mockValidateAuthorizationCode).toHaveBeenCalledWith(
-      "auth-code",
-      "verifier",
+    expect(mockExchangeOAuthAuthorizationCode).toHaveBeenCalledWith(
+      expect.objectContaining({
+        issuer: "https://accounts.google.com",
+        tokenEndpoint: "https://oauth2.googleapis.com/token",
+        code: "auth-code",
+        codeVerifier: "verifier",
+        expectedNonce: "nonce",
+        requireIdToken: true,
+      }),
     );
     expect(global.fetch).toHaveBeenCalledWith(
       "https://openidconnect.googleapis.com/v1/userinfo",
@@ -109,8 +119,8 @@ describe("GoogleOAuthProvider", () => {
   it("fetchProfile throws when Google userinfo fails", async () => {
     (global.fetch as jest.Mock).mockResolvedValueOnce({ ok: false, status: 401 });
     const provider = new GoogleOAuthProvider();
-    await expect(provider.fetchProfile("code", "verifier")).rejects.toThrow(
-      "Google profile request failed (401)",
-    );
+    await expect(
+      provider.fetchProfile("code", "verifier", "nonce"),
+    ).rejects.toThrow("Google profile request failed (401)");
   });
 });

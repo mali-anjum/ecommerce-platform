@@ -1,6 +1,6 @@
 # OAuth module
 
-Social sign-in (Google, Facebook, GitHub, Microsoft, Apple) using [Arctic](https://arcticjs.dev/) on Express.
+Social sign-in (Google, Facebook, GitHub, Microsoft, Apple) using provider-specific OAuth 2.0 flows with Node.js `fetch` and cryptography on Express. OIDC ID tokens are verified with `jsonwebtoken`.
 
 ## Layout
 

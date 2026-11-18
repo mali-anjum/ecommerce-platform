@@ -1,7 +1,10 @@
-import { Google } from "arctic";
 import { BaseOAuthProvider } from "../internal/baseOAuthProvider";
 import { buildOAuthCallbackUrl } from "../internal/oauthConfig";
 import type { NormalizedOAuthProfile } from "../internal/types";
+import {
+  createOAuthAuthorizationUrl,
+  exchangeOAuthAuthorizationCode,
+} from "../internal/oauthClient";
 import { z } from "zod";
 
 const googleUserInfoSchema = z.object({
@@ -21,6 +24,7 @@ export class GoogleOAuthProvider extends BaseOAuthProvider {
   readonly routeSlug = "google";
   readonly displayName = "Google";
   readonly usesPkce = true;
+  readonly usesNonce = true;
 
   isConfigured(): boolean {
     return Boolean(
@@ -29,27 +33,34 @@ export class GoogleOAuthProvider extends BaseOAuthProvider {
     );
   }
 
-  private getClient(): Google {
+  private getClientCredentials(): { clientId: string; clientSecret: string } {
     if (!this.isConfigured()) {
       throw new Error("Google OAuth is not configured");
     }
-    return new Google(
-      process.env.GOOGLE_CLIENT_ID!,
-      process.env.GOOGLE_CLIENT_SECRET!,
-      this.getRedirectUri(),
-    );
+    return {
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    };
   }
 
-  buildAuthorizationUrl(state: string, codeVerifier?: string): URL {
-    if (!codeVerifier) {
-      throw new Error("Google OAuth requires PKCE code verifier");
+  buildAuthorizationUrl(
+    state: string,
+    codeVerifier?: string,
+    nonce?: string,
+  ): URL {
+    if (!codeVerifier || !nonce) {
+      throw new Error("Google OAuth requires PKCE code verifier and nonce");
     }
-    const google = this.getClient();
-    const url = google.createAuthorizationURL(state, codeVerifier, [
-      "openid",
-      "profile",
-      "email",
-    ]);
+    const { clientId } = this.getClientCredentials();
+    const url = createOAuthAuthorizationUrl({
+      authorizationEndpoint: "https://accounts.google.com/o/oauth2/v2/auth",
+      clientId,
+      redirectUri: this.getRedirectUri(),
+      scopes: ["openid", "profile", "email"],
+      state,
+      codeVerifier,
+      nonce,
+    });
     url.searchParams.set("access_type", "online");
     url.searchParams.set("prompt", "select_account");
     return url;
@@ -58,13 +69,26 @@ export class GoogleOAuthProvider extends BaseOAuthProvider {
   async fetchProfile(
     code: string,
     codeVerifier?: string,
+    nonce?: string,
   ): Promise<NormalizedOAuthProfile> {
-    if (!codeVerifier) {
-      throw new Error("Google OAuth requires PKCE code verifier");
+    if (!codeVerifier || !nonce) {
+      throw new Error("Google OAuth requires PKCE code verifier and nonce");
     }
-    const google = this.getClient();
-    const tokens = await google.validateAuthorizationCode(code, codeVerifier);
-    const profile = await this.fetchGoogleUserInfo(tokens.accessToken());
+    const { clientId, clientSecret } = this.getClientCredentials();
+    const tokens = await exchangeOAuthAuthorizationCode({
+      issuer: "https://accounts.google.com",
+      tokenEndpoint: "https://oauth2.googleapis.com/token",
+      jwksUri: "https://www.googleapis.com/oauth2/v3/certs",
+      clientId,
+      clientSecret,
+      redirectUri: this.getRedirectUri(),
+      code,
+      codeVerifier,
+      issuerAliases: ["accounts.google.com"],
+      expectedNonce: nonce,
+      requireIdToken: true,
+    });
+    const profile = await this.fetchGoogleUserInfo(tokens.accessToken);
 
     if (!profile.email) {
       // Do not default missing emails — it can corrupt user data and break linking.

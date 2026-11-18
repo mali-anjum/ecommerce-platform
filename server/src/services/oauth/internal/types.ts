@@ -23,6 +23,7 @@ export type NormalizedOAuthProfile = {
 export type PendingOAuthState = {
   state: string;
   codeVerifier?: string;
+  nonce?: string;
 };
 
 export type OAuthCallbackRequest = {

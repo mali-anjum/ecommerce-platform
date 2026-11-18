@@ -1,23 +1,15 @@
-const validateAuthorizationCode = jest.fn();
-const createAuthorizationURL = jest.fn();
-const ctorArgs: Record<string, unknown[]> = {};
+const mockCreateOAuthAuthorizationUrl = jest.fn(
+  (options: { authorizationEndpoint: string }) =>
+    new URL(options.authorizationEndpoint),
+);
+const mockExchangeOAuthAuthorizationCode = jest.fn();
+const mockJwtSign = jest.fn(() => "apple-client-secret");
 
-function fakeClient(name: string) {
-  return jest.fn().mockImplementation((...args: unknown[]) => {
-    ctorArgs[name] = args;
-    return { validateAuthorizationCode, createAuthorizationURL };
-  });
-}
-
-jest.mock("arctic", () => ({
-  GitHub: fakeClient("GitHub"),
-  Facebook: fakeClient("Facebook"),
-  MicrosoftEntraId: fakeClient("MicrosoftEntraId"),
-  Apple: fakeClient("Apple"),
-  OAuth2RequestError: class OAuth2RequestError extends Error {},
-  generateState: jest.fn(),
-  generateCodeVerifier: jest.fn(),
+jest.mock("../internal/oauthClient", () => ({
+  createOAuthAuthorizationUrl: mockCreateOAuthAuthorizationUrl,
+  exchangeOAuthAuthorizationCode: mockExchangeOAuthAuthorizationCode,
 }));
+jest.mock("jsonwebtoken", () => ({ sign: mockJwtSign }));
 
 import { GitHubOAuthProvider } from "../providers/githubOAuthProvider";
 import { FacebookOAuthProvider } from "../providers/facebookOAuthProvider";
@@ -35,18 +27,17 @@ function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
 }
 
-function idToken(payload: object): string {
-  return `h.${Buffer.from(JSON.stringify(payload)).toString("base64url")}.s`;
-}
-
 describe("social OAuth providers", () => {
   const originalEnv = process.env;
   const originalFetch = global.fetch;
   let fetchMock: jest.Mock;
 
   beforeEach(() => {
-    validateAuthorizationCode.mockReset().mockResolvedValue({ accessToken: () => "access-1", idToken: () => null });
-    createAuthorizationURL.mockReset().mockReturnValue(new URL("https://provider.example/auth"));
+    mockCreateOAuthAuthorizationUrl.mockClear();
+    mockExchangeOAuthAuthorizationCode.mockReset().mockResolvedValue({
+      accessToken: "access-1",
+    });
+    mockJwtSign.mockClear();
     process.env = { ...originalEnv, BACKEND_PUBLIC_URL: "http://localhost:4001" };
     for (const key of OAUTH_ENV) Reflect.deleteProperty(process.env, key);
     fetchMock = jest.fn();
@@ -71,9 +62,17 @@ describe("social OAuth providers", () => {
     });
 
     it("requests user + email scopes", () => {
-      new GitHubOAuthProvider().buildAuthorizationUrl("state-1");
-      expect(createAuthorizationURL).toHaveBeenCalledWith("state-1", ["read:user", "user:email"]);
-      expect(ctorArgs.GitHub[2]).toBe("http://localhost:4001/api/auth/github/callback");
+      const url = new GitHubOAuthProvider().buildAuthorizationUrl("state-1");
+      expect(mockCreateOAuthAuthorizationUrl).toHaveBeenCalledWith(
+        expect.objectContaining({
+          authorizationEndpoint: "https://github.com/login/oauth/authorize",
+          clientId: "gh-id",
+          redirectUri: "http://localhost:4001/api/auth/github/callback",
+          scopes: ["read:user", "user:email"],
+          state: "state-1",
+        }),
+      );
+      expect(url.origin).toBe("https://github.com");
     });
 
     it("uses the primary verified email and marks it verified", async () => {
@@ -92,6 +91,14 @@ describe("social OAuth providers", () => {
         image: "https://a/1",
         emailVerified: true,
       });
+      expect(mockExchangeOAuthAuthorizationCode).toHaveBeenCalledWith(
+        expect.objectContaining({
+          issuer: "https://github.com",
+          tokenEndpoint: "https://github.com/login/oauth/access_token",
+          clientAuthentication: "basic",
+          code: "code",
+        }),
+      );
       expect((fetchMock.mock.calls[0][1] as RequestInit).headers).toMatchObject({ Authorization: "Bearer access-1" });
     });
 
@@ -123,8 +130,15 @@ describe("social OAuth providers", () => {
 
     it("honours FACEBOOK_REDIRECT_URI and requests email scope", () => {
       new FacebookOAuthProvider().buildAuthorizationUrl("s");
-      expect(ctorArgs.Facebook).toEqual(["fb-id", "fb-secret", "https://shop.example/fb/cb"]);
-      expect(createAuthorizationURL).toHaveBeenCalledWith("s", ["email", "public_profile"]);
+      expect(mockCreateOAuthAuthorizationUrl).toHaveBeenCalledWith(
+        expect.objectContaining({
+          authorizationEndpoint: "https://www.facebook.com/v16.0/dialog/oauth",
+          clientId: "fb-id",
+          redirectUri: "https://shop.example/fb/cb",
+          scopes: ["email", "public_profile"],
+          state: "s",
+        }),
+      );
     });
 
     it("maps the Graph profile", async () => {
@@ -138,6 +152,13 @@ describe("social OAuth providers", () => {
         image: "https://p/1",
         emailVerified: true,
       });
+      expect(mockExchangeOAuthAuthorizationCode).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tokenEndpoint: "https://graph.facebook.com/v16.0/oauth/access_token",
+          clientAuthentication: "post",
+          code: "code",
+        }),
+      );
       const url = new URL(String(fetchMock.mock.calls[0][0]));
       expect(url.searchParams.get("fields")).toBe("id,name,email,picture");
     });
@@ -177,8 +198,16 @@ describe("social OAuth providers", () => {
 
     it("passes the verifier through and requests openid scopes", () => {
       new MicrosoftOAuthProvider().buildAuthorizationUrl("s", "verifier");
-      expect(createAuthorizationURL).toHaveBeenCalledWith("s", "verifier", ["openid", "profile", "email", "User.Read"]);
-      expect(ctorArgs.MicrosoftEntraId.slice(0, 3)).toEqual(["common", "ms-id", "ms-secret"]);
+      expect(mockCreateOAuthAuthorizationUrl).toHaveBeenCalledWith(
+        expect.objectContaining({
+          authorizationEndpoint:
+            "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
+          clientId: "ms-id",
+          scopes: ["openid", "profile", "email", "User.Read"],
+          state: "s",
+          codeVerifier: "verifier",
+        }),
+      );
     });
 
     it("never marks the tenant-controlled mail attribute as verified (nOAuth)", async () => {
@@ -190,7 +219,15 @@ describe("social OAuth providers", () => {
         image: null,
         emailVerified: false,
       });
-      expect(validateAuthorizationCode).toHaveBeenCalledWith("code", "verifier");
+      expect(mockExchangeOAuthAuthorizationCode).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tokenEndpoint:
+            "https://login.microsoftonline.com/common/oauth2/v2.0/token",
+          clientAuthentication: "basic",
+          code: "code",
+          codeVerifier: "verifier",
+        }),
+      );
     });
 
     it("falls back to userPrincipalName when mail is missing", async () => {
@@ -221,13 +258,22 @@ describe("social OAuth providers", () => {
       expect(new AppleOAuthProvider().isConfigured()).toBe(false);
       process.env.APPLE_PRIVATE_KEY_PATH = "/keys/apple.p8";
       expect(new AppleOAuthProvider().isConfigured()).toBe(true);
-      expect(() => new AppleOAuthProvider().buildAuthorizationUrl("s")).toThrow(/not implemented/);
+      expect(() =>
+        new AppleOAuthProvider().buildAuthorizationUrl("s", undefined, "nonce"),
+      ).toThrow(/not implemented/);
     });
 
-    it("decodes escaped newlines in the inline private key", () => {
-      new AppleOAuthProvider().buildAuthorizationUrl("s");
-      const keyBytes = ctorArgs.Apple[3] as Uint8Array;
-      expect(new TextDecoder().decode(keyBytes)).toContain("\nabc\n");
+    it("builds an authorization URL with a nonce", () => {
+      new AppleOAuthProvider().buildAuthorizationUrl("state", undefined, "nonce");
+      expect(mockCreateOAuthAuthorizationUrl).toHaveBeenCalledWith(
+        expect.objectContaining({
+          authorizationEndpoint: "https://appleid.apple.com/auth/authorize",
+          clientId: "apple-id",
+          scopes: ["name", "email"],
+          state: "state",
+          nonce: "nonce",
+        }),
+      );
     });
 
     it.each([
@@ -237,20 +283,45 @@ describe("social OAuth providers", () => {
       ["false", false],
       [undefined, false],
     ])("maps email_verified=%p to emailVerified=%p", async (claim, expected) => {
-      validateAuthorizationCode.mockResolvedValue({
-        idToken: () => idToken({ sub: "apple-1", email: "a@privaterelay.appleid.com", email_verified: claim }),
+      mockExchangeOAuthAuthorizationCode.mockResolvedValueOnce({
+        accessToken: "access-1",
+        idTokenClaims: {
+          sub: "apple-1",
+          email: "a@privaterelay.appleid.com",
+          email_verified: claim,
+        },
       });
-      await expect(new AppleOAuthProvider().fetchProfile("code")).resolves.toEqual({
+      await expect(
+        new AppleOAuthProvider().fetchProfile("code", undefined, "nonce"),
+      ).resolves.toEqual({
         providerUserId: "apple-1",
         email: "a@privaterelay.appleid.com",
         name: null,
         image: null,
         emailVerified: expected,
       });
+      expect(mockJwtSign).toHaveBeenCalledWith(
+        {},
+        expect.stringContaining("\nabc\n"),
+        expect.objectContaining({ algorithm: "ES256", issuer: "team", subject: "apple-id" }),
+      );
+      expect(mockExchangeOAuthAuthorizationCode).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tokenEndpoint: "https://appleid.apple.com/auth/token",
+          jwksUri: "https://appleid.apple.com/auth/keys",
+          expectedNonce: "nonce",
+          requireIdToken: true,
+        }),
+      );
     });
 
     it("throws when Apple returns no ID token", async () => {
-      await expect(new AppleOAuthProvider().fetchProfile("code")).rejects.toThrow("Apple did not return an ID token");
+      mockExchangeOAuthAuthorizationCode.mockResolvedValueOnce({
+        accessToken: "access-1",
+      });
+      await expect(
+        new AppleOAuthProvider().fetchProfile("code", undefined, "nonce"),
+      ).rejects.toThrow("Apple did not return a valid ID token");
     });
   });
 });

@@ -1,6 +1,11 @@
-import { generateCodeVerifier, generateState, OAuth2RequestError } from "arctic";
 import type { OAuthProvider } from "@prisma/client";
 import type { Response } from "express";
+import {
+  generateOAuthCodeVerifier,
+  generateOAuthNonce,
+  generateOAuthState,
+  OAuthRequestError,
+} from "./oauthClient";
 import { tokenService } from "../../auth/tokenService";
 import { oauthAccountService } from "./OAuthAccountService";
 import { oauthExchangeStore } from "./oauthExchangeStore";
@@ -28,15 +33,19 @@ export abstract class BaseOAuthProvider {
   abstract readonly displayName: string;
   /** Google and Microsoft use PKCE; Facebook/GitHub do not. */
   abstract readonly usesPkce: boolean;
+  /** OIDC providers bind the authorization response to a nonce in the ID token. */
+  abstract readonly usesNonce: boolean;
 
   abstract isConfigured(): boolean;
   abstract buildAuthorizationUrl(
     state: string,
     codeVerifier?: string,
+    nonce?: string,
   ): URL;
   abstract fetchProfile(
     code: string,
     codeVerifier?: string,
+    nonce?: string,
   ): Promise<NormalizedOAuthProfile>;
 
   getRedirectUri(): string {
@@ -48,11 +57,12 @@ export abstract class BaseOAuthProvider {
   }
 
   start(res: Response): void {
-    const state = generateState();
-    const codeVerifier = this.usesPkce ? generateCodeVerifier() : undefined;
+    const state = generateOAuthState();
+    const codeVerifier = this.usesPkce ? generateOAuthCodeVerifier() : undefined;
+    const nonce = this.usesNonce ? generateOAuthNonce() : undefined;
 
-    const url = this.buildAuthorizationUrl(state, codeVerifier);
-    const payload: PendingOAuthState = { state, codeVerifier };
+    const url = this.buildAuthorizationUrl(state, codeVerifier, nonce);
+    const payload: PendingOAuthState = { state, codeVerifier, nonce };
 
     res.cookie(
       this.getStateCookieName(),
@@ -99,7 +109,11 @@ export abstract class BaseOAuthProvider {
     }
 
     try {
-      const profile = await this.fetchProfile(code, pending.codeVerifier);
+      const profile = await this.fetchProfile(
+        code,
+        pending.codeVerifier,
+        pending.nonce,
+      );
 
       if (!profile.email) {
         res.redirect(
@@ -132,7 +146,7 @@ export abstract class BaseOAuthProvider {
       );
     } catch (err) {
     sentryTracker(err, { source: "baseOAuthProvider" });
-      if (err instanceof OAuth2RequestError) {
+      if (err instanceof OAuthRequestError) {
         res.redirect(
           oauthErrorRedirect(
             err.message || `${this.displayName} rejected the authorization request`,

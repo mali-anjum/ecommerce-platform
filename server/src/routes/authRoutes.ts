@@ -45,7 +45,7 @@ router.post("/reset-password", accountTokenLimiter, validate(resetPasswordSchema
 router.post("/verify-email", accountTokenLimiter, validate(verifyEmailSchema), verifyEmail);
 router.post("/resend-verification", accountEmailLimiter, authenticateJwt, resendVerificationEmail);
 
-// Google OAuth (Arctic on Express — source of truth)
+// Google OAuth (Express is the source of truth)
 router.get("/google", oauthStartLimiter, startGoogleOAuthHandler);
 router.get("/google/callback", oauthStartLimiter, googleOAuthCallbackHandler);
 // Add more providers when env is configured, e.g.:

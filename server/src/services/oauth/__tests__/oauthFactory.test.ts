@@ -1,12 +1,10 @@
-jest.mock("arctic", () => ({
-  Google: jest.fn(),
-  Facebook: jest.fn(),
-  GitHub: jest.fn(),
-  MicrosoftEntraId: jest.fn(),
-  Apple: jest.fn(),
-  OAuth2RequestError: class OAuth2RequestError extends Error {},
-  generateState: jest.fn(() => "state"),
-  generateCodeVerifier: jest.fn(() => "verifier"),
+jest.mock("../internal/oauthClient", () => ({
+  OAuthRequestError: class OAuthRequestError extends Error {},
+  generateOAuthState: jest.fn(() => "state"),
+  generateOAuthCodeVerifier: jest.fn(() => "verifier"),
+  generateOAuthNonce: jest.fn(() => "nonce"),
+  createOAuthAuthorizationUrl: jest.fn(),
+  exchangeOAuthAuthorizationCode: jest.fn(),
 }));
 
 import { OAuthFactory } from "../oauthFactory";

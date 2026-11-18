@@ -1,12 +1,19 @@
 import type { Response } from "express";
-import { OAuth2RequestError } from "arctic";
+import { OAuthRequestError } from "../internal/oauthClient";
 import { BaseOAuthProvider } from "../internal/baseOAuthProvider";
 import type { NormalizedOAuthProfile } from "../internal/types";
 
-jest.mock("arctic", () => ({
-  OAuth2RequestError: class OAuth2RequestError extends Error {},
-  generateState: jest.fn(() => "generated-state"),
-  generateCodeVerifier: jest.fn(() => "generated-verifier"),
+jest.mock("../internal/oauthClient", () => ({
+  OAuthRequestError: class OAuthRequestError extends Error {
+    constructor(code: string, message?: string) {
+      super(message || code);
+    }
+  },
+  generateOAuthState: jest.fn(() => "generated-state"),
+  generateOAuthCodeVerifier: jest.fn(() => "generated-verifier"),
+  generateOAuthNonce: jest.fn(() => "generated-nonce"),
+  createOAuthAuthorizationUrl: jest.fn(),
+  exchangeOAuthAuthorizationCode: jest.fn(),
 }));
 
 jest.mock("../internal/OAuthAccountService", () => ({
@@ -39,6 +46,7 @@ class TestOAuthProvider extends BaseOAuthProvider {
   readonly routeSlug = "github";
   readonly displayName = "GitHub";
   readonly usesPkce = true;
+  readonly usesNonce = false;
 
   isConfigured(): boolean {
     return true;
@@ -167,7 +175,7 @@ describe("BaseOAuthProvider", () => {
   it("handleCallback maps OAuth2RequestError to login redirect", async () => {
     const failingProvider = new (class extends TestOAuthProvider {
       async fetchProfile(): Promise<NormalizedOAuthProfile> {
-        throw new OAuth2RequestError("invalid_grant", "bad code", null, null);
+        throw new OAuthRequestError("invalid_grant", "bad code");
       }
     })();
 

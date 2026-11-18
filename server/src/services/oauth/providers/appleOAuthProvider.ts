@@ -1,6 +1,10 @@
-import { Apple } from "arctic";
+import jwt from "jsonwebtoken";
 import { BaseOAuthProvider } from "../internal/baseOAuthProvider";
 import type { NormalizedOAuthProfile } from "../internal/types";
+import {
+  createOAuthAuthorizationUrl,
+  exchangeOAuthAuthorizationCode,
+} from "../internal/oauthClient";
 
 /**
  * Apple Sign In requires a PKCS8 private key (.p8) in addition to client credentials.
@@ -11,6 +15,7 @@ export class AppleOAuthProvider extends BaseOAuthProvider {
   readonly routeSlug = "apple";
   readonly displayName = "Apple";
   readonly usesPkce = false;
+  readonly usesNonce = true;
 
   isConfigured(): boolean {
     return Boolean(
@@ -22,59 +27,92 @@ export class AppleOAuthProvider extends BaseOAuthProvider {
     );
   }
 
-  private getPrivateKeyBytes(): Uint8Array {
+  private getPrivateKey(): string {
     const inline = process.env.APPLE_PRIVATE_KEY?.trim();
     if (inline) {
-      return new TextEncoder().encode(inline.replace(/\\n/g, "\n"));
+      return inline.replace(/\\n/g, "\n");
     }
     throw new Error(
       "Apple private key loading from APPLE_PRIVATE_KEY_PATH is not implemented yet",
     );
   }
 
-  private getClient(): Apple {
+  private getClientCredentials(): {
+    clientId: string;
+    teamId: string;
+    keyId: string;
+    privateKey: string;
+    redirectUri: string;
+  } {
     if (!this.isConfigured()) {
       throw new Error("Apple OAuth is not configured");
     }
-    const redirectUri =
-      process.env.APPLE_REDIRECT_URI?.trim() || this.getRedirectUri();
-    return new Apple(
-      process.env.APPLE_CLIENT_ID!,
-      process.env.APPLE_TEAM_ID!,
-      process.env.APPLE_KEY_ID!,
-      this.getPrivateKeyBytes(),
+    return {
+      clientId: process.env.APPLE_CLIENT_ID!,
+      teamId: process.env.APPLE_TEAM_ID!,
+      keyId: process.env.APPLE_KEY_ID!,
+      privateKey: this.getPrivateKey(),
+      redirectUri:
+        process.env.APPLE_REDIRECT_URI?.trim() || this.getRedirectUri(),
+    };
+  }
+
+  buildAuthorizationUrl(state: string, _codeVerifier?: string, nonce?: string): URL {
+    if (!nonce) {
+      throw new Error("Apple OAuth requires a nonce");
+    }
+    const { clientId, redirectUri } = this.getClientCredentials();
+    return createOAuthAuthorizationUrl({
+      authorizationEndpoint: "https://appleid.apple.com/auth/authorize",
+      clientId,
       redirectUri,
-    );
+      scopes: ["name", "email"],
+      state,
+      nonce,
+    });
   }
 
-  buildAuthorizationUrl(state: string): URL {
-    const apple = this.getClient();
-    return apple.createAuthorizationURL(state, ["name", "email"]);
-  }
-
-  async fetchProfile(code: string): Promise<NormalizedOAuthProfile> {
-    const apple = this.getClient();
-    const tokens = await apple.validateAuthorizationCode(code);
-    const idToken = tokens.idToken();
-    if (!idToken) {
-      throw new Error("Apple did not return an ID token");
+  async fetchProfile(
+    code: string,
+    _codeVerifier?: string,
+    nonce?: string,
+  ): Promise<NormalizedOAuthProfile> {
+    if (!nonce) {
+      throw new Error("Apple OAuth requires a nonce");
+    }
+    const { clientId, teamId, keyId, privateKey, redirectUri } =
+      this.getClientCredentials();
+    const clientSecret = jwt.sign({}, privateKey, {
+      algorithm: "ES256",
+      audience: "https://appleid.apple.com",
+      expiresIn: "5m",
+      issuer: teamId,
+      keyid: keyId,
+      subject: clientId,
+    });
+    const tokens = await exchangeOAuthAuthorizationCode({
+      issuer: "https://appleid.apple.com",
+      tokenEndpoint: "https://appleid.apple.com/auth/token",
+      jwksUri: "https://appleid.apple.com/auth/keys",
+      clientId,
+      clientSecret,
+      redirectUri,
+      code,
+      expectedNonce: nonce,
+      requireIdToken: true,
+    });
+    const claims = tokens.idTokenClaims;
+    if (!claims) {
+      throw new Error("Apple did not return a valid ID token");
     }
 
-    const payload = JSON.parse(
-      Buffer.from(idToken.split(".")[1], "base64url").toString("utf8"),
-    ) as {
-      sub: string;
-      email?: string;
-      email_verified?: boolean | string;
-    };
-
     return {
-      providerUserId: payload.sub,
-      email: payload.email ?? "",
+      providerUserId: claims.sub,
+      email: typeof claims.email === "string" ? claims.email : "",
       name: null,
       image: null,
       emailVerified:
-        payload.email_verified === true || payload.email_verified === "true",
+        claims.email_verified === true || claims.email_verified === "true",
     };
   }
 }

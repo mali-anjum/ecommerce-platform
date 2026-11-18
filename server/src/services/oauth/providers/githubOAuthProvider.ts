@@ -1,6 +1,9 @@
-import { GitHub } from "arctic";
 import { BaseOAuthProvider } from "../internal/baseOAuthProvider";
 import type { NormalizedOAuthProfile } from "../internal/types";
+import {
+  createOAuthAuthorizationUrl,
+  exchangeOAuthAuthorizationCode,
+} from "../internal/oauthClient";
 
 type GitHubProfile = {
   id: number;
@@ -21,6 +24,7 @@ export class GitHubOAuthProvider extends BaseOAuthProvider {
   readonly routeSlug = "github";
   readonly displayName = "GitHub";
   readonly usesPkce = false;
+  readonly usesNonce = false;
 
   isConfigured(): boolean {
     return Boolean(
@@ -29,31 +33,43 @@ export class GitHubOAuthProvider extends BaseOAuthProvider {
     );
   }
 
-  private getClient(): GitHub {
+  private getClientCredentials(): { clientId: string; clientSecret: string } {
     if (!this.isConfigured()) {
       throw new Error("GitHub OAuth is not configured");
     }
-    const redirectUri =
-      process.env.GITHUB_REDIRECT_URI?.trim() || this.getRedirectUri();
-    return new GitHub(
-      process.env.GITHUB_CLIENT_ID!,
-      process.env.GITHUB_CLIENT_SECRET!,
-      redirectUri,
-    );
+    return {
+      clientId: process.env.GITHUB_CLIENT_ID!,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+    };
   }
 
   buildAuthorizationUrl(state: string): URL {
-    const github = this.getClient();
-    return github.createAuthorizationURL(state, ["read:user", "user:email"]);
+    const { clientId } = this.getClientCredentials();
+    return createOAuthAuthorizationUrl({
+      authorizationEndpoint: "https://github.com/login/oauth/authorize",
+      clientId,
+      redirectUri:
+        process.env.GITHUB_REDIRECT_URI?.trim() || this.getRedirectUri(),
+      scopes: ["read:user", "user:email"],
+      state,
+    });
   }
 
   async fetchProfile(code: string): Promise<NormalizedOAuthProfile> {
-    const github = this.getClient();
-    const tokens = await github.validateAuthorizationCode(code);
-    const accessToken = tokens.accessToken();
-    const profile = await this.fetchGitHubUser(accessToken);
+    const { clientId, clientSecret } = this.getClientCredentials();
+    const tokens = await exchangeOAuthAuthorizationCode({
+      issuer: "https://github.com",
+      tokenEndpoint: "https://github.com/login/oauth/access_token",
+      clientId,
+      clientSecret,
+      redirectUri:
+        process.env.GITHUB_REDIRECT_URI?.trim() || this.getRedirectUri(),
+      code,
+      clientAuthentication: "basic",
+    });
+    const profile = await this.fetchGitHubUser(tokens.accessToken);
     // Only an address GitHub marks verified may link to an existing account.
-    const verifiedEmail = await this.fetchPrimaryEmail(accessToken);
+    const verifiedEmail = await this.fetchPrimaryEmail(tokens.accessToken);
     const email = verifiedEmail ?? profile.email ?? null;
 
     return {

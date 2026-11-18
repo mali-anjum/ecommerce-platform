@@ -1,6 +1,9 @@
-import { Facebook } from "arctic";
 import { BaseOAuthProvider } from "../internal/baseOAuthProvider";
 import type { NormalizedOAuthProfile } from "../internal/types";
+import {
+  createOAuthAuthorizationUrl,
+  exchangeOAuthAuthorizationCode,
+} from "../internal/oauthClient";
 
 type FacebookProfile = {
   id: string;
@@ -14,6 +17,7 @@ export class FacebookOAuthProvider extends BaseOAuthProvider {
   readonly routeSlug = "facebook";
   readonly displayName = "Facebook";
   readonly usesPkce = false;
+  readonly usesNonce = false;
 
   isConfigured(): boolean {
     return Boolean(
@@ -22,28 +26,41 @@ export class FacebookOAuthProvider extends BaseOAuthProvider {
     );
   }
 
-  private getClient(): Facebook {
+  private getClientCredentials(): { clientId: string; clientSecret: string } {
     if (!this.isConfigured()) {
       throw new Error("Facebook OAuth is not configured");
     }
-    const redirectUri =
-      process.env.FACEBOOK_REDIRECT_URI?.trim() || this.getRedirectUri();
-    return new Facebook(
-      process.env.FACEBOOK_CLIENT_ID!,
-      process.env.FACEBOOK_CLIENT_SECRET!,
-      redirectUri,
-    );
+    return {
+      clientId: process.env.FACEBOOK_CLIENT_ID!,
+      clientSecret: process.env.FACEBOOK_CLIENT_SECRET!,
+    };
   }
 
   buildAuthorizationUrl(state: string): URL {
-    const facebook = this.getClient();
-    return facebook.createAuthorizationURL(state, ["email", "public_profile"]);
+    const { clientId } = this.getClientCredentials();
+    return createOAuthAuthorizationUrl({
+      authorizationEndpoint: "https://www.facebook.com/v16.0/dialog/oauth",
+      clientId,
+      redirectUri:
+        process.env.FACEBOOK_REDIRECT_URI?.trim() || this.getRedirectUri(),
+      scopes: ["email", "public_profile"],
+      state,
+    });
   }
 
   async fetchProfile(code: string): Promise<NormalizedOAuthProfile> {
-    const facebook = this.getClient();
-    const tokens = await facebook.validateAuthorizationCode(code);
-    const profile = await this.fetchFacebookUser(tokens.accessToken());
+    const { clientId, clientSecret } = this.getClientCredentials();
+    const tokens = await exchangeOAuthAuthorizationCode({
+      issuer: "https://www.facebook.com",
+      tokenEndpoint: "https://graph.facebook.com/v16.0/oauth/access_token",
+      clientId,
+      clientSecret,
+      redirectUri:
+        process.env.FACEBOOK_REDIRECT_URI?.trim() || this.getRedirectUri(),
+      code,
+      clientAuthentication: "post",
+    });
+    const profile = await this.fetchFacebookUser(tokens.accessToken);
 
     return {
       providerUserId: profile.id,

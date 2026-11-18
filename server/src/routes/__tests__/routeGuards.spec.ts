@@ -5,16 +5,13 @@
 jest.mock("../../lib/prisma", () => ({ __esModule: true, prisma: {}, default: {} }));
 jest.mock("../../config/cloudinary", () => ({ __esModule: true, default: { uploader: {}, api: {} } }));
 jest.mock("../../lib/monitoring", () => ({ sentryTracker: jest.fn() }));
-// arctic is ESM-only; the OAuth controllers are imported via authRoutes.
-jest.mock("arctic", () => ({
-  Google: jest.fn(),
-  Facebook: jest.fn(),
-  GitHub: jest.fn(),
-  MicrosoftEntraId: jest.fn(),
-  Apple: jest.fn(),
-  OAuth2RequestError: class OAuth2RequestError extends Error {},
-  generateState: jest.fn(),
-  generateCodeVerifier: jest.fn(),
+jest.mock("../../services/oauth/internal/oauthClient", () => ({
+  OAuthRequestError: class OAuthRequestError extends Error {},
+  generateOAuthState: jest.fn(),
+  generateOAuthCodeVerifier: jest.fn(),
+  generateOAuthNonce: jest.fn(),
+  createOAuthAuthorizationUrl: jest.fn(),
+  exchangeOAuthAuthorizationCode: jest.fn(),
 }));
 
 import type { Router } from "express";
