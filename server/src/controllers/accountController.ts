@@ -36,7 +36,9 @@ export async function sendVerificationEmailSafely(user: {
   name: string | null;
 }): Promise<boolean> {
   if (!isEmailConfigured()) {
-    logger.warn("Email verification skipped: SMTP is not configured", { userId: user.id });
+    logger.warn("Email verification skipped: email provider is not configured", {
+      userId: user.id,
+    });
     return false;
   }
   try {
@@ -61,7 +63,9 @@ export const forgotPassword = asyncHandler(
 
     if (user?.isActive) {
       if (!isEmailConfigured()) {
-        logger.warn("Password reset email skipped: SMTP is not configured", { userId: user.id });
+        logger.warn("Password reset email skipped: email provider is not configured", {
+          userId: user.id,
+        });
       } else {
         try {
           const rawToken = await issueAccountToken(user.id, "PASSWORD_RESET");

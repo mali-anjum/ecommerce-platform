@@ -18,6 +18,22 @@ export const authRegisterLimiter = rateLimit({
   message: { success: false, error: "Too many registration attempts. Try again later." },
 });
 
+export const accountEmailLimiter = rateLimit({
+  windowMs,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: "Too many email requests. Try again later." },
+});
+
+export const accountTokenLimiter = rateLimit({
+  windowMs,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: "Too many verification attempts. Try again later." },
+});
+
 export const oauthStartLimiter = rateLimit({
   windowMs,
   max: 40,

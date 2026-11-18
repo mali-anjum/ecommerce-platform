@@ -12,6 +12,24 @@ import { sentryTracker } from "../lib/monitoring";
 
 const errorLogger = createLogger("ERROR_HANDLER");
 
+const SENSITIVE_FIELD = /password|token|secret|authorization|cookie|card.?number|cvv|ssn/i;
+
+export function redactSensitive(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map(redactSensitive);
+  }
+  if (typeof value !== "object" || value === null) {
+    return value;
+  }
+
+  return Object.fromEntries(
+    Object.entries(value).map(([key, fieldValue]) => [
+      key,
+      SENSITIVE_FIELD.test(key) ? "[REDACTED]" : redactSensitive(fieldValue),
+    ]),
+  );
+}
+
 export const errorHandler = (
   error: any,
   req: Request,
@@ -28,8 +46,8 @@ export const errorHandler = (
       userId: authReq.user?.userId ?? null,
       ip: req.ip,
       userAgent: req.get("User-Agent") ?? null,
-      body: process.env.NODE_ENV === "development" ? req.body : undefined,
-      query: process.env.NODE_ENV === "development" ? req.query : undefined,
+      body: process.env.NODE_ENV === "development" ? redactSensitive(req.body) : undefined,
+      query: process.env.NODE_ENV === "development" ? redactSensitive(req.query) : undefined,
     });
   } catch (logErr) {
     // if logging fails, don't crash the handler

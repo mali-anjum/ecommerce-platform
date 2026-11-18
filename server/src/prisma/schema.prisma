@@ -28,6 +28,26 @@ model User {
   userCoupons   UserCoupon[]
   seller        Seller?
   oauthAccounts OAuthAccount[]
+  accountTokens AccountToken[]
+}
+
+enum AccountTokenType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
+model AccountToken {
+  id        String           @id @default(uuid())
+  userId    String
+  type      AccountTokenType
+  tokenHash String           @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime         @default(now())
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type])
+  @@index([expiresAt])
 }
 
 model OAuthAccount {
