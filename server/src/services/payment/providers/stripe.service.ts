@@ -111,13 +111,6 @@ export class StripeService extends BasePaymentService {
           internalOrderId: orderData.internalOrderId,
           orderType: "ecommerce",
         },
-        // Copy the order id onto the PaymentIntent so payment_intent.* webhooks can find the order.
-        payment_intent_data: {
-          metadata: {
-            userId: orderData.userId,
-            internalOrderId: orderData.internalOrderId,
-          },
-        },
       });
 
       if (!session.url) {
@@ -238,19 +231,9 @@ export class StripeService extends BasePaymentService {
 
       switch (event.type) {
         case "checkout.session.completed":
-        case "checkout.session.async_payment_succeeded":
           return {
             success: true,
             event: "payment_success",
-            data: event.data.object as Stripe.Checkout.Session,
-          };
-
-        // Abandoned or failed delayed payments: release the pending order.
-        case "checkout.session.expired":
-        case "checkout.session.async_payment_failed":
-          return {
-            success: false,
-            event: "payment_failed",
             data: event.data.object as Stripe.Checkout.Session,
           };
 
@@ -262,8 +245,7 @@ export class StripeService extends BasePaymentService {
           };
 
         default:
-          // Acknowledged but not acted on; the payload is not needed.
-          return { success: true, event: "unknown" };
+          return { success: true, event: "unknown", data: event.data.object as Stripe.Checkout.Session };
       }
     } catch (error) {
     sentryTracker(error, { source: "stripe.service" });

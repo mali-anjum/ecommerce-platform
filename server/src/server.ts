@@ -1,8 +1,5 @@
 import "./config/loadEnv";
-import "./instrument";
-import { resolveTrustProxyHops } from "./config/trustProxy";
-import { createCorsOptions } from "./config/cors";
-import { registerProcessErrorHandlers, sentryTracker } from "./lib/monitoring";
+import { initSentry, registerProcessErrorHandlers, sentryTracker } from "./lib/monitoring";
 import express, { Request, Response } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -30,30 +27,54 @@ import { warmProductIndex } from "./services/ai/productIndex";
 import { startSalesEmailQueueProcessor } from "./services/ai/sales";
 
 const app = express();
+initSentry();
 registerProcessErrorHandlers();
 
 const PORT = process.env.PORT || 3001;
 
-const corsOptions = createCorsOptions();
+const corsOptions: cors.CorsOptions = {
+  origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+    // Allow requests with no origin (mobile apps, Postman, server-to-server)
+    if (!origin) {
+      console.log("🌐 CORS: Allowing request with no origin");
+      return callback(null, true);
+    }
 
-const trustProxyHops = resolveTrustProxyHops();
-if (trustProxyHops > 0) {
-  app.set("trust proxy", trustProxyHops);
-}
+    const allowedOrigins = [
+      process.env.FRONTEND_URL,
+      "http://localhost:3000",
+      "http://localhost:3012",
+      "https://www.postman.com", // added postman for testing endpoints
+      "https://postman.com"
+    ];
+
+    if (allowedOrigins.some(allowed => origin.includes(allowed.replace(/https?:\/\//, '')))) {
+      console.log("✅ CORS: Allowed origin:", origin);
+      callback(null, true);
+    } else {
+      console.log("🚫 CORS Blocked origin:", origin);
+      console.log("📋 Allowed origins:", allowedOrigins);
+      callback(new Error("CORS policy violation"), false);
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "Cookie",
+    "X-Requested-With",
+    "Accept",
+    "Origin"
+  ],
+  exposedHeaders: ["Set-Cookie", "Date", "ETag"],
+  optionsSuccessStatus: 200,
+  maxAge: 86400, // 24 hours
+};
 
 app.use(cors(corsOptions));
-// Express 5 (path-to-regexp v8) needs a named wildcard; a bare "*" crashes startup.
-app.options("/{*splat}", cors(corsOptions));
-// Keep exact bytes for payment webhooks: signature checks fail on re-serialised JSON.
-app.use(
-  express.json({
-    verify: (req, _res, buf) => {
-      if (req.url?.includes("/webhooks/")) {
-        (req as express.Request).rawBody = Buffer.from(buf);
-      }
-    },
-  })
-);
+app.options("*", cors(corsOptions));
+app.use(express.json());
 app.use(cookieParser());
 export { prisma };
 

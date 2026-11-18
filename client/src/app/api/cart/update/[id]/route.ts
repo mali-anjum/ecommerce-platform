@@ -30,7 +30,7 @@ export async function PUT(
     const body = await request.json();
 
     const backendRes = await fetch(
-      `${BACKEND_URL}/api/cart/update/${encodeURIComponent(id)}`,
+      `${BACKEND_URL}/api/cart/update/${id}`,
       {
         method: "PUT",
         headers: {

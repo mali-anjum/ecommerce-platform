@@ -1,0 +1,5 @@
+< [33me1bd4d1b[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m Implement OAuth client utilities with PKCE and nonce support
+< [33m205a8343[m docs: update DATABASE_URL sslmode requirement for production to verify-full
+> [33m3679e00c[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m fix: remove local environment configuration files from the repository
+> [33md693485d[m Merge branch 'main' of https://github.com/mali-anjum/meridian-commerce-platform
+> [33mf92277d0[m[33m ([m[1;34mreplaced[m[33m)[m docs: add project agent skills, guardrail hooks, and AI workflow

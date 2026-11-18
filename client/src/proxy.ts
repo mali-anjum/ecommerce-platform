@@ -4,20 +4,12 @@ import { jwtVerify } from "jose";
 import { proxyLogger } from "@/lib/logger";
 import { sentryTracker } from "@/lib/monitoring";
 
-// Account recovery pages stay public even for signed-in users (links arrive by email).
-const publicRoutes = [
-  "/auth/register",
-  "/auth/login",
-  "/auth/forgot-password",
-  "/auth/reset-password",
-  "/auth/verify-email",
-  "/help",
-];
+const publicRoutes = ["/auth/register", "/auth/login", "/help"];
 const authRoutes = ["/auth/register", "/auth/login"];
 const superAdminRoutes = ["/super-admin"];
 const userRoutes = ["/home"];
 
-const jwtSecret = process.env.JWT_SECRET!;
+const jwtSecret = process.env.JWT_SECRET;
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -172,9 +164,7 @@ export const config = {
      * Skip API routes, Next internals, and public/static assets (e.g. /images/logo.webp).
      * Without excluding /images/, unauthenticated requests get redirected to login and
      * next/image receives HTML instead of image bytes.
-     * /monitoring is the Sentry tunnel (next.config.ts tunnelRoute); redirecting it would
-     * drop browser error reports from guests and expired sessions.
      */
-    "/((?!api|monitoring|_next/static|_next/image|favicon.ico|images/|.*\\..*).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|images/|.*\\..*).*)",
   ],
 };

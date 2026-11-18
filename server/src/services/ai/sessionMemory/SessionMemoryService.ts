@@ -7,11 +7,10 @@ import {
 
 export async function loadSessionHistory(
   sessionId?: string,
-  userId?: string,
 ): Promise<ChatHistoryMessage[]> {
   if (!sessionId) return [];
 
-  const messages = await getSessionMessages(sessionId, userId);
+  const messages = await getSessionMessages(sessionId);
   return messages.map(({ role, content }) => ({ role, content }));
 }
 

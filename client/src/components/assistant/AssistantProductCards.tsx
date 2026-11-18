@@ -63,7 +63,7 @@ export function AssistantProductCards({ products }: AssistantProductCardsProps) 
                     <span className="text-xs text-muted-foreground line-through">
                       {formatPrice(product.price)}
                     </span>
-                    <Badge variant="secondary" className="text-[11px]">
+                    <Badge variant="secondary" className="text-[10px]">
                       {product.discountPercent}% off
                     </Badge>
                   </>

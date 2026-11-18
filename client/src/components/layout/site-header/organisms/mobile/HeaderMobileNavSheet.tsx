@@ -114,7 +114,7 @@ export function HeaderMobileNavSheet({
             <SheetTitle className="flex items-center">
               <Link href="/" onClick={closeSheet}>
                 <span className="bg-linear-to-r from-primary to-secondary bg-clip-text text-xl font-bold text-transparent">
-                  MERIDIAN
+                  FUTURESHOP
                 </span>
               </Link>
             </SheetTitle>

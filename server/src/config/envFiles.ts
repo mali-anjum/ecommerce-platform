@@ -6,7 +6,7 @@ export function getCandidateEnvFiles(nodeEnv = process.env.NODE_ENV): string[] {
   const runtimeEnv = nodeEnv ?? "development";
 
   if (runtimeEnv === "production") return [".env.production", ".env"];
-  if (runtimeEnv === "development") return [".env.local", ".env"];
+  if (runtimeEnv === "test") return [".env.test", ".env"];
   return [".env.local", ".env"];
 }
 

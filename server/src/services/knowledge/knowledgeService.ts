@@ -60,11 +60,16 @@ export class KnowledgeService {
   }
 
   async getStorePolicies() {
-    // Upsert: concurrent first reads must not race to create the singleton row.
-    return prisma.storePolicySettings.upsert({
+    const row = await prisma.storePolicySettings.findUnique({
       where: { id: "default" },
-      create: { id: "default" },
-      update: {},
+    });
+
+    if (row) {
+      return row;
+    }
+
+    return prisma.storePolicySettings.create({
+      data: { id: "default" },
     });
   }
 

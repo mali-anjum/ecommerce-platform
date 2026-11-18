@@ -18,22 +18,6 @@ interface CartStore {
 }
 
 const CART_FETCH_COOLDOWN_MS = 1500;
-
-function cartErrorMessage(error: unknown, fallback: string): string {
-  if (axios.isAxiosError(error)) {
-    const message = (error.response?.data as { error?: unknown } | undefined)?.error;
-    if (typeof message === "string" && message) return message;
-  }
-  return fallback;
-}
-
-/** The server upserts by product/size/color, so a repeat add returns an existing line. */
-function mergeCartItem(items: CartItem[], incoming: CartItem): CartItem[] {
-  const exists = items.some((item) => item.id === incoming.id);
-  return exists
-    ? items.map((item) => (item.id === incoming.id ? incoming : item))
-    : [...items, incoming];
-}
 let cartFetchInFlight: Promise<void> | null = null;
 let lastCartFetchAt = 0;
 
@@ -50,7 +34,7 @@ export const useCartStore = create<CartStore>((set, get) => {
             },
           }
         );
-      } catch (e: unknown) {
+      } catch (e: any) {
     sentryTracker(e, { source: "useCartStore" });
         console.error("❌ Failed to update cart quantity:", e);
         set({ error: "Failed to update cart quantity" });
@@ -93,12 +77,12 @@ export const useCartStore = create<CartStore>((set, get) => {
 
           console.log("✅ Cart fetched successfully");
           lastCartFetchAt = Date.now();
-        } catch (error: unknown) {
+        } catch (error: any) {
     sentryTracker(error, { source: "useCartStore" });
           console.error("❌ Cart fetch failed:", error);
 
           set({
-            error: cartErrorMessage(error, "Failed to fetch cart"),
+            error: error.response?.data?.error || "Failed to fetch cart",
             isLoading: false,
             items: [],
           });
@@ -126,14 +110,14 @@ export const useCartStore = create<CartStore>((set, get) => {
         });
 
         set((state) => ({
-          items: mergeCartItem(state.items, response.data.data),
+          items: [...state.items, response.data.data],
           isLoading: false,
         }));
-      } catch (error: unknown) {
+      } catch (error: any) {
     sentryTracker(error, { source: "useCartStore" });
         console.error("❌ Add to cart failed:", error);
         set({
-          error: cartErrorMessage(error, "Failed to add to cart"),
+          error: error.response?.data?.error || "Failed to add to cart",
           isLoading: false,
         });
       }
@@ -156,11 +140,11 @@ export const useCartStore = create<CartStore>((set, get) => {
         useCartSelectionStore
           .getState()
           .pruneInvalidIds(get().items.map((item) => item.id));
-      } catch (error: unknown) {
+      } catch (error: any) {
     sentryTracker(error, { source: "useCartStore" });
         console.error("❌ Remove from cart failed:", error);
         set({
-          error: cartErrorMessage(error, "Failed to delete from cart"),
+          error: error.response?.data?.error || "Failed to delete from cart",
           isLoading: false,
         });
       }
@@ -192,11 +176,11 @@ export const useCartStore = create<CartStore>((set, get) => {
         );
 
         set({ items: [], isLoading: false });
-      } catch (error: unknown) {
+      } catch (error: any) {
     sentryTracker(error, { source: "useCartStore" });
         console.error("❌ Clear cart failed:", error);
         set({
-          error: cartErrorMessage(error, "Failed to clear cart"),
+          error: error.response?.data?.error || "Failed to clear cart",
           isLoading: false,
         });
       }

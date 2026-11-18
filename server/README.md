@@ -1,6 +1,6 @@
-# Meridian Commerce API — Express & PostgreSQL
+# Server — Express API & data layer
 
-The **Meridian Commerce API** is a TypeScript **Express** application that exposes a REST API under `/api/*`, persists data with **Prisma 7** and **PostgreSQL**, and integrates **Cloudinary**, **Stripe**, **PayPal**, and optional **Nodemailer**.
+The **server** package is a TypeScript **Express** application that exposes a REST API under `/api/*`, persists data with **Prisma 7** and **PostgreSQL**, and integrates **Cloudinary**, **Stripe**, **PayPal**, and optional **Nodemailer**.
 
 **Monorepo root:** see [../README.md](../README.md) for full-stack setup and feature overview.
 
@@ -208,7 +208,7 @@ See `.env.example` for the full list. Critical groups:
 | Cloudinary | `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` |
 | PayPal | `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID`, return/cancel URLs |
 | Stripe | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, checkout base URL |
-| Email | `RESEND_API_KEY` (recommended) or `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`; plus `SMTP_FROM` |
+| Email | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `EMAIL_FROM` |
 
 PayPal/Stripe return URLs must point at the **Next.js** origin (e.g. `http://localhost:3012/...`), not the API port.
 

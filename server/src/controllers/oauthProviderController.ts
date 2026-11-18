@@ -1,20 +1,12 @@
 import type { Request, Response } from "express";
-import { mapProviderId, oauthService } from "../services/oauth";
+import { oauthService } from "../services/oauth";
 import { sentryTracker } from "../lib/monitoring";
-
-/** Unknown provider slugs are a client error, not a server failure. */
-function rejectUnknownProvider(providerSlug: string, res: Response): boolean {
-  if (mapProviderId(providerSlug)) return false;
-  res.status(404).json({ success: false, error: "Unsupported OAuth provider" });
-  return true;
-}
 
 function startOAuthForProvider(
   providerSlug: string,
   _req: Request,
   res: Response,
 ): void {
-  if (rejectUnknownProvider(providerSlug, res)) return;
   try {
     const provider = oauthService.getProvider(providerSlug);
 
@@ -30,10 +22,12 @@ function startOAuthForProvider(
   } catch (error) {
     sentryTracker(error, { source: "oauthProviderController" });
     console.error(`${providerSlug} OAuth start error:`, error);
-    // Raw errors can include provider config details; keep the response generic.
     res.status(500).json({
       success: false,
-      error: "Unable to start sign-in. Please try again.",
+      error:
+        error instanceof Error
+          ? error.message
+          : `Unable to start ${providerSlug} OAuth`,
     });
   }
 }
@@ -43,7 +37,6 @@ async function handleOAuthCallbackForProvider(
   req: Request,
   res: Response,
 ): Promise<void> {
-  if (rejectUnknownProvider(providerSlug, res)) return;
   try {
     const provider = oauthService.getProvider(providerSlug);
 
@@ -61,7 +54,10 @@ async function handleOAuthCallbackForProvider(
     console.error(`${providerSlug} OAuth callback error:`, error);
     res.status(500).json({
       success: false,
-      error: "Sign-in failed. Please try again.",
+      error:
+        error instanceof Error
+          ? error.message
+          : `${providerSlug} OAuth callback failed`,
     });
   }
 }

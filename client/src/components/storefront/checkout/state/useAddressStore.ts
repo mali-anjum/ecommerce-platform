@@ -3,7 +3,6 @@ import type { Address } from "@/components/storefront/checkout/types/Address";
 import { http } from "@/lib/http";
 import { API_ROUTES } from "@/lib/routes/api";
 import { sentryTracker } from "@/lib/monitoring";
-import { getApiErrorMessage } from "@/components/auth/utils/accountApi";
 
 interface AddressStore {
   addresses: Address[];
@@ -72,8 +71,8 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
       }));
 
       return data.address;
-    } catch (error) {
-      set({ isLoading: false, error: getApiErrorMessage(error, "Failed to add address") });
+    } catch {
+      set({ isLoading: false, error: "Failed to add address" });
       return null;
     }
   },
@@ -91,8 +90,8 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
       }));
 
       return data.address;
-    } catch (error) {
-      set({ isLoading: false, error: getApiErrorMessage(error, "Failed to update address") });
+    } catch {
+      set({ isLoading: false, error: "Failed to update address" });
       return null;
     }
   },
@@ -108,8 +107,8 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
       }));
 
       return true;
-    } catch (error) {
-      set({ isLoading: false, error: getApiErrorMessage(error, "Failed to delete address") });
+    } catch {
+      set({ isLoading: false, error: "Failed to delete address" });
       return false;
     }
   },

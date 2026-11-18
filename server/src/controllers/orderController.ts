@@ -19,7 +19,6 @@ import { validateCheckoutSelection } from "../services/cart/validateCheckoutSele
 import {
   applyPurchaseFulfillment,
   buildFulfillmentAnalyticsContext,
-  claimOrderForFulfillment,
   parsePurchasedCartItemIds,
   fetchSellerOrderLinesPage,
   fetchAdminTransactionsPage,
@@ -32,11 +31,8 @@ import {
   updateOrderStatusById,
   withLegacyPaymentAliases,
 } from "../services/order";
-import { OrderStatus } from "@prisma/client";
+import type { OrderStatus } from "@prisma/client";
 import { sentryTracker } from "../lib/monitoring";
-import { getCouponRejection } from "../services/coupon/couponRules";
-
-const ORDER_STATUS_VALUES = new Set<string>(Object.values(OrderStatus));
 
 const createPaymentOrder = asyncHandler(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -72,20 +68,7 @@ const createPaymentOrder = asyncHandler(
         );
       }
 
-      const ownedAddress = await prisma.address.findFirst({
-        where: { id: addressId, userId },
-        select: { id: true },
-      });
-      if (!ownedAddress) {
-        return next(new ApiError(404, "Shipping address not found"));
-      }
-
       const validatedItems = await validateCheckoutSelection(userId, cartItemIds);
-
-      const lineSubtotal = validatedItems.reduce(
-        (sum, item) => sum + item.price * item.quantity,
-        0
-      );
 
       let couponDiscountPercent = 0;
       if (couponId) {
@@ -95,13 +78,13 @@ const createPaymentOrder = asyncHandler(
         if (!coupon) {
           return next(new ApiError(400, "Coupon is invalid or expired"));
         }
-        // Re-check on the server: the client may hold a stale or tampered coupon.
-        const rejection = getCouponRejection(coupon, new Date(), lineSubtotal);
-        if (rejection) {
-          return next(new ApiError(400, rejection));
-        }
         couponDiscountPercent = coupon.discountPercent;
       }
+
+      const lineSubtotal = validatedItems.reduce(
+        (sum, item) => sum + item.price * item.quantity,
+        0
+      );
       const checkoutTotals = calculateCheckoutTotals(
         lineSubtotal,
         couponDiscountPercent
@@ -353,10 +336,12 @@ const capturePayment = asyncHandler(
         },
       });
 
-      // Atomic claim: a concurrent webhook may have fulfilled this order already.
-      const claimed = await claimOrderForFulfillment(internalOrderId);
-      const updatedOrder = await prisma.order.findUniqueOrThrow({
+      const updatedOrder = await prisma.order.update({
         where: { id: internalOrderId },
+        data: {
+          status: "PROCESSING",
+          paymentStatus: "COMPLETED",
+        },
         include: {
           items: true,
           address: true,
@@ -364,16 +349,6 @@ const capturePayment = asyncHandler(
           payments: { orderBy: { createdAt: "desc" }, take: 5 },
         },
       });
-
-      if (!claimed) {
-        return res.status(200).json(
-          new ApiResponse(
-            200,
-            { order: withLegacyPaymentAliases(updatedOrder), captureData: captureResult.data },
-            "Payment already captured for this order",
-          ),
-        );
-      }
 
       const purchasedCartItemIds = parsePurchasedCartItemIds(paymentRow.metadata);
       const analyticsContext = buildFulfillmentAnalyticsContext(
@@ -417,24 +392,27 @@ const capturePayment = asyncHandler(
 // TODO: should do it for single or multiple order? validate the input req.params+body
 const updateOrderStatusAdminOnly = asyncHandler(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    requireUserId(req, "Unauthenticated user");
+    const userId = requireUserId(req, "Unauthenticated user");
 
     const { orderId } = req.params;
-    const status = String(req.body?.status ?? "").trim().toUpperCase();
-    // Reject unknown values with 400 instead of letting Prisma fail with a 500.
-    if (!ORDER_STATUS_VALUES.has(status)) {
-      return next(new ApiError(400, "Invalid order status"));
-    }
+    const { status } = req.body;
 
-    // A missing order surfaces as Prisma P2025, which the error handler maps to 404.
     const statusUpdated = await updateOrderStatusById(
       orderId,
       status as OrderStatus,
     );
 
+    if (!statusUpdated) {
+      return res
+        .status(401)
+        .json(
+          new ApiError(401, "Error occured while updateing the order status"),
+        );
+    }
+
     return res
       .status(200)
-      .json(new ApiResponse(200, statusUpdated, "Order status updated successfully"));
+      .json(new ApiResponse(200, statusUpdated, "stauts updated successfully"));
   },
 );
 // TODO: optimize and reusable for date and add validation for the input

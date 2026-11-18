@@ -22,7 +22,7 @@ export async function proxyWithAuth(
   }
 
   const accessToken = request.cookies.get("accessToken")?.value;
-  const refreshToken = request.cookies.get("refreshToken")?.value ?? "";
+  const refreshToken = request.cookies.get("refreshToken")?.value;
 
   if (!accessToken) {
     return NextResponse.json(
@@ -31,10 +31,10 @@ export async function proxyWithAuth(
     );
   }
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000);
-
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
     const backendRes = await fetch(`${BACKEND_URL}${backendPath}`, {
       method,
       headers: {
@@ -65,7 +65,5 @@ export async function proxyWithAuth(
       { success: false, error: "Proxy request failed" },
       { status: 500 }
     );
-  } finally {
-    clearTimeout(timeoutId);
   }
 }

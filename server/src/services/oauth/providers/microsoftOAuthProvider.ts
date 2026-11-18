@@ -84,9 +84,7 @@ export class MicrosoftOAuthProvider extends BaseOAuthProvider {
       email: profile.email ?? "",
       name: profile.name ?? null,
       image: profile.picture ?? null,
-      // Graph `mail`/`userPrincipalName` are tenant-controlled and unverified ("nOAuth"),
-      // so never let them link to an existing account by email.
-      emailVerified: false,
+      emailVerified: Boolean(profile.email),
     };
   }
 

@@ -12,7 +12,6 @@ import {
   ValidationError,
 } from "../utils/ApiError";
 import { parseMaybeArray } from "../utils/parsedArray";
-import { trimText } from "../utils/trimText";
 import { ApiResponse } from "../utils/ApiResponse";
 import { createLogger } from "../utils/logger";
 import {
@@ -34,31 +33,6 @@ import {
 // Use Promise.allSettled and handle partial failures gracefully.
 const logger = createLogger("PRODUCT_CONTROLLER");
 
-/** Price must be a non-negative number and stock a non-negative integer. */
-function parsePriceAndStock(price: unknown, stock: unknown): { price: number; stock: number } {
-  const parsedPrice = typeof price === "number" ? price : Number(price);
-  const parsedStock = typeof stock === "number" ? stock : Number(stock);
-  if (
-    price === undefined ||
-    price === null ||
-    String(price).trim() === "" ||
-    !Number.isFinite(parsedPrice) ||
-    parsedPrice < 0
-  ) {
-    throw new ValidationError("price must be a non-negative number");
-  }
-  if (
-    stock === undefined ||
-    stock === null ||
-    String(stock).trim() === "" ||
-    !Number.isInteger(parsedStock) ||
-    parsedStock < 0
-  ) {
-    throw new ValidationError("stock must be a non-negative integer");
-  }
-  return { price: parsedPrice, stock: parsedStock };
-}
-
 const createProduct = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     try {
@@ -67,7 +41,10 @@ const createProduct = asyncHandler(
       });
 
       const {
+        name,
+        brand,
         description,
+        category,
         gender,
         condition,
         sellerId,
@@ -79,10 +56,6 @@ const createProduct = asyncHandler(
         price,
         stock,
       } = req.body;
-      // Untrimmed values (e.g. " Electronics") break category matching and search.
-      const name = trimText(req.body.name);
-      const brand = trimText(req.body.brand);
-      const category = trimText(req.body.category);
 
       if (
         !name ||
@@ -148,7 +121,11 @@ const createProduct = asyncHandler(
         throw new ValidationError("At least one color is required");
       }
 
-      const { price: parsedPrice, stock: parsedStock } = parsePriceAndStock(price, stock);
+      const parsedPrice = typeof price === "number" ? price : Number(price);
+      const parsedStock = typeof stock === "number" ? stock : Number(stock);
+      if (Number.isNaN(parsedPrice) || Number.isNaN(parsedStock)) {
+        throw new ValidationError("price and stock must be numeric");
+      }
 
       const parsedCondition = parseProductConditionValue(condition);
       if (condition !== undefined && !parsedCondition) {
@@ -370,7 +347,10 @@ const updateProduct = asyncHandler(
     }
 
     const {
+      name,
+      brand,
       description,
+      category,
       gender,
       sizes,
       colors,
@@ -383,9 +363,6 @@ const updateProduct = asyncHandler(
       dealStartsAt,
       dealEndsAt,
     } = req.body;
-    const name = trimText(req.body.name);
-    const brand = trimText(req.body.brand);
-    const category = trimText(req.body.category);
     const processedSizes = parseMaybeArray(sizes);
     const processedColors = parseMaybeArray(colors);
     if (processedSizes.length === 0) {
@@ -394,8 +371,6 @@ const updateProduct = asyncHandler(
     if (processedColors.length === 0) {
       throw new ValidationError("At least one color is required");
     }
-
-    const { price: parsedPrice, stock: parsedStock } = parsePriceAndStock(price, stock);
 
     const parsedCondition = parseProductConditionValue(condition);
     if (condition !== undefined && !parsedCondition) {
@@ -512,8 +487,8 @@ const updateProduct = asyncHandler(
         ...(parsedDealEndsAt !== undefined ? { dealEndsAt: parsedDealEndsAt } : {}),
         sizes: processedSizes,
         colors: processedColors,
-        price: parsedPrice,
-        stock: parsedStock,
+        price: parseFloat(price),
+        stock: parseInt(stock), // ✅ Better: parseInt for stock
         ...(rating !== undefined &&
         rating !== null &&
         String(rating).trim() !== "" &&

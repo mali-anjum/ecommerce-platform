@@ -7,27 +7,7 @@ import { NotFoundError, ValidationError } from "../utils/ApiError";
 import {
   upsertCatalogFromConstants,
   linkOrphanProductsToSubcategories,
-  invalidateCatalogTreeCache,
 } from "../services/catalogService";
-
-const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-
-/** Lower-cases and validates a URL slug (e.g. "home-living"). */
-export function parseSlug(value: unknown): string {
-  const slug = typeof value === "string" ? value.trim().toLowerCase() : "";
-  if (!slug) throw new ValidationError("slug is required");
-  if (!SLUG_RE.test(slug)) {
-    throw new ValidationError("slug must be lowercase letters, numbers, and single hyphens only");
-  }
-  return slug;
-}
-
-/** Trims a title; rejects blanks so an update can never erase a name. */
-function parseTitle(value: unknown): string {
-  const title = typeof value === "string" ? value.trim() : "";
-  if (!title) throw new ValidationError("title is required");
-  return title;
-}
 
 /** Upserts Electronics / Fashion / … from `PRODUCT_CATEGORY_CATALOG`; links products by `category` title. */
 export const seedCatalogEndpoint = asyncHandler(
@@ -50,10 +30,17 @@ export const adminCreateDepartment = asyncHandler(
       string,
       unknown
     >;
+    if (!title || typeof title !== "string" || !title.trim()) {
+      throw new ValidationError("title is required");
+    }
+    if (!slug || typeof slug !== "string" || !slug.trim()) {
+      throw new ValidationError("slug is required");
+    }
+
     const row = await prisma.department.create({
       data: {
-        title: parseTitle(title),
-        slug: parseSlug(slug),
+        title: title.trim(),
+        slug: slug.trim().toLowerCase(),
         description:
           typeof description === "string" ? description.trim() || null : null,
         sortOrder:
@@ -63,7 +50,6 @@ export const adminCreateDepartment = asyncHandler(
       },
     });
 
-    invalidateCatalogTreeCache();
     return res
       .status(201)
       .json(new ApiResponse(201, row, "Department created successfully"));
@@ -86,8 +72,10 @@ export const adminUpdateDepartment = asyncHandler(
     const row = await prisma.department.update({
       where: { id },
       data: {
-        ...(title !== undefined ? { title: parseTitle(title) } : {}),
-        ...(slug !== undefined ? { slug: parseSlug(slug) } : {}),
+        ...(typeof title === "string" ? { title: title.trim() } : {}),
+        ...(typeof slug === "string"
+          ? { slug: slug.trim().toLowerCase() }
+          : {}),
         ...(typeof description === "string"
           ? { description: description.trim() || null }
           : {}),
@@ -103,7 +91,6 @@ export const adminUpdateDepartment = asyncHandler(
       },
     });
 
-    invalidateCatalogTreeCache();
     return res
       .status(200)
       .json(new ApiResponse(200, row, "Department updated successfully"));
@@ -117,7 +104,6 @@ export const adminDeleteDepartment = asyncHandler(
 
     await prisma.department.delete({ where: { id } });
 
-    invalidateCatalogTreeCache();
     return res
       .status(200)
       .json(new ApiResponse(200, {}, "Department deleted successfully"));
@@ -133,8 +119,12 @@ export const adminCreateSubcategory = asyncHandler(
     if (!departmentId || typeof departmentId !== "string") {
       throw new ValidationError("departmentId is required");
     }
-    const parsedTitle = parseTitle(title);
-    const parsedSlug = parseSlug(slug);
+    if (!title || typeof title !== "string" || !title.trim()) {
+      throw new ValidationError("title is required");
+    }
+    if (!slug || typeof slug !== "string" || !slug.trim()) {
+      throw new ValidationError("slug is required");
+    }
 
     const dept = await prisma.department.findUnique({
       where: { id: departmentId },
@@ -144,8 +134,8 @@ export const adminCreateSubcategory = asyncHandler(
     const row = await prisma.subcategory.create({
       data: {
         departmentId,
-        title: parsedTitle,
-        slug: parsedSlug,
+        title: title.trim(),
+        slug: slug.trim().toLowerCase(),
         sortOrder:
           typeof sortOrder === "number"
             ? sortOrder
@@ -153,7 +143,6 @@ export const adminCreateSubcategory = asyncHandler(
       },
     });
 
-    invalidateCatalogTreeCache();
     return res
       .status(201)
       .json(new ApiResponse(201, row, "Subcategory created successfully"));
@@ -176,8 +165,10 @@ export const adminUpdateSubcategory = asyncHandler(
     const row = await prisma.subcategory.update({
       where: { id },
       data: {
-        ...(title !== undefined ? { title: parseTitle(title) } : {}),
-        ...(slug !== undefined ? { slug: parseSlug(slug) } : {}),
+        ...(typeof title === "string" ? { title: title.trim() } : {}),
+        ...(typeof slug === "string"
+          ? { slug: slug.trim().toLowerCase() }
+          : {}),
         ...(sortOrder !== undefined
           ? {
               sortOrder:
@@ -190,7 +181,6 @@ export const adminUpdateSubcategory = asyncHandler(
       },
     });
 
-    invalidateCatalogTreeCache();
     return res
       .status(200)
       .json(new ApiResponse(200, row, "Subcategory updated successfully"));
@@ -204,7 +194,6 @@ export const adminDeleteSubcategory = asyncHandler(
 
     await prisma.subcategory.delete({ where: { id } });
 
-    invalidateCatalogTreeCache();
     return res
       .status(200)
       .json(new ApiResponse(200, {}, "Subcategory deleted successfully"));

@@ -79,11 +79,14 @@ function mapWishlistItem(row: WishlistItemWithProduct): WishlistItemDto {
 
 export class WishlistService {
   static async getOrCreateWishlist(userId: string) {
-    // Upsert avoids a P2002 race when two first requests arrive together.
-    return prisma.wishlist.upsert({
+    const existing = await prisma.wishlist.findUnique({
       where: { userId },
-      create: { userId },
-      update: {},
+    });
+    if (existing) {
+      return existing;
+    }
+    return prisma.wishlist.create({
+      data: { userId },
     });
   }
 
@@ -169,6 +172,7 @@ export class WishlistService {
         productId,
       };
     } catch (error) {
+    sentryTracker(error, { source: "wishlistService" });
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === "P2002"
@@ -184,7 +188,6 @@ export class WishlistService {
           return { action: "removed", item: null, productId };
         }
       }
-      sentryTracker(error, { source: "wishlistService" });
       throw error;
     }
   }

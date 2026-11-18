@@ -108,8 +108,7 @@ const setUserActiveState = asyncHandler(
 
     const updated = await prisma.user.update({
       where: { id: userId },
-      // Deactivation also revokes the refresh token so the session cannot be renewed.
-      data: isActive ? { isActive } : { isActive, refreshToken: null },
+      data: { isActive },
       select: {
         id: true,
         name: true,

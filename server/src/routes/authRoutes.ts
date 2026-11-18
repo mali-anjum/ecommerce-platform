@@ -40,10 +40,30 @@ router.post("/register", authRegisterLimiter, register);
 router.post("/login", authLoginLimiter, login);
 
 // Password reset and email verification (single-use emailed tokens)
-router.post("/forgot-password", accountEmailLimiter, validate(forgotPasswordSchema), forgotPassword);
-router.post("/reset-password", accountTokenLimiter, validate(resetPasswordSchema), resetPassword);
-router.post("/verify-email", accountTokenLimiter, validate(verifyEmailSchema), verifyEmail);
-router.post("/resend-verification", accountEmailLimiter, authenticateJwt, resendVerificationEmail);
+router.post(
+  "/forgot-password",
+  accountEmailLimiter,
+  validate(forgotPasswordSchema),
+  forgotPassword,
+);
+router.post(
+  "/reset-password",
+  accountTokenLimiter,
+  validate(resetPasswordSchema),
+  resetPassword,
+);
+router.post(
+  "/verify-email",
+  accountTokenLimiter,
+  validate(verifyEmailSchema),
+  verifyEmail,
+);
+router.post(
+  "/resend-verification",
+  accountEmailLimiter,
+  authenticateJwt,
+  resendVerificationEmail,
+);
 
 // Google OAuth (Express is the source of truth)
 router.get("/google", oauthStartLimiter, startGoogleOAuthHandler);

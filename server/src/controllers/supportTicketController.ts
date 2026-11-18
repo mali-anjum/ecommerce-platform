@@ -4,7 +4,6 @@ import { AuthenticatedRequest } from "../types/express";
 import { asyncHandler } from "../utils/asyncHandler";
 import { ApiResponse } from "../utils/ApiResponse";
 import { NotFoundError } from "../utils/ApiError";
-import { isPrismaNotFound } from "../utils/prismaErrors";
 import {
   addAgentReply,
   closeSupportTicket,
@@ -31,12 +30,8 @@ export const closeAdminSupportTicket = asyncHandler(
       const ticket = await closeSupportTicket(req.params.id);
       res.json(new ApiResponse(200, { ticket }, "Support ticket closed"));
     } catch (error) {
-      // Only a missing row is a 404; anything else is a real failure for the error handler.
-      if (isPrismaNotFound(error) || error instanceof NotFoundError) {
-        throw new NotFoundError("Support ticket not found");
-      }
       sentryTracker(error, { source: "supportTicketController" });
-      throw error;
+      throw new NotFoundError("Support ticket not found");
     }
   },
 );
@@ -54,12 +49,8 @@ export const replyAdminSupportTicket = asyncHandler(
       const ticket = await addAgentReply(req.params.id, content);
       res.json(new ApiResponse(200, { ticket }, "Agent reply added"));
     } catch (error) {
-      // Only a missing row is a 404; anything else is a real failure for the error handler.
-      if (isPrismaNotFound(error) || error instanceof NotFoundError) {
-        throw new NotFoundError("Support ticket not found");
-      }
       sentryTracker(error, { source: "supportTicketController" });
-      throw error;
+      throw new NotFoundError("Support ticket not found");
     }
   },
 );

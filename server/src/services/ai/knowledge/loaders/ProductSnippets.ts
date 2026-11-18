@@ -1,5 +1,4 @@
 import type { AssistantProductSnippet } from "../../types";
-import { scoreFields } from "../relevance";
 
 export const MAX_CONTEXT_PRODUCTS = 8;
 
@@ -27,18 +26,43 @@ export function toProductSnippet(product: {
   };
 }
 
-/** Name matches outrank brand/category, which outrank description-only matches. */
-export function scoreProductRelevance(
-  product: { name: string; brand: string; category: string; description: string },
-  terms: string[],
-): number {
-  return scoreFields(
-    [
-      { text: product.name, weight: 3 },
-      { text: product.brand, weight: 2 },
-      { text: product.category, weight: 2 },
-      { text: product.description, weight: 1 },
-    ],
-    terms,
-  );
+export function extractSearchTerms(message: string): string[] {
+  const stopWords = new Set([
+    "a",
+    "an",
+    "the",
+    "is",
+    "are",
+    "what",
+    "how",
+    "do",
+    "you",
+    "we",
+    "i",
+    "my",
+    "this",
+    "that",
+    "about",
+    "for",
+    "and",
+    "or",
+    "can",
+    "please",
+    "tell",
+    "me",
+    "ship",
+    "shipping",
+    "return",
+    "policy",
+    "product",
+    "explain",
+  ]);
+
+  return message
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, " ")
+    .split(/\s+/)
+    .map((word) => word.trim())
+    .filter((word) => word.length > 2 && !stopWords.has(word))
+    .slice(0, 6);
 }

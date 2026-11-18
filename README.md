@@ -1,16 +1,6 @@
-# Meridian Commerce
+# Ecommerce Platform
 
-![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs)
-![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
-![Express](https://img.shields.io/badge/Express-5-000000?logo=express)
-![Prisma](https://img.shields.io/badge/Prisma-7-2D3748?logo=prisma)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)
-![Stripe](https://img.shields.io/badge/Stripe-635BFF?logo=stripe&logoColor=white)
-
-**Meridian Commerce** is a full-stack marketplace with a **Next.js** storefront and admin consoles backed by an **Express** API, **Prisma**, and **PostgreSQL**. It supports shoppers, sellers, and administrators with unified catalog and order management, secure checkout, operational analytics, and AI-powered sales and customer support.
-
-**Live demo:** [ecommerce-platform-with-prisma.vercel.app](https://ecommerce-platform-with-prisma.vercel.app)
+A production-oriented, full-stack marketplace: a **Next.js** storefront and admin consoles backed by an **Express** API, **Prisma**, and **PostgreSQL**. The platform supports multi-role users (shoppers, sellers, super admins), catalog management, cart and wishlist, coupons, checkout with **Stripe** and **PayPal**, order tracking, and operational analytics.
 
 ---
 
@@ -33,10 +23,9 @@
 - [Testing](#testing)
 - [Deployment](#deployment)
 - [Troubleshooting](#troubleshooting)
-- [Development conventions](#development-conventions)
+- [Contributing](#contributing)
 - [AI agent workflow (skills and guardrails)](#ai-agent-workflow-skills-and-guardrails)
 - [Security](#security)
-- [License](#license)
 
 ---
 
@@ -51,7 +40,7 @@
 | **Wishlist** | Toggle products on a per-user wishlist; dedicated wishlist page |
 | **Checkout** | Address book, coupon application, order creation, **Stripe Checkout** and **PayPal** payment flows with return/cancel pages |
 | **Orders** | Order history, order detail, checkout success; track order (guest-friendly flow) |
-| **Account** | Profile area, notifications page, help; Google sign-in, email verification, forgot/reset password |
+| **Account** | Profile area, notifications page, help |
 | **UX** | Responsive layout, site header (desktop/mobile), light/dark theme (Zustand + CSS variables) |
 
 ### Seller hub (role `SELLER`)
@@ -84,13 +73,11 @@
 
 - REST API under `/api/*` with consistent **`ApiResponse` / `ApiError`** JSON shape
 - JWT access + refresh tokens in **httpOnly cookies**; role-based middleware (`USER`, `SELLER`, `SUPER_ADMIN`)
-- Rate limiting on auth, account-email, and public endpoints
 - **Prisma** data layer: users, sellers, departments/subcategories, products, cart, wishlist, coupons, addresses, orders, payments, shipments, tracking events
 - **Cloudinary** for product and banner media
 - **Stripe** Checkout + webhooks; **PayPal** orders + webhooks
 - Optional **Nodemailer** SMTP for transactional email
 - **Pino** logging on the server; structured proxy logging on the Next.js edge guard
-- **Sentry** error tracking on client and server
 - **Jest** tests on server and client (auth refresh, orders, payment providers, etc.)
 - Docker Compose for local PostgreSQL
 
@@ -142,11 +129,9 @@ The platform includes an **AI Sales + Support Automation** layer (assistant widg
 
 | Layer | Technologies |
 |-------|----------------|
-| **Frontend** | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4, Radix UI, Zustand 5, React Hook Form, Zod 4, Axios, Recharts |
-| **Backend** | Express 5, TypeScript, Prisma 7, PostgreSQL (`pg` adapter) |
-| **Auth** | bcryptjs, jose, jsonwebtoken, cookie-based JWT (access + refresh), Google OAuth |
-| **AI** | Pluggable LLM providers — see [docs/ai/LLM-PROVIDERS.md](docs/ai/LLM-PROVIDERS.md) |
-| **Monitoring** | Sentry (`@sentry/nextjs`, `@sentry/node`), Pino |
+| **Frontend** | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS, Radix UI, Zustand, React Hook Form, Zod, Axios, Recharts |
+| **Backend** | Express 4, TypeScript, Prisma 7, PostgreSQL (`pg` adapter) |
+| **Auth** | bcryptjs, jose, jsonwebtoken, cookie-based JWT (access + refresh) |
 | **Payments** | Stripe Checkout, PayPal REST + webhooks |
 | **Media** | Cloudinary, Multer |
 | **Email** | Nodemailer (optional) |
@@ -157,12 +142,12 @@ The platform includes an **AI Sales + Support Automation** layer (assistant widg
 ## Repository layout
 
 ```text
-meridian-commerce-platform/
+ecommerce-platform/
 ├── client/                      # Next.js storefront + admin UIs
 │   ├── src/app/                 # App Router (route groups: storefront, admin, common)
 │   ├── src/app/api/             # BFF proxies to Express (auth, cart, orders, …)
-│   ├── src/components/          # Feature folders (atoms/molecules/organisms, Zustand stores in */state)
-│   ├── src/lib/                 # API proxy helpers, route constants, analytics
+│   ├── src/components/          # UI, layout, site-header, theme
+│   ├── src/store/               # Zustand (cart, theme, auth-related state)
 │   ├── src/proxy.ts             # Edge auth guard (role redirects)
 │   └── .env.local               # Not committed — see .env.example
 ├── server/                      # Express API
@@ -177,9 +162,7 @@ meridian-commerce-platform/
 │   ├── docker-compose.yml       # Local Postgres on port 5436
 │   └── .env.local               # Not committed
 ├── docs/
-│   ├── ENVIRONMENT.md           # Env vars, loading order, deployment checklists
-│   ├── SENTRY_HANDOVER.md       # Sentry setup notes
-│   └── ai/                      # AI module docs (feature tracker, architecture, LLM providers)
+│   └── ai/                      # AI module docs (feature tracker, architecture)
 ├── CLAUDE.md                    # Agent/contributor conventions
 └── README.md                    # This file
 ```
@@ -191,7 +174,7 @@ meridian-commerce-platform/
 | Prisma client | `server/src/lib/prisma.ts` (dev singleton) |
 | Payment providers | `server/src/services/payment/` |
 | Next.js auth redirects | `client/src/proxy.ts` |
-| API base URL (browser) | `NEXT_PUBLIC_API_URL` + `client/src/lib/routes/api.ts` |
+| API base URL (browser) | `NEXT_PUBLIC_API_URL` + `client/src/utils/routes/api.ts` |
 
 ---
 
@@ -208,8 +191,8 @@ meridian-commerce-platform/
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/mali-anjum/meridian-commerce-platform.git
-cd meridian-commerce-platform
+git clone <your-repo-url> ecommerce-platform
+cd ecommerce-platform
 
 cd server && npm install
 cd ../client && npm install
@@ -290,7 +273,7 @@ Never commit `.env.local`, `.env.production`, or real secrets (use host dashboar
 
 `client/src/proxy.ts` enforces role-based redirects (e.g. shoppers cannot open super-admin URLs; sellers are blocked from admin-only paths).
 
-**Public routes** (no valid session required): `/auth/login`, `/auth/register`, `/auth/forgot-password`, `/auth/reset-password`, `/auth/verify-email`, `/help`.
+**Public routes** (no valid session required): `/auth/login`, `/auth/register`, `/help`.
 
 ---
 
@@ -300,7 +283,7 @@ Base path: **`/api`**. Responses use `{ success, message, data, statusCode }` on
 
 | Prefix | Description |
 |--------|-------------|
-| `/api/auth` | Register, login, logout, refresh, heartbeat, `GET /me`, Google OAuth, forgot/reset password, email verification |
+| `/api/auth` | Register, login, logout, refresh, heartbeat, `GET /me` |
 | `/api/products` | Admin/seller CRUD, client listing, categories, product by id |
 | `/api/catalog` | Department/subcategory tree and admin structure CRUD |
 | `/api/sellers` | Seller registration, `GET /me` profile |
@@ -404,19 +387,16 @@ Configure return URLs in server env to match your Next.js origin (default port *
 
 ## Testing
 
-Run one command at a time; `--runInBand` keeps Jest in a single process so low-RAM machines stay responsive.
-
 ```bash
-cd server && npx jest --runInBand
-cd client && npx jest --runInBand
+cd server && npm test
+cd client && npm test
 ```
 
-Run build checks before merging substantial changes:
+Run lint/build before merging substantial changes:
 
 ```bash
+cd client && npm run lint && npm run build
 cd server && npm run build
-cd client && NODE_OPTIONS=--max-old-space-size=3072 npm run build
-cd client && npx eslint <changed files> --max-warnings 0
 ```
 
 See **`CLAUDE.md`** for verification expectations on contributions.
@@ -446,9 +426,9 @@ See **`CLAUDE.md`** for verification expectations on contributions.
 
 ---
 
-## Development conventions
+## Contributing
 
-This is a proprietary project; outside contributions are not accepted. Authorized developers should read **`CLAUDE.md`** for project laws: test discipline, env safety, route boundaries, and required checks before claiming a change is done.
+Read **`CLAUDE.md`** for project laws: test discipline, env safety, route boundaries, and required checks before claiming a change is done.
 
 ---
 
@@ -467,10 +447,6 @@ AI coding agents (Claude Code and compatible tools) use the agent skills in **`.
 | `ecom-payments` | Checkout, orders, coupons, Stripe, PayPal, webhooks |
 | `ecom-security-review` | Auth, roles, ownership, input, uploads, secrets checklist |
 | `ecom-ai-module` | AI commerce module, LLM output handling, feature flags |
-| `ecom-debug` | Reproduce → locate failing layer → root cause → fix with regression test |
-| `ecom-testing` | Strict Jest patterns for server and client, mocking, mutation checks |
-| `ecom-dependency-upgrade` | Package updates, deprecations, audit — one major at a time |
-| `ecom-deploy` | Release checklist: env vars in host, migrations, webhooks, smoke test, rollback |
 | `ecom-verify` | Final quality gate: memory-safe checks, test strength, change report |
 
 **Vendor skills** (installed from upstream, versions pinned in `skills-lock.json`): `prisma-cli`, `prisma-client-api`, `prisma-upgrade-v7`, `stripe-best-practices`, `upgrade-stripe`, `sentry-nextjs-sdk`, `sentry-fix-issues`, `vercel-react-best-practices`, `vercel-composition-patterns`, `web-design-guidelines`.
@@ -484,7 +460,6 @@ AI coding agents (Claude Code and compatible tools) use the agent skills in **`.
 - Do not commit credentials or `.env.local`.
 - Keep `JWT_SECRET` and payment webhook secrets out of the client bundle (only `NEXT_PUBLIC_*` publishable keys belong in the browser).
 - Validate env at startup on the server; fail fast on missing critical config in production paths.
-- To report a vulnerability, contact the maintainer privately rather than opening a public issue.
 
 ---
 
@@ -492,13 +467,3 @@ AI coding agents (Claude Code and compatible tools) use the agent skills in **`.
 
 - **[client/README.md](./client/README.md)** — Next.js app structure, pages, BFF routes, frontend patterns
 - **[server/README.md](./server/README.md)** — API layers, Prisma, services, webhooks, Docker
-- **[docs/ENVIRONMENT.md](./docs/ENVIRONMENT.md)** — environment variables and deployment checklists
-- **[docs/ai/README.md](./docs/ai/README.md)** — AI commerce module
-
----
-
-## License
-
-**Proprietary — all rights reserved.** Copyright © 2025–2026 Ali Anjum.
-
-This code is not open source. No use, copying, modification, or distribution is permitted without prior written permission. See [`LICENSE`](./LICENSE). For licensing or purchase inquiries, contact the owner.

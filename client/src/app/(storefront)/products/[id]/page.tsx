@@ -36,12 +36,12 @@ export async function generateMetadata({
 
     if (!product) {
       return {
-        title: `Product ${id} | Meridian Commerce`,
-        description: "Explore products from the Meridian Commerce marketplace.",
+        title: `Product ${id} | Futuristic Store`,
+        description: "Explore cutting-edge products with futuristic design",
       };
     }
 
-    const title = product.seoTitle?.trim() || `${product.name} | Meridian Commerce`;
+    const title = product.seoTitle?.trim() || `${product.name} | Futuristic Store`;
     const description =
       product.metaDescription?.trim() ||
       product.description.slice(0, 160) ||
@@ -64,8 +64,8 @@ export async function generateMetadata({
     };
   } catch {
     return {
-      title: "Product Details | Meridian Commerce",
-      description: "Explore products from the Meridian Commerce marketplace.",
+      title: "Product Details | Futuristic Store",
+      description: "Explore our cutting-edge products",
     };
   }
 }

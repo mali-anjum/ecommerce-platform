@@ -30,7 +30,7 @@ export async function DELETE(
     const { id } = await params;
 
     const backendRes = await fetch(
-      `${BACKEND_URL}/api/cart/remove/${encodeURIComponent(id)}`,
+      `${BACKEND_URL}/api/cart/remove/${id}`,
       {
         method: "DELETE",
         headers: {

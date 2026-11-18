@@ -17,7 +17,7 @@ export async function GET(
     }
 
     const { orderId } = await context.params;
-    const backendRes = await fetch(`${API_ROUTES.ORDER}/admin/${encodeURIComponent(orderId)}`, {
+    const backendRes = await fetch(`${API_ROUTES.ORDER}/admin/${orderId}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

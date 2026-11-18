@@ -17,7 +17,6 @@ import { randomUUID } from "crypto";
 import jwt from "jsonwebtoken";
 import { mapAuthErrorResponse } from "../utils/auth/authErrors";
 import { sentryTracker } from "../lib/monitoring";
-import { sendVerificationEmailSafely } from "./accountController";
 
 const register = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -55,9 +54,6 @@ const register = async (req: Request, res: Response): Promise<void> => {
         role: "USER",
       },
     });
-
-    // Not awaited: a slow or failing mail server must not block or fail registration.
-    void sendVerificationEmailSafely({ id: user.id, email: user.email, name: user.name });
 
     res.status(201).json({
       message: "User registered successfully",
@@ -111,7 +107,6 @@ const login = async (req: Request, res: Response): Promise<void> => {
         email: true,
         password: true,
         role: true,
-        isActive: true,
       },
     });
 
@@ -142,15 +137,6 @@ const login = async (req: Request, res: Response): Promise<void> => {
       res.status(401).json({
         success: false,
         error: "Invalid credentials",
-      });
-      return;
-    }
-
-    // Checked after the password so deactivation status never leaks to guessers.
-    if (!user.isActive) {
-      res.status(403).json({
-        success: false,
-        error: "This account has been deactivated. Please contact support.",
       });
       return;
     }
@@ -210,8 +196,8 @@ const getCurrentUser = async (req: Request, res: Response) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET!);
     const userId = (decoded as any).userId;
     // Fetch user from DB
-    const user = await prisma.user.findFirst({
-      where: { id: userId, isActive: true },
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
       select: {
         id: true,
         name: true,
@@ -219,7 +205,6 @@ const getCurrentUser = async (req: Request, res: Response) => {
         role: true,
         image: true,
         profileComplete: true,
-        emailVerified: true,
         createdAt: true,
       },
     });
@@ -251,7 +236,7 @@ const refreshAccessToken = async (
     // Verify refresh token
     const hashedToken = hashToken(refreshToken);
     const user = await prisma.user.findFirst({
-      where: { refreshToken: hashedToken, isActive: true },
+      where: { refreshToken: hashedToken },
       select: {
         id: true,
         name: true,

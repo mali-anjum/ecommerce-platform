@@ -77,7 +77,7 @@ export class GitHubOAuthProvider extends BaseOAuthProvider {
       email: email ?? "",
       name: profile.name ?? profile.login,
       image: profile.avatar_url ?? null,
-      emailVerified: Boolean(verifiedEmail),
+      emailVerified: Boolean(email),
     };
   }
 

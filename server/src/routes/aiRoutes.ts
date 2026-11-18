@@ -42,11 +42,6 @@ import { optionalAuthenticateJwt } from "../middleware/optionalAuthMiddleware";
 import { authenticateJwt, isSuperAdmin } from "../middleware/authMiddleware";
 import { requireFeatureFlag, requireModule } from "../middleware/requireFeatureFlag";
 import { validate } from "../middleware/validation";
-import {
-  aiChatLimiter,
-  aiSearchLimiter,
-  publicFormLimiter,
-} from "../middleware/publicRateLimiter";
 import { aiChatSchema } from "../validations/aiChatSchema";
 import {
   createFaqSchema,
@@ -70,7 +65,6 @@ router.use(requireModule("ai"));
 
 router.post(
   "/chat",
-  aiChatLimiter,
   requireFeatureFlag("ai.chat"),
   optionalAuthenticateJwt,
   validate(aiChatSchema),
@@ -86,7 +80,6 @@ router.get(
 );
 router.post(
   "/search",
-  aiSearchLimiter,
   requireFeatureFlag("ai.smartSearch"),
   optionalAuthenticateJwt,
   validate(smartSearchSchema),
@@ -100,7 +93,6 @@ router.get(
 );
 router.post(
   "/sales/capture-email",
-  publicFormLimiter,
   requireFeatureFlag("ai.salesAgent"),
   optionalAuthenticateJwt,
   validate(captureGuestEmailSchema),

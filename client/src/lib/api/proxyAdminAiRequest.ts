@@ -35,21 +35,14 @@ export async function proxyAdminAiRequest(
     );
   }
 
-  // Dot segments would be normalised by fetch and climb out of /api/ai/admin.
-  if (pathSegments.some((segment) => segment === "." || segment === "..")) {
-    return NextResponse.json(
-      { success: false, error: "Invalid path" },
-      { status: 400 },
-    );
-  }
-  const path = `/api/ai/admin/${pathSegments.map(encodeURIComponent).join("/")}`;
+  const path = `/api/ai/admin/${pathSegments.join("/")}`;
   const search = request.nextUrl.search;
   const isUpload = pathSegments.join("/").endsWith(UPLOAD_PATH_SUFFIX);
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000);
-
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+
     const headers: Record<string, string> = { Cookie: cookieHeader };
     let body: BodyInit | undefined;
 
@@ -94,7 +87,5 @@ export async function proxyAdminAiRequest(
       { success: false, error: "Admin AI request failed" },
       { status: 500 },
     );
-  } finally {
-    clearTimeout(timeoutId);
   }
 }

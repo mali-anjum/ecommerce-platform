@@ -35,16 +35,17 @@ export class CartService {
         continue;  // stop below code, and move to the next iteration
       }
       
-      // One issue per line: an empty product is OUT_OF_STOCK, not also INSUFFICIENT_STOCK.
-      if (item.product.stock <= 0) {
-        issues.push({ itemId: item.id, issue: 'OUT_OF_STOCK' });
-      } else if (item.quantity > item.product.stock) {
+      if (item.quantity > item.product.stock) {
         issues.push({ 
           itemId: item.id, 
           issue: 'INSUFFICIENT_STOCK',
           available: item.product.stock,
           requested: item.quantity
         });
+      }
+
+      if (item.product.stock === 0) {
+        issues.push({ itemId: item.id, issue: 'OUT_OF_STOCK' });
       }
     }
     

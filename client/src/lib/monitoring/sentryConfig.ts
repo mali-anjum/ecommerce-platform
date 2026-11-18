@@ -48,14 +48,23 @@ export function parseSampleRate(raw: string | undefined, fallback: number): numb
 }
 
 export function isSentryEnabled(): boolean {
-  if (!getSentryDsn()) return false;
+  const dsn =
+    process.env.NEXT_PUBLIC_SENTRY_DSN?.trim() ??
+    process.env.SENTRY_DSN?.trim();
+  if (!dsn) return false;
 
-  // SENTRY_ENABLED is server-only; the browser bundle only sees NEXT_PUBLIC_* vars.
-  const override = process.env.SENTRY_ENABLED ?? process.env.NEXT_PUBLIC_SENTRY_ENABLED;
-  if (override === "true") return true;
-  if (override === "false") return false;
+  if (process.env.SENTRY_ENABLED === "true") return true;
+  if (process.env.SENTRY_ENABLED === "false") return false;
 
-  return ["production", "staging"].includes(getSentryEnvironment().toLowerCase());
+  const env = (
+    process.env.NEXT_PUBLIC_SENTRY_ENVIRONMENT ??
+    process.env.SENTRY_ENVIRONMENT ??
+    process.env.NEXT_PUBLIC_APP_ENV ??
+    process.env.NODE_ENV ??
+    "development"
+  ).toLowerCase();
+
+  return env === "production" || env === "staging";
 }
 
 export function getSentryEnvironment(): string {
@@ -68,11 +77,9 @@ export function getSentryEnvironment(): string {
   );
 }
 
-/** The only place the DSN is read. Empty strings count as unset so the fallback still applies. */
 export function getSentryDsn(): string | undefined {
   return (
-    process.env.NEXT_PUBLIC_SENTRY_DSN?.trim() ||
-    process.env.SENTRY_DSN?.trim() ||
-    undefined
+    process.env.NEXT_PUBLIC_SENTRY_DSN?.trim() ??
+    process.env.SENTRY_DSN?.trim()
   );
 }

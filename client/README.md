@@ -1,6 +1,6 @@
-# Meridian Commerce — Storefront & Admin
+# Client — Next.js storefront & admin
 
-The **Meridian Commerce** client is a [Next.js 16](https://nextjs.org) application (App Router) that powers the public storefront, customer account flows, seller hub, and super-admin console. It talks to the Express API in `../server` through browser requests and through **Route Handlers** under `src/app/api/` that proxy auth-sensitive traffic and normalize cookies for the app origin.
+The **client** package is a [Next.js 16](https://nextjs.org) application (App Router) that powers the public storefront, customer account flows, seller hub, and super-admin console. It talks to the Express API in `../server` through browser requests and through **Route Handlers** under `src/app/api/` that proxy auth-sensitive traffic and normalize cookies for the app origin.
 
 **Monorepo root:** see [../README.md](../README.md) for full-stack setup, env vars, and deployment.
 
@@ -150,17 +150,13 @@ Route Handlers proxy to Express so cookies and secrets stay server-side. Example
 | `/api/order/*` | `/api/order/*` |
 | `/api/users/*` | `/api/users/*` |
 | `/api/analytics/dashboard` | `/api/analytics/dashboard` |
+| `/api/catalog/tree`, `structure` | `/api/catalog/*` |
 | `/api/warm` | `/api/warm` |
 
 **Local direct call:** browser → `localhost:4001` → cookies on API host.  
 **Production proxy:** browser → `yourapp.com/api/auth/login` → Next.js → backend → cookies rewritten for `yourapp.com`.
 
 Use `DEV_URL` / `BACKEND_URL` in `.env.local` for server-side fetch targets.
-
-Public catalog reads (`/api/catalog/tree` and `/api/catalog/structure`) call the
-Express API directly using `API_ROUTES.CATALOG`; they contain no user-specific
-data and need no Next.js proxy. Set `NEXT_PUBLIC_API_URL` to the same API origin
-used by the client deployment and allow the frontend origin in Express CORS.
 
 ---
 

@@ -39,12 +39,11 @@ export const geminiProvider: LlmProvider = {
     const model = geminiProvider.getModel();
     const { systemInstruction, contents } = buildGeminiContents(request.messages);
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${apiKey}`;
 
-    // Key goes in a header, not the query string, so it never lands in URL/access logs.
     const response = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         systemInstruction,
         contents,

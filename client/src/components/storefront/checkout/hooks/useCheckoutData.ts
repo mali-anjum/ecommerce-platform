@@ -10,7 +10,8 @@ export const useCheckoutData = () => {
 
   const fetchCheckoutData = useCallback(async (
     fetchAddresses: () => Promise<void>,
-    fetchCart: () => Promise<void>
+    fetchCart: () => Promise<void>,
+    fetchCoupons: () => Promise<void>
   ) => {
  
     if (hasFetched.current) {
@@ -19,7 +20,7 @@ export const useCheckoutData = () => {
     
     setIsLoading(true);
     try {
-      await Promise.all([fetchAddresses(), fetchCart()]);
+      await Promise.all([fetchAddresses(), fetchCart(), fetchCoupons()]);
       hasFetched.current = true; // Mark as fetched
     } catch (error) {
     sentryTracker(error, { source: "useCheckoutData" });

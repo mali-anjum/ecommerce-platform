@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAddressStore } from "@/components/storefront/checkout/state/useAddressStore";
 import { useAuthStore } from "@/components/auth/state/useAuthStore";
 import { useCartStore } from "@/components/storefront/cart/state/useCartStore";
+import { useCouponStore } from "@/components/storefront/checkout/state/useCouponStore";
 import { useOrderStore } from "@/components/storefront/orders/state/useOrderStore";
 
 // Custom hooks
@@ -33,6 +34,7 @@ export function CheckoutContent() {
   // Store hooks
   const { addresses, fetchAddresses } = useAddressStore();
   const { items, fetchCart } = useCartStore();
+  const { couponList, fetchCoupons } = useCouponStore();
   const { createOrder, captureOrder, isPaymentProcessing } = useOrderStore();
   const { user } = useAuthStore();
 
@@ -45,7 +47,7 @@ export function CheckoutContent() {
     couponError,
     setCouponCode,
     handleApplyCoupon,
-  } = useCheckoutCoupon();
+  } = useCheckoutCoupon(couponList);
   
   // Use the new address hook instead of useState
   const { selectedAddress, setSelectedAddress } = useCheckoutAddress(addresses);
@@ -83,8 +85,8 @@ export function CheckoutContent() {
 
   // Fetch initial data
   useEffect(() => {
-    fetchCheckoutData(fetchAddresses, fetchCart);
-  }, [fetchCheckoutData, fetchAddresses, fetchCart]);
+    fetchCheckoutData(fetchAddresses, fetchCart, fetchCoupons);
+  }, [fetchCheckoutData, fetchAddresses, fetchCart, fetchCoupons]);
 
   useEffect(() => {
     if (user && user.profileComplete === false) {

@@ -5,13 +5,11 @@ import { validate } from "../middleware/validation";
 import { getAnalyticsDashboard } from "../controllers/analyticsController";
 import { postAnalyticsEvent } from "../controllers/analyticsEventController";
 import { analyticsEventSchema } from "../validations/analyticsEventSchema";
-import { analyticsEventLimiter } from "../middleware/publicRateLimiter";
 
 const router = express.Router();
 
 router.post(
   "/events",
-  analyticsEventLimiter,
   optionalAuthenticateJwt,
   validate(analyticsEventSchema),
   postAnalyticsEvent,

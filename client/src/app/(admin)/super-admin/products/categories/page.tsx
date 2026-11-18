@@ -24,7 +24,6 @@ import {
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { sentryTracker } from "@/lib/monitoring";
-import { API_ROUTES } from "@/lib/routes/api";
 
 type StructureSub = {
   id: string;
@@ -90,19 +89,26 @@ function SuperAdminCategoriesPage() {
     setLoading(true);
     setError(null);
     try {
-      const [structureRes, tree] = await Promise.all([
-        axios.get(`${API_ROUTES.CATALOG}/structure`),
-        axios
-          .get(`${API_ROUTES.CATALOG}/tree`)
-          .then((response) =>
-            Array.isArray(response.data?.data) ? response.data.data : [],
-          )
-          .catch(() => [] as TreeDept[]),
-      ]);
+      const structureRes = await axios.get("/api/catalog/structure", {
+        withCredentials: true,
+      });
       const rawStructure = structureRes.data?.data;
       const structure: StructureDept[] = Array.isArray(rawStructure)
         ? rawStructure
         : [];
+
+      let tree: TreeDept[] = [];
+      try {
+        const treeRes = await axios.get("/api/catalog/tree", {
+          withCredentials: true,
+        });
+        const rawTree = treeRes.data?.data;
+        if (Array.isArray(rawTree)) {
+          tree = rawTree;
+        }
+      } catch {
+        // Product counts are optional; structure alone still lists departments.
+      }
 
       setDepartments(mergeStructureWithTree(structure, tree));
     } catch (e) {

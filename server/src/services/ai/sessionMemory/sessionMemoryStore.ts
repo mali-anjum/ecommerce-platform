@@ -11,13 +11,7 @@ const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
 
 type CacheEntry = {
   messages: StoredChatMessage[];
-  ownerId: string | null;
   expiresAt: number;
-};
-
-type SessionRecord = {
-  messages: StoredChatMessage[];
-  ownerId: string | null;
 };
 
 const memoryCache = new Map<string, CacheEntry>();
@@ -35,30 +29,22 @@ function trimMessages(messages: StoredChatMessage[]): StoredChatMessage[] {
   return messages.slice(-MAX_SESSION_MESSAGES);
 }
 
-function cacheSession(sessionId: string, record: SessionRecord): void {
+function cacheMessages(sessionId: string, messages: StoredChatMessage[]): void {
   pruneCache();
   memoryCache.set(sessionId, {
-    ...record,
+    messages,
     expiresAt: Date.now() + SESSION_TTL_MS,
   });
 }
 
-function readCache(sessionId: string): SessionRecord | null {
+function readCache(sessionId: string): StoredChatMessage[] | null {
   const entry = memoryCache.get(sessionId);
   if (!entry) return null;
   if (entry.expiresAt <= Date.now()) {
     memoryCache.delete(sessionId);
     return null;
   }
-  return { messages: entry.messages, ownerId: entry.ownerId };
-}
-
-/**
- * A session that belongs to a signed-in user is private to that user.
- * Guest sessions (no owner) stay usable by whoever holds the id.
- */
-export function canAccessSession(ownerId: string | null, requesterId?: string): boolean {
-  return ownerId === null || ownerId === requesterId;
+  return entry.messages;
 }
 
 function toStoredMessages(messages: ChatHistoryMessage[]): StoredChatMessage[] {
@@ -86,28 +72,19 @@ function parseStoredMessages(raw: unknown): StoredChatMessage[] {
     }));
 }
 
-async function getSessionRecord(sessionId: string): Promise<SessionRecord> {
+export async function getSessionMessages(
+  sessionId: string,
+): Promise<StoredChatMessage[]> {
   const cached = readCache(sessionId);
   if (cached) return cached;
 
   const row = await prisma.aiChatSession.findUnique({
     where: { id: sessionId },
-    select: { messages: true, userId: true },
+    select: { messages: true },
   });
-  const record = {
-    messages: trimMessages(parseStoredMessages(row?.messages)),
-    ownerId: row?.userId ?? null,
-  };
-  cacheSession(sessionId, record);
-  return record;
-}
-
-export async function getSessionMessages(
-  sessionId: string,
-  requesterId?: string,
-): Promise<StoredChatMessage[]> {
-  const record = await getSessionRecord(sessionId);
-  return canAccessSession(record.ownerId, requesterId) ? record.messages : [];
+  const messages = trimMessages(parseStoredMessages(row?.messages));
+  cacheMessages(sessionId, messages);
+  return messages;
 }
 
 export async function appendSessionMessages(
@@ -115,12 +92,8 @@ export async function appendSessionMessages(
   newMessages: ChatHistoryMessage[],
   userId?: string,
 ): Promise<StoredChatMessage[]> {
-  const existing = await getSessionRecord(sessionId);
-  // Never write into (or re-assign) another user's session.
-  if (!canAccessSession(existing.ownerId, userId)) {
-    return [];
-  }
-  const merged = trimMessages([...existing.messages, ...toStoredMessages(newMessages)]);
+  const existing = await getSessionMessages(sessionId);
+  const merged = trimMessages([...existing, ...toStoredMessages(newMessages)]);
 
   await prisma.aiChatSession.upsert({
     where: { id: sessionId },
@@ -135,7 +108,7 @@ export async function appendSessionMessages(
     },
   });
 
-  cacheSession(sessionId, { messages: merged, ownerId: existing.ownerId ?? userId ?? null });
+  cacheMessages(sessionId, merged);
   return merged;
 }
 

@@ -1,4 +1,3 @@
-import { randomBytes } from "crypto";
 import {
   SalesEmailJobStatus,
   SalesOfferStatus,
@@ -56,10 +55,8 @@ function effectivePrice(price: number, discountPercent: number | null): number {
 }
 
 function generateCouponCode(sessionId: string): string {
-  const prefix = sessionId.replace(/-/g, "").slice(0, 6).toUpperCase();
-  // Random part keeps codes unique when the same session earns another offer after the cooldown.
-  const random = randomBytes(3).toString("hex").toUpperCase();
-  return `SAVE-${prefix}${random}`;
+  const suffix = sessionId.replace(/-/g, "").slice(0, 8).toUpperCase();
+  return `SAVE-${suffix}`;
 }
 
 async function hasRecentOffer(input: {

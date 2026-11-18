@@ -3,111 +3,95 @@ import type { Prisma } from "@prisma/client";
 import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { PaymentFactory } from "../services/payment/payment.factory";
-import { normalizePaymentMethod } from "../services/payment/paymentMethod";
 import {
-  FULFILLED_ORDER_STATUSES,
   applyPurchaseFulfillment,
   buildFulfillmentAnalyticsContext,
-  claimOrderForFulfillment,
   parsePurchasedCartItemIds,
-} from "../services/order";
+} from "../services/order/fulfillment";
 import { sentryTracker } from "../lib/monitoring";
 
-type WebhookResult = {
-  success: boolean;
-  event?: string;
-  data?: any;
-  error?: string;
+const orderIncludeWithItems: Prisma.OrderInclude = {
+  items: true,
+  payments: { orderBy: { createdAt: "desc" }, take: 5 },
 };
 
-type PaymentWithOrder = Prisma.PaymentGetPayload<{
-  include: { order: { include: { items: true } } };
-}>;
+/** Resolve an order using internal id and/or provider payment reference (PayPal order id, Stripe session id). */
+async function findOrderByIdentifiers(
+  providerReferenceId?: string,
+  internalOrderId?: string,
+  legacyPaymentId?: string,
+  includeItems: boolean = true
+) {
+  const ref = providerReferenceId || legacyPaymentId;
+  const include = includeItems
+    ? orderIncludeWithItems
+    : { payments: { orderBy: { createdAt: "desc" as const }, take: 5 } };
 
-/**
- * Exact request bytes for signature verification. `express.json` stores them on
- * `req.rawBody` (see server.ts); re-serialising the parsed body breaks Stripe signatures.
- */
-export function getRawBody(req: Request): string {
-  if (Buffer.isBuffer(req.rawBody)) return req.rawBody.toString("utf8");
-  if (Buffer.isBuffer(req.body)) return req.body.toString("utf8");
-  if (typeof req.body === "string") return req.body;
-  return JSON.stringify(req.body ?? {});
-}
-
-function headerValue(req: Request, name: string): string {
-  const value = req.headers[name];
-  return typeof value === "string" ? value : "";
-}
-
-/** Verifies PayPal's transmission signature. Missing headers fail verification. */
-async function verifyPayPalRequest(req: Request, rawBody: string): Promise<boolean> {
-  const paymentService = PaymentFactory.createPaymentService("PAYPAL");
-  return paymentService.verifyWebhookSignature(
-    rawBody,
-    headerValue(req, "paypal-transmission-sig"),
-    headerValue(req, "paypal-transmission-time"),
-    headerValue(req, "paypal-cert-url"),
-    headerValue(req, "paypal-transmission-id")
-  );
-}
-
-async function dispatchPayPalEvent(result: WebhookResult) {
-  switch (result.event) {
-    case "payment_captured":
-      await handlePayPalPaymentCaptured(result.data);
-      break;
-    case "order_approved":
-      await handlePayPalOrderApproved(result.data);
-      break;
-    case "payment_failed":
-      await handlePaymentFailed("PAYPAL", result.data);
-      break;
-  }
-}
-
-async function dispatchStripeEvent(result: WebhookResult) {
-  if (result.success && result.event === "payment_success") {
-    await handleStripePaymentSuccess(result.data);
-  } else if (!result.success && result.event === "payment_failed") {
-    await handlePaymentFailed("STRIPE", result.data);
-  }
-}
-
-async function processPayPal(req: Request, res: Response) {
-  const rawBody = getRawBody(req);
-  if (!(await verifyPayPalRequest(req, rawBody))) {
-    console.error("Invalid PayPal webhook signature");
-    return res.status(400).send("Invalid signature");
+  if (internalOrderId) {
+    const order = await prisma.order.findUnique({
+      where: { id: internalOrderId },
+      include,
+    });
+    if (order) return order;
   }
 
-  const paymentService = PaymentFactory.createPaymentService("PAYPAL");
-  const result: WebhookResult = await paymentService.handleWebhook(rawBody, "");
-  await dispatchPayPalEvent(result);
-  return res.status(200).send("Webhook processed");
-}
-
-async function processStripe(req: Request, res: Response) {
-  const paymentService = PaymentFactory.createPaymentService("STRIPE");
-  const result: WebhookResult = await paymentService.handleWebhook(
-    getRawBody(req),
-    headerValue(req, "stripe-signature")
-  );
-
-  // `error` is only set when constructEvent rejected the payload (bad signature / no secret).
-  if (result.error) {
-    console.error("Invalid Stripe webhook:", result.error);
-    return res.status(400).send("Invalid signature");
+  if (ref) {
+    const order = await prisma.order.findFirst({
+      where: {
+        payments: {
+          some: { providerReferenceId: ref },
+        },
+      },
+      include,
+    });
+    if (order) return order;
   }
 
-  await dispatchStripeEvent(result);
-  return res.status(200).send("Webhook processed");
+  return null;
 }
 
 // PayPal-specific webhook handler
 export const paypalWebhook = async (req: Request, res: Response) => {
   try {
-    await processPayPal(req, res);
+    const signature = req.headers["paypal-transmission-sig"] as string;
+    const transmissionId = req.headers["paypal-transmission-id"] as string;
+    const timestamp = req.headers["paypal-transmission-time"] as string;
+    const certUrl = req.headers["paypal-cert-url"] as string;
+
+    const paymentService = PaymentFactory.createPaymentService("PAYPAL");
+
+    const rawBody = JSON.stringify(req.body);
+
+    const isValid = await paymentService.verifyWebhookSignature(
+      rawBody,
+      signature,
+      timestamp,
+      certUrl,
+      transmissionId
+    );
+
+    if (!isValid) {
+      console.error("Invalid PayPal webhook signature");
+      return res.status(400).send("Invalid signature");
+    }
+
+    const result = await paymentService.handleWebhook(rawBody, signature);
+
+    if (result.success) {
+      switch (result.event) {
+        case "payment_captured":
+          await handlePayPalPaymentCaptured(result.data);
+          break;
+        case "order_approved":
+          await handlePayPalOrderApproved(result.data);
+          break;
+        case "payment_failed":
+          await handlePaymentFailed("PAYPAL", result.data);
+          break;
+      }
+    }
+
+    res.status(200).send("Webhook processed");
   } catch (error) {
     sentryTracker(error, { source: "webhook.controller" });
     console.error("Error processing PayPal webhook:", error);
@@ -118,7 +102,21 @@ export const paypalWebhook = async (req: Request, res: Response) => {
 // Stripe-specific webhook handler
 export const stripeWebhook = async (req: Request, res: Response) => {
   try {
-    await processStripe(req, res);
+    const signature = req.headers["stripe-signature"] as string;
+
+    const paymentService = PaymentFactory.createPaymentService("STRIPE");
+
+    const rawBody = (req as any).rawBody || JSON.stringify(req.body);
+
+    const result = await paymentService.handleWebhook(rawBody, signature);
+
+    if (result.success && result.event === "payment_success") {
+      await handleStripePaymentSuccess(result.data);
+    } else if (!result.success && result.event === "payment_failed") {
+      await handlePaymentFailed("STRIPE", result.data);
+    }
+
+    res.status(200).send("Webhook processed");
   } catch (error) {
     sentryTracker(error, { source: "webhook.controller" });
     console.error("Error processing Stripe webhook:", error);
@@ -126,23 +124,71 @@ export const stripeWebhook = async (req: Request, res: Response) => {
   }
 };
 
-// Generic webhook handler: same verification rules as the provider-specific routes.
+// Generic webhook handler
 export const genericWebhook = async (req: Request, res: Response) => {
   try {
-    const provider = normalizePaymentMethod(
-      String(req.params.provider ?? req.headers["x-payment-provider"] ?? "")
-    );
+    const provider = req.path.includes("paypal")
+      ? "PAYPAL"
+      : req.path.includes("stripe")
+        ? "STRIPE"
+        : (req.headers["x-payment-provider"] as string);
+
+    if (!provider) {
+      return res.status(400).send("Payment provider not specified");
+    }
+
+    const paymentService = PaymentFactory.createPaymentService(provider);
+
+    let signature = "";
+    let timestamp = "";
+    let transmissionId = "";
+    let certUrl = "";
 
     if (provider === "PAYPAL") {
-      await processPayPal(req, res);
-      return;
-    }
-    if (provider === "STRIPE") {
-      await processStripe(req, res);
-      return;
+      signature = req.headers["paypal-transmission-sig"] as string;
+      transmissionId = req.headers["paypal-transmission-id"] as string;
+      timestamp = req.headers["paypal-transmission-time"] as string;
+      certUrl = req.headers["paypal-cert-url"] as string;
+    } else if (provider === "STRIPE") {
+      signature = req.headers["stripe-signature"] as string;
     }
 
-    res.status(400).send("Unsupported payment provider");
+    const rawBody = JSON.stringify(req.body);
+
+    if (provider === "PAYPAL" && transmissionId && timestamp && certUrl) {
+      const isValid = await paymentService.verifyWebhookSignature(
+        rawBody,
+        signature,
+        timestamp,
+        certUrl,
+        transmissionId
+      );
+
+      if (!isValid) {
+        return res.status(400).send("Invalid signature");
+      }
+    }
+
+    const result = await paymentService.handleWebhook(rawBody, signature);
+
+    if (result.success) {
+      switch (result.event) {
+        case "payment_captured":
+        case "payment_success":
+          await handlePaymentSuccess(provider, result.data);
+          break;
+        case "order_approved":
+          if (provider === "PAYPAL") {
+            await handlePayPalOrderApproved(result.data);
+          }
+          break;
+        case "payment_failed":
+          await handlePaymentFailed(provider, result.data);
+          break;
+      }
+    }
+
+    res.status(200).send("Webhook processed");
   } catch (error) {
     sentryTracker(error, { source: "webhook.controller" });
     console.error("Error processing webhook:", error);
@@ -151,7 +197,7 @@ export const genericWebhook = async (req: Request, res: Response) => {
 };
 
 async function handlePayPalOrderApproved(resource: any) {
-  const paypalOrderId = resource?.resource?.id ?? resource?.id;
+  const paypalOrderId = resource.id;
 
   if (!paypalOrderId) return;
 
@@ -178,12 +224,39 @@ async function handlePayPalOrderApproved(resource: any) {
   }
 }
 
-/**
- * Records the capture and, only for the first successful delivery, applies stock,
- * cart and coupon fulfillment. Duplicate webhooks and the return-page capture race
- * are resolved by `claimOrderForFulfillment`.
- */
-async function completePayment(payment: PaymentWithOrder, captureId: string) {
+async function handlePayPalPaymentCaptured(resource: any) {
+  const captureId = resource.id;
+  const paypalOrderId = resource.supplementary_data?.related_ids?.order_id;
+
+  if (!paypalOrderId) return;
+
+  const payment = await prisma.payment.findFirst({
+    where: { providerReferenceId: paypalOrderId },
+    include: {
+      order: { include: { items: true } },
+    },
+  });
+
+  if (!payment?.order?.items?.length) return;
+
+  const order = payment.order;
+
+  if (
+    order.status === "PROCESSING" ||
+    order.status === "SHIPPED" ||
+    order.status === "DELIVERED"
+  ) {
+    await prisma.payment.update({
+      where: { id: payment.id },
+      data: {
+        providerCaptureId: captureId,
+        capturedAt: new Date(),
+        attemptStatus: "COMPLETED",
+      },
+    });
+    return;
+  }
+
   await prisma.payment.update({
     where: { id: payment.id },
     data: {
@@ -193,9 +266,13 @@ async function completePayment(payment: PaymentWithOrder, captureId: string) {
     },
   });
 
-  const order = payment.order;
-  const claimed = await claimOrderForFulfillment(order.id);
-  if (!claimed) return;
+  await prisma.order.update({
+    where: { id: order.id },
+    data: {
+      status: "PROCESSING",
+      paymentStatus: "COMPLETED",
+    },
+  });
 
   await applyPurchaseFulfillment(
     order.userId,
@@ -212,29 +289,11 @@ async function completePayment(payment: PaymentWithOrder, captureId: string) {
   }
 }
 
-async function handlePayPalPaymentCaptured(event: any) {
-  const capture = event?.resource ?? event;
-  const captureId = capture?.id;
-  const paypalOrderId = capture?.supplementary_data?.related_ids?.order_id;
-
-  if (!captureId || !paypalOrderId) return;
-
-  const payment = await prisma.payment.findFirst({
-    where: { providerReferenceId: paypalOrderId },
-    include: { order: { include: { items: true } } },
-  });
-
-  if (!payment?.order?.items?.length) return;
-  await completePayment(payment, captureId);
-}
-
 async function handleStripePaymentSuccess(session: any) {
-  const sessionId = session?.id;
-  const metadata = session?.metadata;
+  const sessionId = session.id;
+  const metadata = session.metadata;
 
-  if (session?.payment_status && session.payment_status !== "paid") return;
-
-  let payment: PaymentWithOrder | null = sessionId
+  let payment = sessionId
     ? await prisma.payment.findFirst({
         where: { providerReferenceId: sessionId },
         include: { order: { include: { items: true } } },
@@ -250,48 +309,97 @@ async function handleStripePaymentSuccess(session: any) {
   }
 
   if (!payment?.order?.items?.length) return;
-  await completePayment(payment, sessionId);
+
+  const order = payment.order;
+
+  if (
+    order.status === "PROCESSING" ||
+    order.status === "SHIPPED" ||
+    order.status === "DELIVERED"
+  ) {
+    await prisma.payment.update({
+      where: { id: payment.id },
+      data: {
+        providerCaptureId: sessionId,
+        capturedAt: new Date(),
+        attemptStatus: "COMPLETED",
+      },
+    });
+    return;
+  }
+
+  await prisma.payment.update({
+    where: { id: payment.id },
+    data: {
+      attemptStatus: "COMPLETED",
+      providerCaptureId: sessionId,
+      capturedAt: new Date(),
+    },
+  });
+
+  await prisma.order.update({
+    where: { id: order.id },
+    data: {
+      status: "PROCESSING",
+      paymentStatus: "COMPLETED",
+    },
+  });
+
+  await applyPurchaseFulfillment(
+    order.userId,
+    order.items,
+    parsePurchasedCartItemIds(payment.metadata),
+    buildFulfillmentAnalyticsContext(order, payment.metadata),
+  );
+
+  if (order.couponId) {
+    await prisma.coupon.update({
+      where: { id: order.couponId },
+      data: { usageCount: { increment: 1 } },
+    });
+  }
 }
 
-async function handlePaymentFailed(provider: "PAYPAL" | "STRIPE", data: any) {
-  const resource = provider === "PAYPAL" ? (data?.resource ?? data) : data;
-  const providerOrderId: string | undefined =
-    provider === "PAYPAL"
-      ? resource?.supplementary_data?.related_ids?.order_id
-      : resource?.id;
-  const internalOrderId: string | undefined =
-    provider === "STRIPE" ? resource?.metadata?.internalOrderId : undefined;
+async function handlePaymentSuccess(provider: string, data: any) {
+  if (provider === "PAYPAL") {
+    await handlePayPalPaymentCaptured(data);
+  } else if (provider === "STRIPE") {
+    await handleStripePaymentSuccess(data);
+  }
+}
 
-  const orderId =
-    internalOrderId ??
-    (providerOrderId
-      ? (
-          await prisma.payment.findFirst({
-            where: { providerReferenceId: providerOrderId },
-            select: { orderId: true },
-          })
-        )?.orderId
-      : undefined);
+async function handlePaymentFailed(provider: string, data: any) {
+  let providerOrderId: string | undefined;
+  let internalOrderId: string | undefined;
 
-  if (!orderId) return;
+  if (provider === "PAYPAL") {
+    providerOrderId = data.supplementary_data?.related_ids?.order_id;
+  } else if (provider === "STRIPE") {
+    providerOrderId = data.id;
+    internalOrderId = data.metadata?.internalOrderId;
+  }
 
-  // A late failure event must never downgrade an order that was already paid.
-  const { count } = await prisma.order.updateMany({
-    where: {
-      id: orderId,
-      status: { notIn: FULFILLED_ORDER_STATUSES },
-      paymentStatus: { notIn: ["COMPLETED", "REFUNDED"] },
-    },
+  const order = await findOrderByIdentifiers(
+    providerOrderId,
+    internalOrderId,
+    undefined,
+    false
+  );
+
+  if (!order) return;
+
+  await prisma.order.update({
+    where: { id: order.id },
     data: {
       status: "PAYMENT_FAILED",
       paymentStatus: "FAILED",
+      updatedAt: new Date(),
     },
   });
-  if (count === 0) return;
 
   await prisma.payment.updateMany({
     where: {
-      orderId,
+      orderId: order.id,
       attemptStatus: { in: ["PENDING", "AUTHORIZED"] },
     },
     data: { attemptStatus: "FAILED" },

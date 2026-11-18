@@ -41,8 +41,11 @@ export const useKnowledgeStore = create<KnowledgeState>((set) => ({
   savePolicies: async (payload) => {
     set({ isLoading: true, error: null });
     try {
+      console.log("payload for save policies", payload);
       const response = await adminApi.put(AI_ADMIN_ROUTES.policies, payload);
+      console.log("response for save policies", response);
       const data = unwrapData<{ policies: StorePolicies }>(response);
+      console.log("data for save policies", data);
       set({ policies: data.policies, isLoading: false });
       return true;
     } catch {
